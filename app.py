@@ -11,7 +11,7 @@ app = Flask(__name__)
 def home():
     return "PT Eval App is Live!"
 
-# Set OpenAI key
+# Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Optional: verify key is loaded
