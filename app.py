@@ -14,14 +14,7 @@ def home():
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Optional: verify key is loaded
-if not openai.api_key:
-    raise ValueError("OPENAI_API_KEY environment variable not set.")
-    
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
 MODEL = "gpt-4o-mini"
-client = OpenAI(api_key=API_KEY)
 
 TEMPLATES = {
     "LBP Eval Template": """
