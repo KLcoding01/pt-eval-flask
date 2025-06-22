@@ -3,14 +3,18 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, filedialog
 from datetime import date, datetime
 import openai
-from flask import Flask
-
-app = Flask(__name__)
+from flask import Flaskapp = Flask(__name__)
 
 @app.route('/')
 def home():
     return "PT Eval App is Live!"
 
+# Set OpenAI key
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# Optional: verify key is loaded
+if not openai.api_key:
+    raise ValueError("OPENAI_API_KEY environment variable not set.")
     
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
