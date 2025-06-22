@@ -27,8 +27,7 @@ def index():
         # You can add OpenAI or PT logic here later!
         result = "Form submitted! (This is where you process/save/generate content.)"
 
-    return render_template(
-        "index.html",
+    return render_template("index.html")
         templates=TEMPLATES,
         selected_template=fields.get("template", "LBP Eval Template"),
         fields=fields,
