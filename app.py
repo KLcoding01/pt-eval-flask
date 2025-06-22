@@ -11,8 +11,30 @@ def home():
 openai.api_key = os.getenv("OPENAI_API_KEY")
 MODEL = "gpt-4o-mini"
 
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+@app.route("/generate", methods=["POST"])
+def generate():
+    prompt = request.form.get("prompt")
+    if not prompt:
+        return "Prompt is required", 400
+
+    try:
+        response = openai.ChatCompletion.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=500
+        )
+        result = response["choices"][0]["message"]["content"]
+        return f"<h2>Generated Output:</h2><pre>{result}</pre><a href='/'>Back</a>"
+    except Exception as e:
+        return f"Error: {e}", 500
+        
 if __name__ == "__main__":
     app.run()
+
 
 
 TEMPLATES = {
