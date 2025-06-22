@@ -6,16 +6,6 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "PT Eval App is Live!"
-
-openai.api_key = os.getenv("OPENAI_API_KEY")
-MODEL = "gpt-4o-mini"
-
-if __name__ == "__main__":
-    app.run()
-    
-@app.route("/")
-def home():
     return render_template("index.html")
 
 @app.route("/generate", methods=["POST"])
@@ -35,9 +25,12 @@ def generate():
     except Exception as e:
         return f"Error: {e}", 500
         
+openai.api_key = os.getenv("OPENAI_API_KEY")
+MODEL = "gpt-4o-mini"
 
-
-
+if __name__ == "__main__":
+    app.run()
+    
 
 TEMPLATES = {
     "LBP Eval Template": """
