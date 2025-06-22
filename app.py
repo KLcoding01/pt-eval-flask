@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, filedialog
 from datetime import date, datetime
 from openai import OpenAI
+import openai
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
