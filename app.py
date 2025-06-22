@@ -11,6 +11,9 @@ def home():
 openai.api_key = os.getenv("OPENAI_API_KEY")
 MODEL = "gpt-4o-mini"
 
+if __name__ == "__main__":
+    app.run()
+    
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -32,8 +35,7 @@ def generate():
     except Exception as e:
         return f"Error: {e}", 500
         
-if __name__ == "__main__":
-    app.run()
+
 
 
 
