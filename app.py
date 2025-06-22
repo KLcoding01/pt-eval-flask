@@ -2,9 +2,16 @@ import os
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, filedialog
 from datetime import date, datetime
-from openai import OpenAI
 import openai
+from flask import Flask
 
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "PT Eval App is Live!"
+
+    
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 MODEL = "gpt-4o-mini"
