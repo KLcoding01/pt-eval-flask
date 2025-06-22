@@ -6,12 +6,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-openai.api_key = os.getenv("OPENAI_API_KEY")  # Store this in .env, NOT your code
 
+openai.api_key = os.getenv("OPENAI_API_KEY")  # Store your key in a .env file, never in code!
 MODEL = "gpt-4o-mini"
 
+# Template dictionary if you want to expand in the future
 TEMPLATES = {
-    "LBP Eval Template": """Your long template here...""",
+    "LBP Eval Template": "Your long template here...",
+    # Add other templates here
 }
 
 @app.route("/", methods=["GET", "POST"])
@@ -20,12 +22,10 @@ def index():
     fields = {}
 
     if request.method == "POST":
-        # Capture all field values from form (add as many as you want)
+        # Capture all submitted fields
         fields = {k: v for k, v in request.form.items()}
-        # You could process/generate content here as needed
-
-        # For demo: echo back data or call OpenAI if desired
-        # result = "Data received. (Build your OpenAI/PT logic here!)"
+        # You can add OpenAI or PT logic here later!
+        result = "Form submitted! (This is where you process/save/generate content.)"
 
     return render_template(
         "index.html",
@@ -35,6 +35,7 @@ def index():
         result=result,
     )
 
+# If you want to generate summaries with OpenAI (AJAX or another form)
 @app.route("/generate_summary", methods=["POST"])
 def generate_summary():
     prompt = request.form.get("summary_prompt", "")
