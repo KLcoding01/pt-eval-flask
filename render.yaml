@@ -3,5 +3,5 @@ services:
     name: pt-eval-app
     env: python
     plan: free
-    buildCommand: ""
+    buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
