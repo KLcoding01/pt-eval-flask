@@ -5,12 +5,12 @@ from datetime import date, datetime
 import openai
 from flask import Flask
 
-app = Flask(__name__)
+app = Flask("__main__")
 
 @app.route('/')
 def home():
     return "PT Eval App is Live!"
-
+    
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
