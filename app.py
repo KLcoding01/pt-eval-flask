@@ -1,8 +1,10 @@
-from flask import Flask
+from flask import Flask, render_template, request
 import openai
 import os
 
 app = Flask(__name__)
+openai.api_key = os.getenv("OPENAI_API_KEY")
+MODEL = "gpt-4o-mini"
 
 @app.route("/")
 def home():
@@ -12,7 +14,7 @@ def home():
 def generate():
     prompt = request.form.get("prompt")
     if not prompt:
-        return "Prompt is required", 400
+        return "Prompt required", 400
 
     try:
         response = openai.ChatCompletion.create(
@@ -20,13 +22,10 @@ def generate():
             messages=[{"role": "user", "content": prompt}],
             max_tokens=500
         )
-        result = response["choices"][0]["message"]["content"]
+        result = response.choices[0].message.content
         return f"<h2>Generated Output:</h2><pre>{result}</pre><a href='/'>Back</a>"
     except Exception as e:
         return f"Error: {e}", 500
-        
-openai.api_key = os.getenv("OPENAI_API_KEY")
-MODEL = "gpt-4o-mini"
 
 if __name__ == "__main__":
     app.run()
