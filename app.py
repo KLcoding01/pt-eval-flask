@@ -3,7 +3,9 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, filedialog
 from datetime import date, datetime
 import openai
-from flask import Flaskapp = Flask(__name__)
+from flask import Flask
+
+app = Flask(__name__)
 
 @app.route('/')
 def home():
