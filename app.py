@@ -4,15 +4,16 @@ import os
 
 app = Flask(__name__)
 
-@app.route('/')
+@app.route("/")
 def home():
     return "PT Eval App is Live!"
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 MODEL = "gpt-4o-mini"
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run()
+
 
 TEMPLATES = {
     "LBP Eval Template": """
