@@ -154,12 +154,9 @@
       })
       .then(r => r.text())
       .then(t => {
-        // If the backend returns escaped newlines (\n), turn them into real newlines:
-        try {
-          document.getElementById('diffdx').value = t.replace(/\\n/g, '\n');
-        } catch (e) {
-          document.getElementById('diffdx').value = t;
-        }
+        console.log("DIFFDX RAW TEXT:", t);
+        // Clean up any literal \n to real newlines:
+        document.getElementById('diffdx').value = t.replace(/\\n/g, '\n');
         setStatus("Diff Dx generated!","green");
       }).catch(()=> setStatus("AI error","red"));
     };
