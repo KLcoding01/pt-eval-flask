@@ -4,7 +4,6 @@ from docx import Document
 from docx.shared import Pt
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-from datetime import date
 from dotenv import load_dotenv
 import io
 from openai import OpenAI
@@ -13,7 +12,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# NEW: Create OpenAI client for v1
+# OpenAI v1 client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-4o-mini"
 
@@ -24,7 +23,7 @@ def gpt_call(prompt, max_tokens=350):
             messages=[{"role": "user", "content": prompt}],
             max_tokens=max_tokens
         )
-        return resp.choices[0].message.content
+        return resp.choices[0].message.content.strip()
     except Exception as e:
         return f"OpenAI error: {e}"
 
@@ -125,7 +124,6 @@ Treatment Procedures:
 """
 }
 
-# Helper: Parse template text into fields
 def parse_template(template):
     fields = {k: "" for k in [
         "meddiag", "history", "subjective", "meds", "tests", "dme", "plof",
@@ -218,20 +216,12 @@ def generate_diffdx():
         "You are a PT clinical assistant. Provide the single best-fit diagnosis:\n\n"
         f"Subjective:\n{hpi}\n\nPain:\n{pain}\n\nObjective:\n{obj}"
     )
-    response = openai.ChatCompletion.create(
-        model="gpt-4o",
-        messages=[{"role": "system", "content": prompt}],
-        max_tokens=200
-    )
-    diffdx = response.choices[0].message["content"].strip()
+    diffdx = gpt_call(prompt, max_tokens=200)
     return diffdx
- };
- };
- 
+
 @app.route('/generate_summary', methods=['POST'])
 def generate_summary():
     fields = request.json.get('fields', {})
-    # Compose your prompt using your requirements
     prefix = ""
     name = fields.get("name", "Pt Name")
     age = fields.get("age", "X")
@@ -245,26 +235,21 @@ def generate_summary():
     rom = fields.get("rom", "")
     impair = fields.get("impairments", "")
     func = fields.get("functional", "")
-    prognosis = "good potential for improvement"  # You may pull from elsewhere
+    prognosis = "good potential for improvement"
 
     prompt = f"""Generate a concise, 7-8 sentence Physical Therapy assessment summary for PT documentation. Use clinical, professional language and use abbreviations only (e.g., use HEP, ADLs, LBP, STM, TherEx, etc.—do not spell out the abbreviation and do not write both full term and abbreviation). Never use the phrase 'The patient'; instead, use 'Pt' at the start of each relevant sentence. Start with: "{prefix} {name}, a {age} y/o {gender.lower()} with relevant history of {pmh}." 
 Include: 
 1) How/when/why pt was seen (PT initial eval on {today} for {subj}), 
 2) mechanism of injury if available ({moi}),
 3) main differential dx ({dx}),
-4) current impairments (strength: {strength}; ROM: {rom}; balance/mobility: {impairments}), 
+4) current impairments (strength: {strg}; ROM: {rom}; balance/mobility: {impair}), 
 5) functional/activity/participation limitations: {func},
 6) a professional prognosis and 
 7) that skilled PT will help pt return to PLOF.
 Do not use bulleted or numbered lists—just a single, well-written summary paragraph."""
-    response = openai.ChatCompletion.create(
-        model="gpt-4o",
-        messages=[{"role": "system", "content": prompt}],
-        max_tokens=350
-    )
-    summary = response.choices[0].message["content"].strip()
+    summary = gpt_call(prompt, max_tokens=350)
     return summary
-    
+
 @app.route("/generate_goals", methods=["POST"])
 def generate_goals():
     data = request.json
@@ -301,13 +286,9 @@ def export_word():
         doc.add_paragraph(value if value else "", style='Normal')
         doc.add_paragraph('-'*114)
 
-    # Section: Medical Diagnosis
     add_section("Medical Diagnosis:", data.get("meddiag", ""))
-    # Section: Medical History/HNP
     add_section("Medical History/HNP:", data.get("history", ""))
-    # Section: Subjective
     add_section("Subjective:", data.get("subjective", ""))
-    # Section: Pain
     doc.add_paragraph("Pain:", style='Heading2')
     pain_fields = [
         ("Area/Location of Injury", "pain_location"),
@@ -324,13 +305,10 @@ def export_word():
     for label, key in pain_fields:
         doc.add_paragraph(f"{label}: {data.get(key, '')}")
     doc.add_paragraph('-'*114)
-    # Medications, Tests, DME, PLOF
     add_section("Current Medication(s):", data.get("meds", ""))
     add_section("Diagnostic Test(s):", data.get("tests", ""))
     add_section("DME/Assistive Device:", data.get("dme", ""))
     add_section("PLOF:", data.get("plof", ""))
-
-    # Objective
     doc.add_paragraph("Objective:", style='Heading2')
     obj_fields = [
         ("Posture", "posture"),
@@ -344,18 +322,11 @@ def export_word():
     for label, key in obj_fields:
         doc.add_paragraph(f"{label}: {data.get(key, '')}")
     doc.add_paragraph('-'*114)
-
-    # Assessment Summary
     add_section("Assessment Summary:", data.get("summary", ""))
-    # Goals
     add_section("Goals:", data.get("goals", ""))
-    # Frequency
     add_section("Frequency:", data.get("frequency", ""))
-    # Intervention
     add_section("Intervention:", data.get("intervention", ""))
-    # Procedures
     add_section("Treatment Procedures:", data.get("procedures", ""))
-
     buffer = io.BytesIO()
     doc.save(buffer)
     buffer.seek(0)
@@ -393,12 +364,9 @@ def export_pdf():
     c.drawString(40, y, "Physical Therapy Evaluation")
     y -= 30
 
-    # Add all main sections in the same order
     add_section("Medical Diagnosis:", data.get("meddiag", ""))
     add_section("Medical History/HNP:", data.get("history", ""))
     add_section("Subjective:", data.get("subjective", ""))
-
-    # Pain block
     c.setFont("Helvetica-Bold", 13)
     c.drawString(40, y, "Pain:")
     y -= 18
@@ -422,13 +390,10 @@ def export_pdf():
     y -= 8
     c.line(40, y, width - 40, y)
     y -= 16
-
     add_section("Current Medication(s):", data.get("meds", ""))
     add_section("Diagnostic Test(s):", data.get("tests", ""))
     add_section("DME/Assistive Device:", data.get("dme", ""))
     add_section("PLOF:", data.get("plof", ""))
-
-    # Objective block
     c.setFont("Helvetica-Bold", 13)
     c.drawString(40, y, "Objective:")
     y -= 18
@@ -449,13 +414,11 @@ def export_pdf():
     y -= 8
     c.line(40, y, width - 40, y)
     y -= 16
-
     add_section("Assessment Summary:", data.get("summary", ""))
     add_section("Goals:", data.get("goals", ""))
     add_section("Frequency:", data.get("frequency", ""))
     add_section("Intervention:", data.get("intervention", ""))
     add_section("Treatment Procedures:", data.get("procedures", ""))
-
     c.save()
     buffer.seek(0)
     return send_file(
