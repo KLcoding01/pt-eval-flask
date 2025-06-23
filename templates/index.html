@@ -1,204 +1,190 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>PT Eval Builder</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <style>
-        body { background: #f4f4f4; }
-        .container { max-width: 980px; margin: 30px auto; background: #fff; padding: 30px; border-radius: 12px; }
-        .tab-content { margin-top: 18px; }
-        .form-label { font-weight: 500; }
-        .ai-btn { margin-left: 6px; }
-        .ai-btn, .btn { min-width: 100px; }
+        textarea, input { min-width:160px; }
+        label { font-weight: 500; }
+        .ai-btn { min-width: 130px; }
     </style>
 </head>
-<body>
-<div class="container">
-    <h2 class="mb-3">PT Eval Builder</h2>
-    <form id="ptevalform">
-        <div class="d-flex align-items-center mb-3">
-            <label class="me-2 fw-bold">Template:</label>
-            <select name="template" class="form-select w-auto me-2" id="template-select">
-                <option value="LBP Eval Template">LBP Eval Template</option>
-            </select>
-            <button type="button" class="btn btn-outline-primary btn-sm me-2" id="load-template-btn">Load</button>
-            <button type="submit" class="btn btn-success btn-sm">Save/Preview</button>
-            <span id="status-msg" class="ms-3"></span>
+<body class="container p-3">
+
+    <h1 class="mb-3">PT Eval Builder</h1>
+    <div class="mb-3 d-flex align-items-center">
+        <select id="templateSelect" class="form-select w-auto me-2">
+            {% for name in templates %}
+                <option>{{name}}</option>
+            {% endfor %}
+        </select>
+        <button id="loadBtn" class="btn btn-primary me-3">Load Template</button>
+        <span id="status" class="text-success ms-3"></span>
+    </div>
+    <form id="eval-form" autocomplete="off">
+        <div class="row">
+            <div class="col-md-6">
+                <label>Medical Diagnosis:</label>
+                <textarea id="med_diag" class="form-control mb-2"></textarea>
+
+                <label>Medical History/HNP:</label>
+                <textarea id="med_hist" class="form-control mb-2"></textarea>
+
+                <label>Subjective:</label>
+                <textarea id="subj" class="form-control mb-2"></textarea>
+
+                <label>Current Medication(s):</label>
+                <textarea id="meds" class="form-control mb-2"></textarea>
+
+                <label>Diagnostic Test(s):</label>
+                <textarea id="tests" class="form-control mb-2"></textarea>
+
+                <label>DME/Assistive Device:</label>
+                <textarea id="dme" class="form-control mb-2"></textarea>
+
+                <label>PLOF:</label>
+                <textarea id="plof" class="form-control mb-2"></textarea>
+            </div>
+            <div class="col-md-6">
+                <label>Posture:</label>
+                <textarea id="posture" class="form-control mb-2"></textarea>
+
+                <label>ROM:</label>
+                <textarea id="rom" class="form-control mb-2"></textarea>
+
+                <label>Muscle Strength Test:</label>
+                <textarea id="str" class="form-control mb-2"></textarea>
+
+                <label>Palpation:</label>
+                <textarea id="palpation" class="form-control mb-2"></textarea>
+
+                <label>Functional Test(s):</label>
+                <textarea id="func" class="form-control mb-2"></textarea>
+
+                <label>Special Test(s):</label>
+                <textarea id="special" class="form-control mb-2"></textarea>
+
+                <label>Current Functional Mobility Impairment(s):</label>
+                <textarea id="impair" class="form-control mb-2"></textarea>
+            </div>
         </div>
-        <ul class="nav nav-tabs" id="evalTabs" role="tablist">
-            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#patientinfo" type="button" role="tab">Patient Info</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">History</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#pain" type="button" role="tab">Pain</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#objective" type="button" role="tab">Objective</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#diffdx" type="button" role="tab">Diff Dx</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#summary" type="button" role="tab">Assessment Summary</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#plan" type="button" role="tab">Plan</button></li>
-        </ul>
-        <div class="tab-content p-3 bg-light border-bottom border-end border-start">
-            <!-- Patient Info Tab -->
-            <div class="tab-pane fade show active" id="patientinfo" role="tabpanel">
-                <div class="row mb-2">
-                    <div class="col-md-3"><label class="form-label">Patient Name:</label><input type="text" class="form-control" name="name"></div>
-                    <div class="col-md-3"><label class="form-label">Gender:</label>
-                        <select class="form-select" name="gender">
-                            <option>Female</option><option>Male</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3"><label class="form-label">DOB (MM/DD/YYYY):</label><input type="text" class="form-control" name="dob"></div>
-                    <div class="col-md-3"><label class="form-label">Age:</label><input type="text" class="form-control" name="age"></div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4"><label class="form-label">Current Date:</label><input type="text" class="form-control" name="currentdate" value=""></div>
-                </div>
+        <hr>
+        <div class="row">
+            <div class="col-md-4">
+                <label>Pain - Area/Location of Injury:</label>
+                <input id="pain_area" class="form-control mb-2">
+                <label>Pain - Onset/Exacerbation Date:</label>
+                <input id="pain_onset" class="form-control mb-2">
+                <label>Pain - Condition of Injury:</label>
+                <input id="pain_cond" class="form-control mb-2">
+                <label>Pain - Mechanism of Injury:</label>
+                <input id="pain_mech" class="form-control mb-2">
             </div>
-            <!-- History Tab -->
-            <div class="tab-pane fade" id="history" role="tabpanel">
-                <div class="mb-2"><label class="form-label">Medical Diagnosis:</label>
-                    <textarea class="form-control" rows="2" name="meddiag"></textarea></div>
-                <div class="mb-2"><label class="form-label">Medical History/HNP:</label>
-                    <textarea class="form-control" rows="2" name="history"></textarea></div>
-                <div class="mb-2"><label class="form-label">Subjective (HPI):</label>
-                    <textarea class="form-control" rows="3" name="subjective"></textarea></div>
-                <div class="mb-2"><label class="form-label">Current Medication(s):</label>
-                    <textarea class="form-control" rows="2" name="meds"></textarea></div>
-                <div class="mb-2"><label class="form-label">Diagnostic Test(s):</label>
-                    <textarea class="form-control" rows="2" name="tests"></textarea></div>
-                <div class="mb-2"><label class="form-label">DME/Assistive Device:</label>
-                    <textarea class="form-control" rows="2" name="dme"></textarea></div>
-                <div class="mb-2"><label class="form-label">PLOF:</label>
-                    <textarea class="form-control" rows="2" name="plof"></textarea></div>
+            <div class="col-md-4">
+                <label>Pain - Rating (P/B/W):</label>
+                <input id="pain_rating" class="form-control mb-2">
+                <label>Pain - Frequency:</label>
+                <input id="pain_freq" class="form-control mb-2">
+                <label>Pain - Description:</label>
+                <input id="pain_desc" class="form-control mb-2">
             </div>
-            <!-- Pain Tab -->
-            <div class="tab-pane fade" id="pain" role="tabpanel">
-                <div class="row">
-                    <div class="col-md-4"><label class="form-label">Area/Location of Injury</label><input class="form-control" name="pain_location"></div>
-                    <div class="col-md-4"><label class="form-label">Onset/Exacerbation Date</label><input class="form-control" name="pain_onset"></div>
-                    <div class="col-md-4"><label class="form-label">Condition of Injury</label><input class="form-control" name="pain_condition"></div>
-                </div>
-                <div class="row mt-2">
-                    <div class="col-md-4"><label class="form-label">Mechanism of Injury</label><input class="form-control" name="pain_mechanism"></div>
-                    <div class="col-md-4"><label class="form-label">Pain Rating (P/B/W)</label><input class="form-control" name="pain_rating"></div>
-                    <div class="col-md-4"><label class="form-label">Pain Frequency</label><input class="form-control" name="pain_frequency"></div>
-                </div>
-                <div class="row mt-2">
-                    <div class="col-md-4"><label class="form-label">Description</label><input class="form-control" name="pain_description"></div>
-                    <div class="col-md-4"><label class="form-label">Aggravating Factor</label><input class="form-control" name="pain_aggravating"></div>
-                    <div class="col-md-4"><label class="form-label">Relieved By</label><input class="form-control" name="pain_relieved"></div>
-                </div>
-                <div class="row mt-2">
-                    <div class="col-md-4"><label class="form-label">Interferes With</label><input class="form-control" name="pain_interferes"></div>
-                </div>
+            <div class="col-md-4">
+                <label>Pain - Aggravating Factor:</label>
+                <input id="pain_aggrav" class="form-control mb-2">
+                <label>Pain - Relieved By:</label>
+                <input id="pain_relieve" class="form-control mb-2">
+                <label>Pain - Interferes With:</label>
+                <input id="pain_interfere" class="form-control mb-2">
             </div>
-            <!-- Objective Tab -->
-            <div class="tab-pane fade" id="objective" role="tabpanel">
-                <div class="mb-2"><label class="form-label">Posture:</label>
-                    <textarea class="form-control" rows="2" name="posture"></textarea></div>
-                <div class="mb-2"><label class="form-label">ROM:</label>
-                    <textarea class="form-control" rows="2" name="rom"></textarea></div>
-                <div class="mb-2"><label class="form-label">Muscle Strength Test:</label>
-                    <textarea class="form-control" rows="2" name="strength"></textarea></div>
-                <div class="mb-2"><label class="form-label">Palpation:</label>
-                    <textarea class="form-control" rows="2" name="palpation"></textarea></div>
-                <div class="mb-2"><label class="form-label">Functional Test(s):</label>
-                    <textarea class="form-control" rows="2" name="functional"></textarea></div>
-                <div class="mb-2"><label class="form-label">Special Test(s):</label>
-                    <textarea class="form-control" rows="2" name="special"></textarea></div>
-                <div class="mb-2"><label class="form-label">Current Functional Mobility Impairment(s):</label>
-                    <textarea class="form-control" rows="2" name="impairments"></textarea></div>
+        </div>
+        <hr>
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label>Best-Fit Diagnosis (Diff Dx):</label>
+                <textarea id="diffdx" class="form-control"></textarea>
+                <button id="diffdxBtn" type="button" class="btn btn-secondary ai-btn mt-1">AI Generate Diff Dx</button>
             </div>
-            <!-- Diff Dx Tab -->
-            <div class="tab-pane fade" id="diffdx" role="tabpanel">
-                <div class="mb-2 d-flex align-items-center">
-                    <label class="form-label mb-0 me-2">Best-Fit Diagnosis</label>
-                    <button type="button" class="btn btn-outline-success btn-sm ai-btn" id="ai-generate-diffdx">AI Generate</button>
-                </div>
-                <textarea class="form-control" rows="2" name="diffdx" id="diffdx-text"></textarea>
+            <div class="col-md-4">
+                <label>Assessment Summary:</label>
+                <textarea id="summary" class="form-control"></textarea>
+                <button id="summaryBtn" type="button" class="btn btn-secondary ai-btn mt-1">AI Generate Summary</button>
             </div>
-            <!-- Assessment Summary Tab -->
-            <div class="tab-pane fade" id="summary" role="tabpanel">
-                <div class="mb-2 d-flex align-items-center">
-                    <label class="form-label mb-0 me-2">Assessment Summary:</label>
-                    <button type="button" class="btn btn-outline-success btn-sm ai-btn" id="ai-generate-summary">AI Generate</button>
-                </div>
-                <textarea class="form-control" rows="4" name="summary" id="summary-text"></textarea>
-            </div>
-            <!-- Plan Tab -->
-            <div class="tab-pane fade" id="plan" role="tabpanel">
-                <div class="mb-2 d-flex align-items-center">
-                    <label class="form-label mb-0 me-2">Goals:</label>
-                    <button type="button" class="btn btn-outline-success btn-sm ai-btn" id="ai-generate-goals">AI Generate</button>
-                </div>
-                <textarea class="form-control" rows="6" name="goals" id="goals-text"></textarea>
-                <div class="mb-2 mt-3"><label class="form-label">Frequency/Duration:</label>
-                    <input class="form-control" name="frequency"></div>
-                <div class="mb-2"><label class="form-label">Intervention:</label>
-                    <textarea class="form-control" rows="2" name="intervention"></textarea></div>
-                <div class="mb-2"><label class="form-label">Treatment Procedures:</label>
-                    <textarea class="form-control" rows="2" name="procedures"></textarea></div>
+            <div class="col-md-4">
+                <label>Goals:</label>
+                <textarea id="goals" class="form-control"></textarea>
+                <button id="goalsBtn" type="button" class="btn btn-secondary ai-btn mt-1">AI Generate Goals</button>
             </div>
         </div>
     </form>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-function getAllFields() {
-    const data = {};
-    document.querySelectorAll('input, textarea, select').forEach(el => {
-        if (el.name) data[el.name] = el.value;
-    });
-    return data;
-}
-function setStatus(msg, color="green") {
-    document.getElementById('status-msg').textContent = msg;
-    document.getElementById('status-msg').style.color = color;
-}
-// AI Generate Diff Dx
-document.getElementById('ai-generate-diffdx').onclick = function() {
-    setStatus("Generating Diff Dx...", "orange");
-    fetch('/generate_diffdx', {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({fields: getAllFields()})
-    })
-    .then(r => r.text())
-    .then(t => {
-        document.getElementById('diffdx-text').value = t;
-        setStatus("Diff Dx generated!", "green");
-    }).catch(e => setStatus("AI error", "red"));
-};
-// AI Generate Assessment Summary
-document.getElementById('ai-generate-summary').onclick = function() {
-    setStatus("Generating summary...", "orange");
-    fetch('/generate_summary', {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({fields: getAllFields()})
-    })
-    .then(r => r.text())
-    .then(t => {
-        document.getElementById('summary-text').value = t;
-        setStatus("Assessment summary generated!", "green");
-    }).catch(e => setStatus("AI error", "red"));
-};
-// AI Generate Goals
-document.getElementById('ai-generate-goals').onclick = function() {
-    setStatus("Generating goals...", "orange");
-    fetch('/generate_goals', {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({fields: getAllFields()})
-    })
-    .then(r => r.text())
-    .then(t => {
-        document.getElementById('goals-text').value = t;
-        setStatus("Goals generated!", "green");
-    }).catch(e => setStatus("AI error", "red"));
-};
-// Load Template (stub: loads default text, can be expanded)
-document.getElementById('load-template-btn').onclick = function() {
-    // In real use, parse and populate fields!
-    setStatus("Loaded template!", "green");
-};
-</script>
+
+    <script>
+    function getAllFields() {
+        let ids = [
+            'med_diag','med_hist','subj','meds','tests','dme','plof','posture','rom','str','palpation','func',
+            'special','impair','goals','freq','interv','proc','pain_area','pain_onset','pain_cond','pain_mech',
+            'pain_rating','pain_freq','pain_desc','pain_aggrav','pain_relieve','pain_interfere','diffdx','summary'
+        ];
+        let fields = {};
+        ids.forEach(id=>{
+            let el = document.getElementById(id);
+            fields[id] = el ? el.value : "";
+        });
+        return fields;
+    }
+    function setStatus(msg, color) {
+        let s = document.getElementById('status');
+        s.innerText = msg; s.className = color === "green" ? "text-success" : "text-danger";
+    }
+    document.getElementById('loadBtn').onclick = function() {
+        fetch("/load_template", {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({template: document.getElementById('templateSelect').value})
+        })
+        .then(r=>r.json()).then(fields=>{
+            for(const k in fields){
+                if(document.getElementById(k)){
+                    document.getElementById(k).value = fields[k];
+                }
+            }
+            setStatus("Template loaded!", "green");
+        }).catch(()=>setStatus("Load error", "red"));
+    };
+    document.getElementById('diffdxBtn').onclick = function() {
+        setStatus("Generating Diff Dx...", "green");
+        fetch("/generate_diffdx", {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({fields:getAllFields()})
+        }).then(r=>r.text()).then(t=>{
+            document.getElementById('diffdx').value = t;
+            setStatus("Diff Dx generated!", "green");
+        }).catch(()=>setStatus("AI error", "red"));
+    };
+    document.getElementById('summaryBtn').onclick = function() {
+        setStatus("Generating summary...", "green");
+        fetch("/generate_summary", {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({fields:getAllFields()})
+        }).then(r=>r.text()).then(t=>{
+            document.getElementById('summary').value = t;
+            setStatus("Summary generated!", "green");
+        }).catch(()=>setStatus("AI error", "red"));
+    };
+    document.getElementById('goalsBtn').onclick = function() {
+        setStatus("Generating goals...", "green");
+        fetch("/generate_goals", {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({fields:getAllFields()})
+        }).then(r=>r.text()).then(t=>{
+            document.getElementById('goals').value = t;
+            setStatus("Goals generated!", "green");
+        }).catch(()=>setStatus("AI error", "red"));
+    };
+    </script>
 </body>
 </html>

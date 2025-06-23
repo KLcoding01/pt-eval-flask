@@ -173,6 +173,14 @@ def gpt_call(prompt, max_tokens=350):
     except Exception as e:
         return f"OpenAI error: {e}"
 
+@app.route("/load_template", methods=["POST"])
+def load_template():
+    data = request.json
+    name = data.get("template", "LBP Eval Template")
+    template = TEMPLATES.get(name, "")
+    fields = parse_template(template)
+    return jsonify(fields)
+    
 @app.route("/generate_summary", methods=["POST"])
 def generate_summary():
     data = request.json
