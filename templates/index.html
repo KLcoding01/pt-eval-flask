@@ -143,23 +143,19 @@
         }
       });
     };
-
-    // AI Generate handlers
     document.getElementById('ai-generate-diffdx').onclick = () => {
-      setStatus("Generating Diff Dx…","orange");
-      fetch('/generate_diffdx', {
+       setStatus("Generating Diff Dx…","orange");
+       fetch('/generate_diffdx', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ fields: getAllFields() })
-      })
-      .then(r => r.text())
-      .then(t => {
-        // See what you actually received:
-        console.log("DIFFDX RESULT:", t);
-        // Set text and handle literal "\n" as real line breaks:
+    })
+       .then(r => r.text())
+       .then(t => {
+        console.log("DIFFDX RAW:", t); // You should see your AI text here!
         document.getElementById('diffdx').value = t.replace(/\\n/g, '\n');
         setStatus("Diff Dx generated!","green");
-      }).catch(()=> setStatus("AI error","red"));
+       }).catch(()=> setStatus("AI error","red"));
     };
     document.getElementById('ai-generate-summary').onclick = () => {
       setStatus("Generating summary…","orange");
