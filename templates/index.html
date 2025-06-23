@@ -205,12 +205,10 @@ document.getElementById('load-template-btn').onclick = function() {
     .then(resp => resp.json())
     .then(data => {
         for (const [k, v] of Object.entries(data)) {
-            // Try name if no id
             let fld = document.getElementById(k) || document.querySelector(`[name='${k}']`);
             if (fld) fld.value = v || "";
         }
     });
-};
 };
 </script>
 </body>
