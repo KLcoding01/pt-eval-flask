@@ -1,8 +1,11 @@
 import os
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, send_file, render_template, jsonify
+from docx import Document
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 from datetime import date
 from dotenv import load_dotenv
-
+import io
 from openai import OpenAI
 
 load_dotenv()
@@ -250,7 +253,6 @@ def export_word():
     data = request.get_json()
     doc = Document()
     doc.add_heading("PT Evaluation", 0)
-    # Use a table for better formatting
     table = doc.add_table(rows=1, cols=2)
     hdr_cells = table.rows[0].cells
     hdr_cells[0].text = 'Field'
@@ -286,7 +288,7 @@ def export_pdf():
             c.showPage()
             y = height - 40
             c.setFont("Helvetica", 12)
-        c.drawString(40, y, text[:110])  # avoid overly long lines
+        c.drawString(40, y, text[:110])
         y -= 18
     c.save()
     buffer.seek(0)
@@ -296,43 +298,6 @@ def export_pdf():
         download_name="PT_Eval.pdf",
         mimetype="application/pdf"
     )
-document.getElementById('save-word-btn').onclick = function() {
-    fetch('/export_word', {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(getAllFields())
-    })
-    .then(resp => resp.blob())
-    .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "PT_Eval.docx";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-    });
-};
 
-document.getElementById('save-pdf-btn').onclick = function() {
-    fetch('/export_pdf', {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(getAllFields())
-    })
-    .then(resp => resp.blob())
-    .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "PT_Eval.pdf";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-    });
-};
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
