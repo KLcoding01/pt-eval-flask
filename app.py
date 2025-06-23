@@ -245,5 +245,94 @@ Functional Limitations: {fields.get('functional','')}
     goals = gpt_call(prompt, max_tokens=350)
     return goals
 
+@app.route("/export_word", methods=["POST"])
+def export_word():
+    data = request.get_json()
+    doc = Document()
+    doc.add_heading("PT Evaluation", 0)
+    # Use a table for better formatting
+    table = doc.add_table(rows=1, cols=2)
+    hdr_cells = table.rows[0].cells
+    hdr_cells[0].text = 'Field'
+    hdr_cells[1].text = 'Value'
+    for k, v in data.items():
+        row_cells = table.add_row().cells
+        row_cells[0].text = str(k)
+        row_cells[1].text = str(v)
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="PT_Eval.docx",
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+
+@app.route("/export_pdf", methods=["POST"])
+def export_pdf():
+    data = request.get_json()
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    y = height - 40
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(40, y, "PT Evaluation")
+    c.setFont("Helvetica", 12)
+    y -= 30
+    for k, v in data.items():
+        text = f"{k}: {v}"
+        if y < 50:
+            c.showPage()
+            y = height - 40
+            c.setFont("Helvetica", 12)
+        c.drawString(40, y, text[:110])  # avoid overly long lines
+        y -= 18
+    c.save()
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="PT_Eval.pdf",
+        mimetype="application/pdf"
+    )
+document.getElementById('save-word-btn').onclick = function() {
+    fetch('/export_word', {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(getAllFields())
+    })
+    .then(resp => resp.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "PT_Eval.docx";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    });
+};
+
+document.getElementById('save-pdf-btn').onclick = function() {
+    fetch('/export_pdf', {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(getAllFields())
+    })
+    .then(resp => resp.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "PT_Eval.pdf";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    });
+};
+
 if __name__ == "__main__":
     app.run(debug=True)
