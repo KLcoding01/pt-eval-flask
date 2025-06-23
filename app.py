@@ -223,7 +223,7 @@ def generate_diffdx():
             max_tokens=200
         )
         diffdx = resp.choices[0].message.content.strip()
-        return diffdx, 200  # <- returns plain text, status code 200
+        return diffdx, 200  # Always defined here!
     except Exception as e:
         print("AI error:", e)
         return "Error: " + str(e), 500
