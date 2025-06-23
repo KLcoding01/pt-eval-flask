@@ -1,4 +1,3 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -159,19 +158,7 @@
         setStatus("Diff Dx generated!","green");
       }).catch(()=> setStatus("AI error","red"));
     };
-    document.getElementById('ai-generate-diffdx').onclick = () => {
-        setStatus("Generating Diff Dx…","orange");
-        fetch('/generate_diffdx', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ fields: getAllFields() })
-        })
-        .then(r=>r.text())
-        .then(t=>{
-          document.getElementById('diffdx').value = t;  // <-- CORRECT LINE
-          setStatus("Diff Dx generated!","green");
-        }).catch(()=> setStatus("AI error","red"));
-      };
+
     document.getElementById('ai-generate-summary').onclick = () => {
       setStatus("Generating summary…","orange");
       fetch('/generate_summary', {
@@ -186,39 +173,53 @@
       }).catch(()=> setStatus("AI error","red"));
     };
 
+    document.getElementById('ai-generate-goals').onclick = () => {
+      setStatus("Generating goals…","orange");
+      fetch('/generate_goals', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ fields: getAllFields() })
+      })
+      .then(r=>r.text())
+      .then(t=>{
+        document.getElementById('goals-text').value = t;
+        setStatus("Goals generated!","green");
+      }).catch(()=> setStatus("AI error","red"));
+    };
+
     // Export Word
-    document.getElementById('save-word-btn').onclick = function() {
-      setStatus("Generating Word doc...","orange");
+    document.getElementById('save-word-btn').onclick = () => {
+      setStatus("Exporting Word...","orange");
       fetch('/export_word', {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
         body: JSON.stringify(getAllFields())
       })
-      .then(resp => resp.blob())
-      .then(blob => {
+      .then(r=>r.blob())
+      .then(blob=>{
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
+        const a = document.createElement('a');
         a.href = url;
         a.download = "PT_Eval.docx";
         document.body.appendChild(a);
         a.click();
         a.remove();
-        setStatus("Word document downloaded!","green");
+        setStatus("Word downloaded!","green");
       });
     };
 
     // Export PDF
-    document.getElementById('save-pdf-btn').onclick = function() {
-      setStatus("Generating PDF...","orange");
+    document.getElementById('save-pdf-btn').onclick = () => {
+      setStatus("Exporting PDF...","orange");
       fetch('/export_pdf', {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
         body: JSON.stringify(getAllFields())
       })
-      .then(resp => resp.blob())
-      .then(blob => {
+      .then(r=>r.blob())
+      .then(blob=>{
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
+        const a = document.createElement('a');
         a.href = url;
         a.download = "PT_Eval.pdf";
         document.body.appendChild(a);

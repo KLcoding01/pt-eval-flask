@@ -237,56 +237,78 @@ def generate_summary():
         "Do not use bulleted or numbered lists—just a single, well-written summary paragraph."
     )
     return gpt_call(prompt, max_tokens=350)
+
+@app.route("/generate_goals", methods=["POST"])
+def generate_goals():
+    f = request.json.get("fields", {})
+    prompt = (
+        "You are a clinical assistant helping a PT write documentation. Using the following information, generate short-term and long-term PT goals in this format (adapt based on the summary):\n"
+        "Short-Term Goals (1–12 visits):\n"
+        "1. Pt will report a reduction in low back pain to ≤1/10 to allow safe and comfortable participation in functional activities.\n"
+        "2. Pt will demonstrate a ≥10% improvement in trunk AROM to enhance mobility and reduce risk of reinjury during daily tasks.\n"
+        "3. Pt will improve gross LE strength by at least 0.5 muscle grade to enhance safety during ADLs and minimize pain/injury risk.\n"
+        "4. Pt will self-report ≥50% improvement in functional limitations related to ADLs.\n"
+        "Long-Term Goals (13–25 visits):\n"
+        "1. Pt will demonstrate B LE strength of ≥4/5 to independently and safely perform all ADLs.\n"
+        "2. Pt will complete ≥14 repetitions on the 30-second chair sit-to-stand test to reduce fall risk.\n"
+        "3. Pt will tolerate ≥30 minutes of activity to safely resume household tasks without limitation.\n"
+        "4. Pt will demonstrate independence with HEP, using proper body mechanics and strength to support safe return to ADLs without difficulty.\n\n"
+        f"Summary: {f.get('summary','')}\nDiagnosis: {f.get('diffdx','')}\nImpairments: {f.get('impairments','')}\nFunctional Limitations: {f.get('functional','')}"
+    )
+    return gpt_call(prompt, max_tokens=350)
+
 @app.route("/export_word", methods=["POST"])
 def export_word():
     data = request.get_json()
     doc = Document()
-    doc.add_heading("Physical Therapy Evaluation", 0)
-    def add_section(title, value):
-        doc.add_paragraph(title, style='Heading2')
-        doc.add_paragraph(value if value else "", style='Normal')
-        doc.add_paragraph('-'*114)
+
+    def add_section(title, content):
+        doc.add_paragraph(title)
+        doc.add_paragraph(content.strip() if content else "")
+
     add_section("Medical Diagnosis:", data.get("meddiag", ""))
     add_section("Medical History/HNP:", data.get("history", ""))
     add_section("Subjective:", data.get("subjective", ""))
-    doc.add_paragraph("Pain:", style='Heading2')
-    pain_fields = [
-        ("Area/Location of Injury", "pain_location"),
-        ("Onset/Exacerbation Date", "pain_onset"),
-        ("Condition of Injury", "pain_condition"),
-        ("Mechanism of Injury", "pain_mechanism"),
-        ("Pain Rating (Present/Best/Worst)", "pain_rating"),
-        ("Frequency", "pain_frequency"),
-        ("Description", "pain_description"),
-        ("Aggravating Factor", "pain_aggravating"),
-        ("Relieved By", "pain_relieved"),
-        ("Interferes With", "pain_interferes"),
+    pain_lines = [
+        f"Area/Location of Injury: {data.get('pain_location','')}",
+        f"Onset/Exacerbation Date: {data.get('pain_onset','')}",
+        f"Condition of Injury: {data.get('pain_condition','')}",
+        f"Mechanism of Injury: {data.get('pain_mechanism','')}",
+        f"Pain Rating (Present/Best/Worst): {data.get('pain_rating','')}",
+        f"Frequency: {data.get('pain_frequency','')}",
+        f"Description: {data.get('pain_description','')}",
+        f"Aggravating Factor: {data.get('pain_aggravating','')}",
+        f"Relieved By: {data.get('pain_relieved','')}",
+        f"Interferes With: {data.get('pain_interferes','')}",
+        "",
+        f"Current Medication(s): {data.get('meds','')}",
+        f"Diagnostic Test(s): {data.get('tests','')}",
+        f"DME/Assistive Device: {data.get('dme','')}",
+        f"PLOF: {data.get('plof','')}",
     ]
-    for label, key in pain_fields:
-        doc.add_paragraph(f"{label}: {data.get(key, '')}")
-    doc.add_paragraph('-'*114)
-    add_section("Current Medication(s):", data.get("meds", ""))
-    add_section("Diagnostic Test(s):", data.get("tests", ""))
-    add_section("DME/Assistive Device:", data.get("dme", ""))
-    add_section("PLOF:", data.get("plof", ""))
-    doc.add_paragraph("Objective:", style='Heading2')
-    obj_fields = [
-        ("Posture", "posture"),
-        ("ROM", "rom"),
-        ("Muscle Strength Test", "strength"),
-        ("Palpation", "palpation"),
-        ("Functional Test(s)", "functional"),
-        ("Special Test(s)", "special"),
-        ("Current Functional Mobility Impairment(s)", "impairments"),
+    add_section("Pain:", "\n".join(pain_lines))
+    obj_lines = [
+        f"Posture: {data.get('posture','')}",
+        "",
+        f"ROM: \n{data.get('rom','')}",
+        "",
+        f"Muscle Strength Test: \n{data.get('strength','')}",
+        "",
+        f"Palpation: \n{data.get('palpation','')}",
+        "",
+        f"Functional Test(s): \n{data.get('functional','')}",
+        "",
+        f"Special Test(s): \n{data.get('special','')}",
+        "",
+        f"Current Functional Mobility Impairment(s): \n{data.get('impairments','')}",
     ]
-    for label, key in obj_fields:
-        doc.add_paragraph(f"{label}: {data.get(key, '')}")
-    doc.add_paragraph('-'*114)
+    add_section("Objective:", "\n".join(obj_lines))
     add_section("Assessment Summary:", data.get("summary", ""))
     add_section("Goals:", data.get("goals", ""))
     add_section("Frequency:", data.get("frequency", ""))
     add_section("Intervention:", data.get("intervention", ""))
     add_section("Treatment Procedures:", data.get("procedures", ""))
+
     buffer = io.BytesIO()
     doc.save(buffer)
     buffer.seek(0)
@@ -304,6 +326,7 @@ def export_pdf():
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
     y = height - 40
+
     def add_section(title, value):
         nonlocal y
         c.setFont("Helvetica-Bold", 13)
@@ -318,64 +341,54 @@ def export_pdf():
         c.setLineWidth(0.5)
         c.line(40, y, width - 40, y)
         y -= 16
+
     c.setFont("Helvetica-Bold", 16)
     c.drawString(40, y, "Physical Therapy Evaluation")
     y -= 30
+
     add_section("Medical Diagnosis:", data.get("meddiag", ""))
     add_section("Medical History/HNP:", data.get("history", ""))
     add_section("Subjective:", data.get("subjective", ""))
-    c.setFont("Helvetica-Bold", 13)
-    c.drawString(40, y, "Pain:")
-    y -= 18
-    c.setFont("Helvetica", 11)
-    pain_fields = [
-        ("Area/Location of Injury", "pain_location"),
-        ("Onset/Exacerbation Date", "pain_onset"),
-        ("Condition of Injury", "pain_condition"),
-        ("Mechanism of Injury", "pain_mechanism"),
-        ("Pain Rating (Present/Best/Worst)", "pain_rating"),
-        ("Frequency", "pain_frequency"),
-        ("Description", "pain_description"),
-        ("Aggravating Factor", "pain_aggravating"),
-        ("Relieved By", "pain_relieved"),
-        ("Interferes With", "pain_interferes"),
+    pain_lines = [
+        f"Area/Location of Injury: {data.get('pain_location','')}",
+        f"Onset/Exacerbation Date: {data.get('pain_onset','')}",
+        f"Condition of Injury: {data.get('pain_condition','')}",
+        f"Mechanism of Injury: {data.get('pain_mechanism','')}",
+        f"Pain Rating (Present/Best/Worst): {data.get('pain_rating','')}",
+        f"Frequency: {data.get('pain_frequency','')}",
+        f"Description: {data.get('pain_description','')}",
+        f"Aggravating Factor: {data.get('pain_aggravating','')}",
+        f"Relieved By: {data.get('pain_relieved','')}",
+        f"Interferes With: {data.get('pain_interferes','')}",
+        "",
+        f"Current Medication(s): {data.get('meds','')}",
+        f"Diagnostic Test(s): {data.get('tests','')}",
+        f"DME/Assistive Device: {data.get('dme','')}",
+        f"PLOF: {data.get('plof','')}",
     ]
-    for label, key in pain_fields:
-        c.drawString(48, y, f"{label}: {data.get(key, '')}")
-        y -= 14
-        if y < 60: c.showPage(); y = height - 40
-    y -= 8
-    c.line(40, y, width - 40, y)
-    y -= 16
-    add_section("Current Medication(s):", data.get("meds", ""))
-    add_section("Diagnostic Test(s):", data.get("tests", ""))
-    add_section("DME/Assistive Device:", data.get("dme", ""))
-    add_section("PLOF:", data.get("plof", ""))
-    c.setFont("Helvetica-Bold", 13)
-    c.drawString(40, y, "Objective:")
-    y -= 18
-    c.setFont("Helvetica", 11)
-    obj_fields = [
-        ("Posture", "posture"),
-        ("ROM", "rom"),
-        ("Muscle Strength Test", "strength"),
-        ("Palpation", "palpation"),
-        ("Functional Test(s)", "functional"),
-        ("Special Test(s)", "special"),
-        ("Current Functional Mobility Impairment(s)", "impairments"),
+    add_section("Pain:", "\n".join(pain_lines))
+    obj_lines = [
+        f"Posture: {data.get('posture','')}",
+        "",
+        f"ROM: \n{data.get('rom','')}",
+        "",
+        f"Muscle Strength Test: \n{data.get('strength','')}",
+        "",
+        f"Palpation: \n{data.get('palpation','')}",
+        "",
+        f"Functional Test(s): \n{data.get('functional','')}",
+        "",
+        f"Special Test(s): \n{data.get('special','')}",
+        "",
+        f"Current Functional Mobility Impairment(s): \n{data.get('impairments','')}",
     ]
-    for label, key in obj_fields:
-        c.drawString(48, y, f"{label}: {data.get(key, '')}")
-        y -= 14
-        if y < 60: c.showPage(); y = height - 40
-    y -= 8
-    c.line(40, y, width - 40, y)
-    y -= 16
+    add_section("Objective:", "\n".join(obj_lines))
     add_section("Assessment Summary:", data.get("summary", ""))
     add_section("Goals:", data.get("goals", ""))
     add_section("Frequency:", data.get("frequency", ""))
     add_section("Intervention:", data.get("intervention", ""))
     add_section("Treatment Procedures:", data.get("procedures", ""))
+
     c.save()
     buffer.seek(0)
     return send_file(
