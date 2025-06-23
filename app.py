@@ -1,18 +1,17 @@
 import os
-from flask import Flask, request, send_file, render_template, jsonify
+import io
+from flask import Flask, request, render_template, jsonify, send_file
+from dotenv import load_dotenv
+from openai import OpenAI
 from docx import Document
-from docx.shared import Pt
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-from dotenv import load_dotenv
-import io
-from openai import OpenAI
 
 load_dotenv()
 
 app = Flask(__name__)
 
-# OpenAI v1 client
+# OpenAI client (v1)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-4o-mini"
 
@@ -27,6 +26,7 @@ def gpt_call(prompt, max_tokens=350):
     except Exception as e:
         return f"OpenAI error: {e}"
 
+### TEMPLATES ###
 TEMPLATES = {
     "LBP Eval Template": """Medical Diagnosis:
 Medical History/HNP:
@@ -126,12 +126,12 @@ Treatment Procedures:
 
 def parse_template(template):
     fields = {k: "" for k in [
-        "meddiag", "history", "subjective", "meds", "tests", "dme", "plof",
-        "posture", "rom", "strength", "palpation", "functional", "special",
-        "impairments", "goals", "frequency", "intervention", "procedures",
-        "pain_location", "pain_onset", "pain_condition", "pain_mechanism",
-        "pain_rating", "pain_frequency", "pain_description", "pain_aggravating",
-        "pain_relieved", "pain_interferes"
+        "meddiag","history","subjective","meds","tests","dme","plof",
+        "posture","rom","strength","palpation","functional","special",
+        "impairments","goals","frequency","intervention","procedures",
+        "pain_location","pain_onset","pain_condition","pain_mechanism",
+        "pain_rating","pain_frequency","pain_description",
+        "pain_aggravating","pain_relieved","pain_interferes"
     ]}
     key_map = {
         "Medical Diagnosis": "meddiag",
@@ -167,66 +167,59 @@ def parse_template(template):
     curr = None
     for line in template.splitlines():
         line = line.strip()
-        for k, f in key_map.items():
-            if line.startswith(k+":"):
+        for k,f in key_map.items():
+            if line.startswith(k + ":"):
                 curr = f
                 fields[f] = line.split(":",1)[1].strip()
                 break
         else:
-            if curr and line: fields[curr] += "\n"+line
+            if curr and line:
+                fields[curr] += "\n" + line
     return fields
+
+### Routes ###
 
 @app.route("/", methods=["GET"])
 def index():
-    return render_template("index.html", templates=TEMPLATES)
+    return render_template("index.html", templates=list(TEMPLATES.keys()))
 
 @app.route("/load_template", methods=["POST"])
 def load_template():
-    data = request.json
-    name = data.get("template", "LBP Eval Template")
-    template = TEMPLATES.get(name, "")
-    fields = parse_template(template)
+    tmpl = request.json.get("template", "")
+    template_text = TEMPLATES.get(tmpl, "")
+    fields = parse_template(template_text)
     return jsonify(fields)
 
 @app.route("/generate_diffdx", methods=["POST"])
 def generate_diffdx():
-    fields = request.json.get('fields', {})
+    fields = request.json.get("fields", {})
     hpi  = fields.get("subjective", "")
-    pain = "; ".join([
+    pain = "; ".join(
         f"{label}: {fields.get(key, '')}"
-        for label, key in [
-            ("Area/Location", "pain_location"),
-            ("Onset", "pain_onset"),
-            ("Condition", "pain_condition"),
-            ("Mechanism", "pain_mechanism"),
-            ("Rating", "pain_rating"),
-            ("Frequency", "pain_frequency"),
-            ("Description", "pain_description"),
-            ("Aggravating", "pain_aggravating"),
-            ("Relieved", "pain_relieved"),
-            ("Interferes", "pain_interferes"),
+        for label,key in [
+            ("Area/Location","pain_location"),
+            ("Onset","pain_onset"),
+            ("Condition","pain_condition"),
+            ("Mechanism","pain_mechanism"),
+            ("Rating","pain_rating"),
+            ("Frequency","pain_frequency"),
+            ("Description","pain_description"),
+            ("Aggravating","pain_aggravating"),
+            ("Relieved","pain_relieved"),
+            ("Interferes","pain_interferes")
         ]
-    ])
+    )
     obj = (
-        f"Posture: {fields.get('posture', '')}\n"
-        f"ROM: {fields.get('rom', '')}\n"
-        f"Strength: {fields.get('strength', '')}\n"
+        f"Posture: {fields.get('posture','')}\n"
+        f"ROM: {fields.get('rom','')}\n"
+        f"Strength: {fields.get('strength','')}\n"
     )
     prompt = (
         "You are a PT clinical assistant. Provide the single best-fit diagnosis:\n\n"
         f"Subjective:\n{hpi}\n\nPain:\n{pain}\n\nObjective:\n{obj}"
     )
-    try:
-        resp = client.chat.completions.create(
-            model=MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=200
-        )
-        diffdx = resp.choices[0].message.content.strip()
-        return diffdx, 200  # Always defined here!
-    except Exception as e:
-        print("AI error:", e)
-        return "Error: " + str(e), 500
+    diffdx = gpt_call(prompt, max_tokens=200)
+    return diffdx, 200
 
 @app.route('/generate_summary', methods=['POST'])
 def generate_summary():
