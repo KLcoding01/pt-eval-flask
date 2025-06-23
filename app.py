@@ -1,16 +1,16 @@
 import os
 import io
-from flask import Flask, request, render_template, jsonify, send_file
+from flask import Flask, request, jsonify, render_template, send_file
 from dotenv import load_dotenv
 from openai import OpenAI
 from docx import Document
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from datetime import date
 
 load_dotenv()
 app = Flask(__name__)
 
-# OpenAI client (v1)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-4o-mini"
 
@@ -25,7 +25,6 @@ def gpt_call(prompt, max_tokens=350):
     except Exception as e:
         return f"OpenAI error: {e}"
 
-### TEMPLATES ###
 TEMPLATES = {
     "LBP Eval Template": """Medical Diagnosis:
 Medical History/HNP:
@@ -60,7 +59,7 @@ ROM:
     Trunk Rotation Left: 50% limited
     Trunk Rotation Right: 50% limited
 
-Muscle Strength Test:
+Muscle Strength Test:          
      Gross Core Strength:        3/5
      Gross Hip Strength:    L/R  3/5; 3/5
      Gross Knee Strength:   L/R  3/5; 3/5
@@ -124,19 +123,10 @@ Treatment Procedures:
 }
 
 def parse_template(template):
-    fields = {k: "" for k in [
-        "meddiag","history","subjective","meds","tests","dme","plof",
-        "posture","rom","strength","palpation","functional","special",
-        "impairments","goals","frequency","intervention","procedures",
-        "pain_location","pain_onset","pain_condition","pain_mechanism",
-        "pain_rating","pain_frequency","pain_description",
-        "pain_aggravating","pain_relieved","pain_interferes"
-    ]}
     key_map = {
         "Medical Diagnosis": "meddiag",
         "Medical History/HNP": "history",
         "Subjective": "subjective",
-        "Subjective (HPI)": "subjective",
         "Current Medication(s)": "meds",
         "Diagnostic Test(s)": "tests",
         "DME/Assistive Device": "dme",
@@ -163,17 +153,20 @@ def parse_template(template):
         "Relieved By": "pain_relieved",
         "Interferes With": "pain_interferes"
     }
+    fields = {v: "" for v in key_map.values()}
     curr = None
     for line in template.splitlines():
-        line = line.strip()
-        for k, f in key_map.items():
-            if line.startswith(k + ":"):
-                curr = f
-                fields[f] = line.split(":", 1)[1].strip()
+        stripped = line.strip()
+        matched = False
+        for label, key in key_map.items():
+            if stripped.startswith(label + ":"):
+                curr = key
+                _, val = stripped.split(":", 1)
+                fields[key] = val.strip()
+                matched = True
                 break
-        else:
-            if curr and line:
-                fields[curr] += "\n" + line
+        if not matched and curr and stripped:
+            fields[curr] += "\n" + stripped
     return fields
 
 @app.route("/", methods=["GET"])
@@ -189,84 +182,201 @@ def load_template():
 @app.route("/generate_diffdx", methods=["POST"])
 def generate_diffdx():
     f = request.json.get("fields", {})
-    hpi = f.get("subjective", "")
-    pain = "; ".join(f"{l}: {f.get(k, '')}" for l,k in [
-        ("Area/Location","pain_location"),("Onset","pain_onset"),
-        ("Condition","pain_condition"),("Mechanism","pain_mechanism"),
-        ("Rating","pain_rating"),("Frequency","pain_frequency"),
-        ("Description","pain_description"),("Aggravating","pain_aggravating"),
-        ("Relieved","pain_relieved"),("Interferes","pain_interferes")
-    ])
-    obj = f"Posture: {f.get('posture','')}\nROM: {f.get('rom','')}\nStrength: {f.get('strength','')}\n"
+    pain = "; ".join(f"{lbl}: {f.get(key,'')}"
+                      for lbl,key in [
+                          ("Area/Location", "pain_location"),
+                          ("Onset", "pain_onset"),
+                          ("Condition", "pain_condition"),
+                          ("Mechanism", "pain_mechanism"),
+                          ("Rating", "pain_rating"),
+                          ("Frequency", "pain_frequency"),
+                          ("Description", "pain_description"),
+                          ("Aggravating", "pain_aggravating"),
+                          ("Relieved", "pain_relieved"),
+                          ("Interferes", "pain_interferes"),
+                      ])
     prompt = (
         "You are a PT clinical assistant. Provide the single best-fit diagnosis:\n\n"
-        f"Subjective:\n{hpi}\n\nPain:\n{pain}\n\nObjective:\n{obj}"
+        f"Subjective:\n{f.get('subjective','')}\n\n"
+        f"Pain:\n{pain}\n\n"
+        f"Objective:\nPosture: {f.get('posture','')}\n"
+        f"ROM: {f.get('rom','')}\n"
+        f"Strength: {f.get('strength','')}\n"
     )
-    return gpt_call(prompt, max_tokens=200), 200
+    return gpt_call(prompt, max_tokens=200)
 
 @app.route("/generate_summary", methods=["POST"])
 def generate_summary():
     f = request.json.get("fields", {})
+    name = f.get("name","Pt Name")
+    age  = f.get("age","X")
+    gender = f.get("gender","patient").lower()
+    pmh = f.get("history","no significant history")
+    today = f.get("currentdate", date.today().strftime("%m/%d/%Y"))
+    subj = f.get("subjective","")
+    moi  = f.get("pain_mechanism","")
+    dx   = f.get("diffdx","")
+    strg = f.get("strength","")
+    rom  = f.get("rom","")
+    impair = f.get("impairments","")
+    func = f.get("functional","")
     prompt = (
-        f'Generate a concise, 7-8 sentence PT assessment summary. '
-        f'Start: "Pt {f.get("name","")} a {f.get("age","")} y/o {f.get("gender","").lower()} with relevant history of {f.get("history","")}". '
-        f'Include: PT eval on {f.get("currentdate","")}, mechanism: {f.get("pain_mechanism","")}, '
-        f'diff dx: {f.get("diffdx","")}, impairments: strength {f.get("strength","")}, ROM {f.get("rom","")}, '
-        f'impair {f.get("impairments","")}, functional limits {f.get("functional","")}, prognosis, and skilled PT → return to PLOF.'
+        f"{name}, a {age} y/o {gender} with relevant history of {pmh}. "
+        f"Pt was seen for PT initial eval on {today} for {subj}. "
+        f"Mechanism appears {moi}. Main differential dx is {dx}. "
+        f"Impairments include strength: {strg}; ROM: {rom}; mobility: {impair}. "
+        f"Limitations in {func}. Prognosis is favorable and skilled PT will help return to PLOF."
     )
-    return gpt_call(prompt, max_tokens=350), 200
-
-@app.route("/generate_goals", methods=["POST"])
-def generate_goals():
-    f = request.json.get("fields", {})
-    prompt = (
-        f"You are a clinical assistant. Generate short-term (1–12 visits) and long-term (13–25 visits) PT goals "
-        f"based on:\nSummary: {f.get('summary','')}\nDiff Dx: {f.get('diffdx','')}\n"
-        f"Impairments: {f.get('impairments','')}\nFunctional: {f.get('functional','')}"
-    )
-    return gpt_call(prompt, max_tokens=350), 200
+    return gpt_call(prompt, max_tokens=350)
 
 @app.route("/export_word", methods=["POST"])
 def export_word():
-    d = request.get_json()
+    data = request.get_json()
     doc = Document()
     doc.add_heading("Physical Therapy Evaluation", 0)
-    def sec(t,v):
-        doc.add_paragraph(t, style="Heading2")
-        doc.add_paragraph(v or "", style="Normal")
-        doc.add_paragraph("-"*100)
-    sec("Medical Diagnosis:", d.get("meddiag",""))
-    sec("Medical History/HNP:", d.get("history",""))
-    sec("Subjective:", d.get("subjective",""))
-    # ... similar for pain, objective, summary, goals ...
-    buf = io.BytesIO()
-    doc.save(buf); buf.seek(0)
-    return send_file(buf, as_attachment=True,
-                     download_name="PT_Eval.docx",
-                     mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    def add_section(title, value):
+        doc.add_paragraph(title, style='Heading2')
+        doc.add_paragraph(value if value else "", style='Normal')
+        doc.add_paragraph('-'*114)
+    add_section("Medical Diagnosis:", data.get("meddiag", ""))
+    add_section("Medical History/HNP:", data.get("history", ""))
+    add_section("Subjective:", data.get("subjective", ""))
+    doc.add_paragraph("Pain:", style='Heading2')
+    pain_fields = [
+        ("Area/Location of Injury", "pain_location"),
+        ("Onset/Exacerbation Date", "pain_onset"),
+        ("Condition of Injury", "pain_condition"),
+        ("Mechanism of Injury", "pain_mechanism"),
+        ("Pain Rating (Present/Best/Worst)", "pain_rating"),
+        ("Frequency", "pain_frequency"),
+        ("Description", "pain_description"),
+        ("Aggravating Factor", "pain_aggravating"),
+        ("Relieved By", "pain_relieved"),
+        ("Interferes With", "pain_interferes"),
+    ]
+    for label, key in pain_fields:
+        doc.add_paragraph(f"{label}: {data.get(key, '')}")
+    doc.add_paragraph('-'*114)
+    add_section("Current Medication(s):", data.get("meds", ""))
+    add_section("Diagnostic Test(s):", data.get("tests", ""))
+    add_section("DME/Assistive Device:", data.get("dme", ""))
+    add_section("PLOF:", data.get("plof", ""))
+    doc.add_paragraph("Objective:", style='Heading2')
+    obj_fields = [
+        ("Posture", "posture"),
+        ("ROM", "rom"),
+        ("Muscle Strength Test", "strength"),
+        ("Palpation", "palpation"),
+        ("Functional Test(s)", "functional"),
+        ("Special Test(s)", "special"),
+        ("Current Functional Mobility Impairment(s)", "impairments"),
+    ]
+    for label, key in obj_fields:
+        doc.add_paragraph(f"{label}: {data.get(key, '')}")
+    doc.add_paragraph('-'*114)
+    add_section("Assessment Summary:", data.get("summary", ""))
+    add_section("Goals:", data.get("goals", ""))
+    add_section("Frequency:", data.get("frequency", ""))
+    add_section("Intervention:", data.get("intervention", ""))
+    add_section("Treatment Procedures:", data.get("procedures", ""))
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="PT_Eval.docx",
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
 
 @app.route("/export_pdf", methods=["POST"])
 def export_pdf():
-    d = request.get_json()
-    buf = io.BytesIO()
-    c = canvas.Canvas(buf, pagesize=letter)
-    w,h = letter; y = h - 40
-    def sec(t,v):
+    data = request.get_json()
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    y = height - 40
+    def add_section(title, value):
         nonlocal y
-        c.setFont("Helvetica-Bold",12); c.drawString(40,y,t); y-=16
-        c.setFont("Helvetica",10)
-        for ln in (v or "").split("\n"):
-            c.drawString(48,y,ln); y-=12
-            if y<60: c.showPage(); y=h-40
-        y-=8; c.line(40,y,w-40,y); y-=12
-    sec("Medical Diagnosis:", d.get("meddiag",""))
-    sec("Medical History/HNP:", d.get("history",""))
-    sec("Subjective:", d.get("subjective",""))
-    # ... continue for all sections ...
-    c.save(); buf.seek(0)
-    return send_file(buf, as_attachment=True,
-                     download_name="PT_Eval.pdf",
-                     mimetype="application/pdf")
+        c.setFont("Helvetica-Bold", 13)
+        c.drawString(40, y, title)
+        y -= 18
+        c.setFont("Helvetica", 11)
+        for line in (value or "").split('\n'):
+            c.drawString(48, y, line)
+            y -= 14
+            if y < 60: c.showPage(); y = height - 40
+        y -= 8
+        c.setLineWidth(0.5)
+        c.line(40, y, width - 40, y)
+        y -= 16
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(40, y, "Physical Therapy Evaluation")
+    y -= 30
+    add_section("Medical Diagnosis:", data.get("meddiag", ""))
+    add_section("Medical History/HNP:", data.get("history", ""))
+    add_section("Subjective:", data.get("subjective", ""))
+    c.setFont("Helvetica-Bold", 13)
+    c.drawString(40, y, "Pain:")
+    y -= 18
+    c.setFont("Helvetica", 11)
+    pain_fields = [
+        ("Area/Location of Injury", "pain_location"),
+        ("Onset/Exacerbation Date", "pain_onset"),
+        ("Condition of Injury", "pain_condition"),
+        ("Mechanism of Injury", "pain_mechanism"),
+        ("Pain Rating (Present/Best/Worst)", "pain_rating"),
+        ("Frequency", "pain_frequency"),
+        ("Description", "pain_description"),
+        ("Aggravating Factor", "pain_aggravating"),
+        ("Relieved By", "pain_relieved"),
+        ("Interferes With", "pain_interferes"),
+    ]
+    for label, key in pain_fields:
+        c.drawString(48, y, f"{label}: {data.get(key, '')}")
+        y -= 14
+        if y < 60: c.showPage(); y = height - 40
+    y -= 8
+    c.line(40, y, width - 40, y)
+    y -= 16
+    add_section("Current Medication(s):", data.get("meds", ""))
+    add_section("Diagnostic Test(s):", data.get("tests", ""))
+    add_section("DME/Assistive Device:", data.get("dme", ""))
+    add_section("PLOF:", data.get("plof", ""))
+    c.setFont("Helvetica-Bold", 13)
+    c.drawString(40, y, "Objective:")
+    y -= 18
+    c.setFont("Helvetica", 11)
+    obj_fields = [
+        ("Posture", "posture"),
+        ("ROM", "rom"),
+        ("Muscle Strength Test", "strength"),
+        ("Palpation", "palpation"),
+        ("Functional Test(s)", "functional"),
+        ("Special Test(s)", "special"),
+        ("Current Functional Mobility Impairment(s)", "impairments"),
+    ]
+    for label, key in obj_fields:
+        c.drawString(48, y, f"{label}: {data.get(key, '')}")
+        y -= 14
+        if y < 60: c.showPage(); y = height - 40
+    y -= 8
+    c.line(40, y, width - 40, y)
+    y -= 16
+    add_section("Assessment Summary:", data.get("summary", ""))
+    add_section("Goals:", data.get("goals", ""))
+    add_section("Frequency:", data.get("frequency", ""))
+    add_section("Intervention:", data.get("intervention", ""))
+    add_section("Treatment Procedures:", data.get("procedures", ""))
+    c.save()
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="PT_Eval.pdf",
+        mimetype="application/pdf"
+    )
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
+
