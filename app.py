@@ -188,7 +188,7 @@ def load_template():
     fields = parse_template(template)
     return jsonify(fields)
 
-@app.route('/generate_diffdx', methods=['POST'])
+@app.route("/generate_diffdx", methods=["POST"])
 def generate_diffdx():
     fields = request.json.get('fields', {})
     hpi  = fields.get("subjective", "")
@@ -216,8 +216,17 @@ def generate_diffdx():
         "You are a PT clinical assistant. Provide the single best-fit diagnosis:\n\n"
         f"Subjective:\n{hpi}\n\nPain:\n{pain}\n\nObjective:\n{obj}"
     )
-    diffdx = gpt_call(prompt, max_tokens=200)
-    return diffdx
+    try:
+        resp = client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=200
+        )
+        diffdx = resp.choices[0].message.content.strip()
+        return diffdx, 200  # <- returns plain text, status code 200
+    except Exception as e:
+        print("AI error:", e)
+        return "Error: " + str(e), 500
 
 @app.route('/generate_summary', methods=['POST'])
 def generate_summary():
