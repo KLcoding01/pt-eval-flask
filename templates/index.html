@@ -159,7 +159,19 @@
         setStatus("Diff Dx generated!","green");
       }).catch(()=> setStatus("AI error","red"));
     };
-
+    document.getElementById('ai-generate-diffdx').onclick = () => {
+        setStatus("Generating Diff Dx…","orange");
+        fetch('/generate_diffdx', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ fields: getAllFields() })
+        })
+        .then(r=>r.text())
+        .then(t=>{
+          document.getElementById('diffdx').value = t;  // <-- CORRECT LINE
+          setStatus("Diff Dx generated!","green");
+        }).catch(()=> setStatus("AI error","red"));
+      };
     document.getElementById('ai-generate-summary').onclick = () => {
       setStatus("Generating summary…","orange");
       fetch('/generate_summary', {

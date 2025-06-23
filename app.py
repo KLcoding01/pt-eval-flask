@@ -208,27 +208,35 @@ def generate_diffdx():
 @app.route("/generate_summary", methods=["POST"])
 def generate_summary():
     f = request.json.get("fields", {})
-    name = f.get("name","Pt Name")
-    age  = f.get("age","X")
-    gender = f.get("gender","patient").lower()
-    pmh = f.get("history","no significant history")
+    name = f.get("name", "Pt Name")
+    age = f.get("age", "X")
+    gender = f.get("gender", "patient").lower()
+    pmh = f.get("history", "no significant history")
     today = f.get("currentdate", date.today().strftime("%m/%d/%Y"))
-    subj = f.get("subjective","")
-    moi  = f.get("pain_mechanism","")
-    dx   = f.get("diffdx","")
-    strg = f.get("strength","")
-    rom  = f.get("rom","")
-    impair = f.get("impairments","")
-    func = f.get("functional","")
+    subj = f.get("subjective", "")
+    moi = f.get("pain_mechanism", "")
+    dx = f.get("diffdx", "")
+    strg = f.get("strength", "")
+    rom = f.get("rom", "")
+    impair = f.get("impairments", "")
+    func = f.get("functional", "")
+
     prompt = (
-        f"{name}, a {age} y/o {gender} with relevant history of {pmh}. "
-        f"Pt was seen for PT initial eval on {today} for {subj}. "
-        f"Mechanism appears {moi}. Main differential dx is {dx}. "
-        f"Impairments include strength: {strg}; ROM: {rom}; mobility: {impair}. "
-        f"Limitations in {func}. Prognosis is favorable and skilled PT will help return to PLOF."
+        "Generate a concise, 7-8 sentence Physical Therapy assessment summary for PT documentation. "
+        "Use clinical, professional language and use abbreviations only (e.g., HEP, ADLs, LBP, STM, TherEx, etc.; "
+        "do not spell out the abbreviation and do not write both full term and abbreviation). "
+        "Never use the phrase 'The patient'; instead, use 'Pt' at the start of each relevant sentence. "
+        f"Start with: \"{name}, a {age} y/o {gender} with relevant history of {pmh}.\" "
+        f"Include: "
+        f"How/when/why pt was seen (PT initial eval on {today} for {subj}), "
+        f"mechanism of injury if available ({moi}), "
+        f"main differential dx ({dx}), "
+        f"current impairments (strength: {strg}; ROM: {rom}; balance/mobility: {impair}), "
+        f"functional/activity/participation limitations: {func}, "
+        "a professional prognosis and that skilled PT will help pt return to PLOF. "
+        "Do not use bulleted or numbered lists—just a single, well-written summary paragraph."
     )
     return gpt_call(prompt, max_tokens=350)
-
 @app.route("/export_word", methods=["POST"])
 def export_word():
     data = request.get_json()
