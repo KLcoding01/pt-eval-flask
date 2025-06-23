@@ -154,7 +154,7 @@
       })
       .then(r=>r.text())
       .then(t=>{
-        document.getElementById('diffdx').value = t;
+        document.getElementById('diffdx').value = t;  // THIS LINE!
         setStatus("Diff Dx generated!","green");
       }).catch(()=> setStatus("AI error","red"));
     };
