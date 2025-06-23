@@ -5,183 +5,163 @@
   <title>PT Eval Builder</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { background: #f4f4f4; }
-    .container { max-width: 980px; margin: 30px auto; background: #fff; padding: 30px; border-radius: 12px; }
+    .container { max-width: 900px; margin-top: 30px; }
     .form-label { font-weight: 500; }
-    .ai-btn { margin-left: 6px; }
-    textarea, input, select { width: 100%; }
+    textarea, input { width: 100%; }
+    .ai-btn { margin-left: 8px; }
   </style>
 </head>
 <body>
-<div class="container">
-  <h2 class="mb-3">PT Eval Builder</h2>
-  <div class="d-flex align-items-center mb-3">
-    <label class="me-2 fw-bold">Template:</label>
-    <select id="template-select" class="form-select w-auto me-2">
-      {% for t in templates %}<option>{{ t }}</option>{% endfor %}
-    </select>
-    <button id="load-template-btn" class="btn btn-outline-primary btn-sm me-2">Load</button>
-    <button id="save-preview-btn" class="btn btn-success btn-sm me-2">Save/Preview</button>
-    <button id="save-word-btn" class="btn btn-info btn-sm me-2">Export Word</button>
-    <button id="save-pdf-btn" class="btn btn-danger btn-sm">Export PDF</button>
-    <span id="status-msg" class="ms-3"></span>
-  </div>
+  <div class="container">
+    <h2>PT Eval Builder</h2>
+    <div class="d-flex align-items-center mb-3">
+      <label class="me-2 fw-bold">Template:</label>
+      <select id="template-select" class="form-select w-auto me-2">
+        {% for t in templates %}<option>{{ t }}</option>{% endfor %}
+      </select>
+      <button id="load-template-btn" class="btn btn-outline-primary btn-sm me-2">Load</button>
+      <button id="save-preview-btn" class="btn btn-success btn-sm me-2">Save/Preview</button>
+      <button id="save-word-btn" class="btn btn-info btn-sm me-2">Export Word</button>
+      <button id="save-pdf-btn" class="btn btn-danger btn-sm">Export PDF</button>
+      <span id="status-msg" class="ms-3"></span>
+    </div>
 
-  <ul class="nav nav-tabs">
-    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#patientinfo">Patient Info</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#history">History</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#pain">Pain</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#objective">Objective</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#diffdx">Diff Dx</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#summary">Assessment Summary</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#plan">Plan</button></li>
-  </ul>
+    <!-- Tabs here (Patient Info, History, Pain, Objective) -->
 
-  <div class="tab-content p-3 bg-light border">
-    <!-- other tabs omitted for brevity... -->
-
-    <!-- Diff Dx Tab -->
-    <div class="tab-pane fade" id="diffdx">
-      <div class="d-flex align-items-center mb-2">
-        <label class="form-label me-2">Diff Dx:</label>
+    <!-- Diff Dx -->
+    <div class="mb-4">
+      <h5>Diff Dx
         <button id="ai-generate-diffdx" class="btn btn-outline-success btn-sm ai-btn">AI Generate</button>
-      </div>
+      </h5>
       <textarea id="diffdx" rows="3"></textarea>
     </div>
 
-    <!-- Assessment Summary Tab -->
-    <div class="tab-pane fade" id="summary">
-      <div class="d-flex align-items-center mb-2">
-        <label class="form-label me-2">Assessment Summary:</label>
+    <!-- Assessment Summary -->
+    <div class="mb-4">
+      <h5>Assessment Summary
         <button id="ai-generate-summary" class="btn btn-outline-success btn-sm ai-btn">AI Generate</button>
-      </div>
+      </h5>
       <textarea id="summary-text" rows="4"></textarea>
     </div>
 
-    <!-- Plan/Goals Tab -->
-    <div class="tab-pane fade" id="plan">
-      <div class="d-flex align-items-center mb-2">
-        <label class="form-label me-2">Goals:</label>
+    <!-- Goals -->
+    <div class="mb-4">
+      <h5>Goals
         <button id="ai-generate-goals" class="btn btn-outline-success btn-sm ai-btn">AI Generate</button>
-      </div>
+      </h5>
       <textarea id="goals-text" rows="4"></textarea>
     </div>
   </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-  function setStatus(msg,color="green"){
-    const el = document.getElementById("status-msg");
-    el.textContent = msg; el.style.color = color;
-  }
-
-  function getAllFields(){
-    const data = {};
-    document.querySelectorAll('input, textarea, select').forEach(el=>{
-      if(el.name) data[el.name] = el.value;
-    });
-    return data;
-  }
-
-  // Load Template
-  document.getElementById("load-template-btn").onclick = ()=>{
-    setStatus("Loading…","orange");
-    fetch("/load_template", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({template: document.getElementById("template-select").value})
-    })
-    .then(r=>r.json())
-    .then(data=>{
-      Object.entries(data).forEach(([k,v])=>{
-        const fld = document.getElementById(k) || document.querySelector(`[name='${k}']`);
-        if(fld) fld.value = v;
+  <script>
+    function setStatus(msg,color="green"){
+      const e=document.getElementById("status-msg");
+      e.textContent=msg; e.style.color=color;
+    }
+    function getAllFields(){
+      const out={};
+      document.querySelectorAll("input,textarea,select").forEach(el=>{
+        if(el.name) out[el.name]=el.value;
       });
-      setStatus("Template loaded!","green");
-    })
-    .catch(()=>setStatus("Load error","red"));
-  };
+      return out;
+    }
 
-  // AI Generate Diff Dx
-  document.getElementById("ai-generate-diffdx").onclick = ()=>{
-    setStatus("Generating Diff Dx…","orange");
-    fetch("/generate_diffdx", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({fields:getAllFields()})
-    })
-    .then(r=>r.text())
-    .then(t=>{
-      document.getElementById("diffdx").value = t;
-      setStatus("Diff Dx generated!","green");
-    })
-    .catch(()=>setStatus("AI error","red"));
-  };
+    // Load Template
+    document.getElementById("load-template-btn").onclick = ()=>{
+      setStatus("Loading…","orange");
+      fetch("/load_template",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({template: document.getElementById("template-select").value})
+      })
+      .then(r=>r.json())
+      .then(data=>{
+        Object.entries(data).forEach(([k,v])=>{
+          const el=document.getElementById(k)||document.querySelector(`[name='${k}']`);
+          if(el) el.value=v;
+        });
+        setStatus("Template loaded!","green");
+      }).catch(e=>setStatus("Load error","red"));
+    };
 
-  // AI Generate Summary
-  document.getElementById("ai-generate-summary").onclick = ()=>{
-    setStatus("Generating Summary…","orange");
-    fetch("/generate_summary", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({fields:getAllFields()})
-    })
-    .then(r=>r.text())
-    .then(t=>{
-      document.getElementById("summary-text").value = t;
-      setStatus("Summary generated!","green");
-    })
-    .catch(()=>setStatus("AI error","red"));
-  };
+    // Diff Dx
+    document.getElementById("ai-generate-diffdx").onclick = ()=>{
+      setStatus("Generating Diff Dx…","orange");
+      fetch("/generate_diffdx",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({fields:getAllFields()})
+      })
+      .then(r=>r.text())
+      .then(t=>{
+        document.getElementById("diffdx").value = t;
+        setStatus("Diff Dx generated!","green");
+      }).catch(e=>setStatus("AI error","red"));
+    };
 
-  // AI Generate Goals
-  document.getElementById("ai-generate-goals").onclick = ()=>{
-    setStatus("Generating Goals…","orange");
-    fetch("/generate_goals", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({fields:getAllFields()})
-    })
-    .then(r=>r.text())
-    .then(t=>{
-      document.getElementById("goals-text").value = t;
-      setStatus("Goals generated!","green");
-    })
-    .catch(()=>setStatus("AI error","red"));
-  };
+    // Summary
+    document.getElementById("ai-generate-summary").onclick = ()=>{
+      setStatus("Generating Summary…","orange");
+      fetch("/generate_summary",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({fields:getAllFields()})
+      })
+      .then(r=>r.text())
+      .then(t=>{
+        document.getElementById("summary-text").value = t;
+        setStatus("Summary generated!","green");
+      }).catch(e=>setStatus("AI error","red"));
+    };
 
-  // Export Word
-  document.getElementById("save-word-btn").onclick = ()=>{
-    fetch("/export_word", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify(getAllFields())
-    })
-    .then(r=>r.blob())
-    .then(blob=>{
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href=url; a.download="PT_Eval.docx"; document.body.append(a);
-      a.click(); a.remove(); URL.revokeObjectURL(url);
-    });
-  };
+    // Goals
+    document.getElementById("ai-generate-goals").onclick = ()=>{
+      setStatus("Generating Goals…","orange");
+      fetch("/generate_goals",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({fields:getAllFields()})
+      })
+      .then(r=>r.text())
+      .then(t=>{
+        document.getElementById("goals-text").value = t;
+        setStatus("Goals generated!","green");
+      }).catch(e=>setStatus("AI error","red"));
+    };
 
-  // Export PDF
-  document.getElementById("save-pdf-btn").onclick = ()=>{
-    fetch("/export_pdf", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify(getAllFields())
-    })
-    .then(r=>r.blob())
-    .then(blob=>{
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href=url; a.download="PT_Eval.pdf"; document.body.append(a);
-      a.click(); a.remove(); URL.revokeObjectURL(url);
-    });
-  };
-</script>
+    // Export Word
+    document.getElementById("save-word-btn").onclick = ()=>{
+      fetch("/export_word",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify(getAllFields())
+      })
+      .then(r=>r.blob())
+      .then(blob=>{
+        const url=URL.createObjectURL(blob),
+              a=document.createElement("a");
+        a.href=url; a.download="PT_Eval.docx";
+        document.body.append(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+      });
+    };
+
+    // Export PDF
+    document.getElementById("save-pdf-btn").onclick = ()=>{
+      fetch("/export_pdf",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify(getAllFields())
+      })
+      .then(r=>r.blob())
+      .then(blob=>{
+        const url=URL.createObjectURL(blob),
+              a=document.createElement("a");
+        a.href=url; a.download="PT_Eval.pdf";
+        document.body.append(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+      });
+    };
+  </script>
 </body>
 </html>
