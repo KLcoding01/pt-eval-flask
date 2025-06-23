@@ -195,7 +195,7 @@ Generate a concise, 7-8 sentence Physical Therapy assessment summary for PT docu
 History: {fields.get('history','')}
 Subjective: {fields.get('subjective','')}
 Objective: {fields.get('objective','')}
-Best-Fit Diagnosis: {fields.get('diffdx','')}
+Diff Diagnosis: {fields.get('diffdx','')}
 Functional Limitations: {fields.get('functional','')}
 Impairments: {fields.get('impairments','')}
 ROM: {fields.get('rom','')}
