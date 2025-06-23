@@ -111,7 +111,7 @@
             <!-- Diff Dx Tab -->
             <div class="tab-pane fade" id="diffdx" role="tabpanel">
                 <div class="mb-2 d-flex align-items-center">
-                    <label class="form-label mb-0 me-2">diff dx</label>
+                    <label class="form-label mb-0 me-2">Diff dx</label>
                     <button type="button" class="btn btn-outline-success btn-sm ai-btn" id="ai-generate-diffdx">AI Generate</button>
                 </div>
                 <textarea class="form-control" rows="2" name="diffdx" id="diffdx"></textarea>
@@ -161,7 +161,7 @@
             headers: {"Content-Type":"application/json"},
             body: JSON.stringify({fields: getAllFields()})
         })
-        .then(r => r.text())
+            then(r => r.text())
         .then(t => {
             document.getElementById('diffdx').value = t;
             setStatus("Diff Dx generated!", "green");
