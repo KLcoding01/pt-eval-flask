@@ -203,7 +203,10 @@ def generate_diffdx():
         f"ROM: {f.get('rom','')}\n"
         f"Strength: {f.get('strength','')}\n"
     )
-    return gpt_call(prompt, max_tokens=200)
+    print("PROMPT:", prompt)  # Log the prompt for debugging
+    result = gpt_call(prompt, max_tokens=200)
+    print("RESULT:", repr(result))  # Print exactly what is returned
+    return result
 
 @app.route("/generate_summary", methods=["POST"])
 def generate_summary():
