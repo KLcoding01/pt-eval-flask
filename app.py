@@ -1,16 +1,28 @@
 import os
-from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for
+from flask import Flask, render_template, request, jsonify
 from datetime import date
-import openai
 from dotenv import load_dotenv
-from io import BytesIO
-from docx import Document
+
+from openai import OpenAI
 
 load_dotenv()
 
 app = Flask(__name__)
-openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# NEW: Create OpenAI client for v1
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-4o-mini"
+
+def gpt_call(prompt, max_tokens=350):
+    try:
+        resp = client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=max_tokens
+        )
+        return resp.choices[0].message.content
+    except Exception as e:
+        return f"OpenAI error: {e}"
 
 TEMPLATES = {
     "LBP Eval Template": """Medical Diagnosis:
@@ -162,17 +174,6 @@ def parse_template(template):
 def index():
     return render_template("index.html", templates=TEMPLATES)
 
-def gpt_call(prompt, max_tokens=350):
-    try:
-        resp = openai.ChatCompletion.create(
-            model=MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=max_tokens
-        )
-        return resp["choices"][0]["message"]["content"]
-    except Exception as e:
-        return f"OpenAI error: {e}"
-
 @app.route("/load_template", methods=["POST"])
 def load_template():
     data = request.json
@@ -180,7 +181,7 @@ def load_template():
     template = TEMPLATES.get(name, "")
     fields = parse_template(template)
     return jsonify(fields)
-    
+
 @app.route("/generate_summary", methods=["POST"])
 def generate_summary():
     data = request.json
@@ -242,4 +243,3 @@ Functional Limitations: {fields.get('functional','')}
 
 if __name__ == "__main__":
     app.run(debug=True)
-
