@@ -152,13 +152,17 @@
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ fields: getAllFields() })
       })
-      .then(r=>r.text())
-      .then(t=>{
-        document.getElementById('diffdx').value = t;  // THIS LINE!
+      .then(r => r.text())
+      .then(t => {
+        // If the backend returns escaped newlines (\n), turn them into real newlines:
+        try {
+          document.getElementById('diffdx').value = t.replace(/\\n/g, '\n');
+        } catch (e) {
+          document.getElementById('diffdx').value = t;
+        }
         setStatus("Diff Dx generated!","green");
       }).catch(()=> setStatus("AI error","red"));
     };
-
     document.getElementById('ai-generate-summary').onclick = () => {
       setStatus("Generating summary…","orange");
       fetch('/generate_summary', {
