@@ -158,80 +158,79 @@ def parse_template(template):
             if curr and line: fields[curr] += "\n"+line
     return fields
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET"])
 def index():
-    result = ""
-    selected_template = "LBP Eval Template"
-    fields = {k:"" for k in [
-        "name","gender","dob","age","today",
-        "med_diag","med_hist","subj","meds","tests","dme","plof","posture","rom","str","palpation","func",
-        "special","impair","diff","summary",
-        "goals","freq","interv","proc",
-        "pain_area","pain_onset","pain_cond","pain_mech",
-        "pain_rating","pain_freq","pain_desc","pain_aggrav","pain_relieve","pain_interfere"
-    ]}
-    fields["today"] = date.today().strftime("%m-%d-%Y")
-    if request.method == "POST":
-        if "action" in request.form and request.form["action"] == "Load":
-            selected_template = request.form.get("template", "LBP Eval Template")
-            fields.update(parse_template(TEMPLATES[selected_template]))
-            result = "Loaded template!"
-        else:
-            for k in fields: fields[k] = request.form.get(k,"")
-            result = "Saved! (Or add DB/save logic here)"
-    return render_template("index.html", templates=TEMPLATES, selected_template=selected_template, fields=fields, result=result)
+    return render_template("index.html", templates=TEMPLATES)
 
-@app.route("/generate_summary", methods=["POST"])
-def generate_summary():
-    data = request.json or request.form
-    prompt = f"""
-Generate a concise, 7-8 sentence PT assessment summary for documentation using abbreviations only (HEP, ADLs, LBP, STM, TherEx, etc). Never use 'The patient', always start with 'Pt ...'.
-Subj: {data.get('subj')}
-Dx: {data.get('diff')}
-Impairments: {data.get('impair')}
-Function: {data.get('func')}
-"""
+def gpt_call(prompt, max_tokens=350):
     try:
         resp = openai.ChatCompletion.create(
             model=MODEL,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=300
+            max_tokens=max_tokens
         )
         return resp["choices"][0]["message"]["content"]
     except Exception as e:
-        return str(e), 500
+        return f"OpenAI error: {e}"
 
-@app.route("/download_word", methods=["POST"])
-def download_word():
-    data = request.form
-    doc = Document()
-    def add(label, key): doc.add_paragraph(f"{label} {data.get(key,'')}")
-    add("Patient Name:", "name")
-    add("Gender:", "gender")
-    add("DOB:", "dob")
-    add("Age:", "age")
-    add("Today:", "today")
-    doc.add_paragraph("-"*50)
-    for field in ["med_diag","med_hist","subj","meds","tests","dme","plof"]:
-        add(field.replace("_"," ").title()+":", field)
-    doc.add_paragraph("-"*50)
-    doc.add_paragraph("Pain Section:")
-    for key in ["pain_area","pain_onset","pain_cond","pain_mech","pain_rating","pain_freq","pain_desc","pain_aggrav","pain_relieve","pain_interfere"]:
-        add(key.replace("pain_","").replace("_"," ").title()+":", key)
-    doc.add_paragraph("-"*50)
-    for field in ["posture","rom","str","palpation","func","special","impair"]:
-        add(field.title()+":", field)
-    doc.add_paragraph("-"*50)
-    add("Diff Dx:", "diff")
-    add("Assessment Summary:", "summary")
-    add("Goals:", "goals")
-    add("Frequency:", "freq")
-    add("Intervention:", "interv")
-    add("Treatment Procedures:", "proc")
-    f = BytesIO()
-    doc.save(f)
-    f.seek(0)
-    return send_file(f, as_attachment=True, download_name="PT_Eval.docx")
+@app.route("/generate_summary", methods=["POST"])
+def generate_summary():
+    data = request.json
+    fields = data.get("fields", {})
+    prompt = f"""
+Generate a concise, 7-8 sentence Physical Therapy assessment summary for PT documentation. Use clinical, professional language and abbreviations only (e.g., use HEP, ADLs, LBP, STM, TherEx, etc.—do not spell out the abbreviation and do not write both full term and abbreviation). Never use 'The patient'; use 'Pt' at the start of sentences.
+History: {fields.get('history','')}
+Subjective: {fields.get('subjective','')}
+Objective: {fields.get('objective','')}
+Best-Fit Diagnosis: {fields.get('diffdx','')}
+Functional Limitations: {fields.get('functional','')}
+Impairments: {fields.get('impairments','')}
+ROM: {fields.get('rom','')}
+Strength: {fields.get('strength','')}
+Prognosis: {fields.get('prognosis','')}
+Write as a single paragraph.
+"""
+    summary = gpt_call(prompt)
+    return summary
+
+@app.route("/generate_diffdx", methods=["POST"])
+def generate_diffdx():
+    data = request.json
+    fields = data.get("fields", {})
+    prompt = f"""
+You are a PT clinical assistant. Provide the single best-fit diagnosis for this patient:
+History: {fields.get('history','')}
+Subjective: {fields.get('subjective','')}
+Pain: {fields.get('pain','')}
+Objective: {fields.get('objective','')}
+"""
+    diffdx = gpt_call(prompt, max_tokens=200)
+    return diffdx
+
+@app.route("/generate_goals", methods=["POST"])
+def generate_goals():
+    data = request.json
+    fields = data.get("fields", {})
+    prompt = f"""
+You are a clinical assistant helping a PT write documentation. Using the following information, generate short-term and long-term PT goals in this format (adapt based on the summary):
+Short-Term Goals (1–12 visits):
+1. Pt will report a reduction in low back pain to ≤1/10 to allow safe and comfortable participation in functional activities.
+2. Pt will demonstrate a ≥10% improvement in trunk AROM to enhance mobility and reduce risk of reinjury during daily tasks.
+3. Pt will improve gross LE strength by at least 0.5 muscle grade to enhance safety during ADLs and minimize pain/injury risk.
+4. Pt will self-report ≥50% improvement in functional limitations related to ADLs.
+Long-Term Goals (13–25 visits):
+1. Pt will demonstrate B LE strength of ≥4/5 to independently and safely perform all ADLs.
+2. Pt will complete ≥14 repetitions on the 30-second chair sit-to-stand test to reduce fall risk.
+3. Pt will tolerate ≥30 minutes of activity to safely resume household tasks without limitation.
+4. Pt will demonstrate independence with HEP, using proper body mechanics and strength to support safe return to ADLs without difficulty.
+
+Summary: {fields.get('summary','')}
+Diagnosis: {fields.get('diffdx','')}
+Impairments: {fields.get('impairments','')}
+Functional Limitations: {fields.get('functional','')}
+"""
+    goals = gpt_call(prompt, max_tokens=350)
+    return goals
 
 if __name__ == "__main__":
     app.run(debug=True)
