@@ -221,47 +221,48 @@ def generate_diffdx():
     response = openai.ChatCompletion.create(
         model="gpt-4o-mini",
         messages=[{"role": "system", "content": prompt}],
-        max_tokens=80
-    )
-    diffdx = response.choices[0].message["content"].strip()
-    return diffdx
-
-@app.route('/generate_diffdx', methods=['POST'])
-def generate_diffdx():
-    fields = request.json.get('fields', {})
-    hpi  = fields.get("subjective", "")
-    pain = "; ".join([
-        f"{label}: {fields.get(key, '')}"
-        for label, key in [
-            ("Area/Location", "pain_location"),
-            ("Onset", "pain_onset"),
-            ("Condition", "pain_condition"),
-            ("Mechanism", "pain_mechanism"),
-            ("Rating", "pain_rating"),
-            ("Frequency", "pain_frequency"),
-            ("Description", "pain_description"),
-            ("Aggravating", "pain_aggravating"),
-            ("Relieved", "pain_relieved"),
-            ("Interferes", "pain_interferes"),
-        ]
-    ])
-    obj = (
-        f"Posture: {fields.get('posture', '')}\n"
-        f"ROM: {fields.get('rom', '')}\n"
-        f"Strength: {fields.get('strength', '')}\n"
-    )
-    prompt = (
-        "You are a PT clinical assistant. Provide the single best-fit diagnosis:\n\n"
-        f"Subjective:\n{hpi}\n\nPain:\n{pain}\n\nObjective:\n{obj}"
-    )
-    response = openai.ChatCompletion.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "system", "content": prompt}],
         max_tokens=200
     )
     diffdx = response.choices[0].message["content"].strip()
     return diffdx
+    
+@app.route('/generate_summary', methods=['POST'])
+def generate_summary():
+    fields = request.json.get('fields', {})
+    # Compose your prompt using your requirements
+    prefix = ""
+    name = fields.get("name", "Pt Name")
+    age = fields.get("age", "X")
+    gender = fields.get("gender", "patient")
+    pmh = fields.get("history", "no significant history")
+    today = fields.get("currentdate", "today")
+    subj = fields.get("subjective", "")
+    moi = fields.get("pain_mechanism", "")
+    dx = fields.get("diffdx", "")
+    strg = fields.get("strength", "")
+    rom = fields.get("rom", "")
+    impair = fields.get("impairments", "")
+    func = fields.get("functional", "")
+    prognosis = "good potential for improvement"  # You may pull from elsewhere
 
+    prompt = f"""Generate a concise, 7-8 sentence Physical Therapy assessment summary for PT documentation. Use clinical, professional language and use abbreviations only (e.g., use HEP, ADLs, LBP, STM, TherEx, etc.—do not spell out the abbreviation and do not write both full term and abbreviation). Never use the phrase 'The patient'; instead, use 'Pt' at the start of each relevant sentence. Start with: "{prefix} {name}, a {age} y/o {gender.lower()} with relevant history of {pmh}." 
+Include: 
+1) How/when/why pt was seen (PT initial eval on {today} for {subj}), 
+2) mechanism of injury if available ({moi}),
+3) main differential dx ({dx}),
+4) current impairments (strength: {strength}; ROM: {rom}; balance/mobility: {impairments}), 
+5) functional/activity/participation limitations: {func},
+6) a professional prognosis and 
+7) that skilled PT will help pt return to PLOF.
+Do not use bulleted or numbered lists—just a single, well-written summary paragraph."""
+    response = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[{"role": "system", "content": prompt}],
+        max_tokens=350
+    )
+    summary = response.choices[0].message["content"].strip()
+    return summary
+    
 @app.route("/generate_goals", methods=["POST"])
 def generate_goals():
     data = request.json
