@@ -1,30 +1,34 @@
-from flask import Flask, render_template, request
-import openai
+from flask import Flask, render_template, request, send_file
 import os
-
-from dotenv import load_dotenv
-load_dotenv()
+import io
+from docx import Document
 
 app = Flask(__name__)
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
-MODEL = "gpt-4o-mini"
-
-TEMPLATES = {
-    "LBP Eval Template": "Your long template here...",
-    # Add other templates here
-}
+TEMPLATES = { "LBP Eval Template": """(your long template above)""" }
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    result = ""
     fields = {}
-
+    result = ""
     if request.method == "POST":
+        # Get all fields from the web form
         fields = {k: v for k, v in request.form.items()}
-        result = "Form submitted! (This is where you process/save/generate content.)"
-
-    # *** CORRECT way: pass values as arguments in render_template ***
+        action = request.form.get("action", "save")
+        if action == "save_template":
+            # Save as docx
+            doc = Document()
+            for k, v in fields.items():
+                doc.add_paragraph(f"{k}: {v}")
+            buf = io.BytesIO()
+            doc.save(buf)
+            buf.seek(0)
+            return send_file(buf, as_attachment=True, download_name="PT_Eval.docx")
+        elif action == "load":
+            # Load the template (fill all fields)
+            # Parse your template and set to fields
+            pass
+        result = "Form submitted!"
     return render_template(
         "index.html",
         templates=TEMPLATES,
@@ -32,22 +36,6 @@ def index():
         fields=fields,
         result=result,
     )
-
-@app.route("/generate_summary", methods=["POST"])
-def generate_summary():
-    prompt = request.form.get("summary_prompt", "")
-    if not prompt:
-        return "No prompt", 400
-    try:
-        resp = openai.ChatCompletion.create(
-            model=MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=300
-        )
-        out = resp["choices"][0]["message"]["content"]
-        return out
-    except Exception as e:
-        return str(e), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
