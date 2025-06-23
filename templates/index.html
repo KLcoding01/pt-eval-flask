@@ -38,73 +38,73 @@
             <!-- Patient Info Tab -->
             <div class="tab-pane fade show active" id="patientinfo" role="tabpanel">
                 <div class="row mb-2">
-                    <div class="col-md-3"><label class="form-label">Patient Name:</label><input type="text" class="form-control" name="name"></div>
+                    <div class="col-md-3"><label class="form-label">Patient Name:</label><input type="text" class="form-control" name="name" id="name"></div>
                     <div class="col-md-3"><label class="form-label">Gender:</label>
-                        <select class="form-select" name="gender">
+                        <select class="form-select" name="gender" id="gender">
                             <option>Female</option><option>Male</option>
                         </select>
                     </div>
-                    <div class="col-md-3"><label class="form-label">DOB (MM/DD/YYYY):</label><input type="text" class="form-control" name="dob"></div>
-                    <div class="col-md-3"><label class="form-label">Age:</label><input type="text" class="form-control" name="age"></div>
+                    <div class="col-md-3"><label class="form-label">DOB (MM/DD/YYYY):</label><input type="text" class="form-control" name="dob" id="dob"></div>
+                    <div class="col-md-3"><label class="form-label">Age:</label><input type="text" class="form-control" name="age" id="age"></div>
                 </div>
                 <div class="row">
-                    <div class="col-md-4"><label class="form-label">Current Date:</label><input type="text" class="form-control" name="currentdate" value=""></div>
+                    <div class="col-md-4"><label class="form-label">Current Date:</label><input type="text" class="form-control" name="currentdate" id="currentdate" value=""></div>
                 </div>
             </div>
             <!-- History Tab -->
             <div class="tab-pane fade" id="history" role="tabpanel">
                 <div class="mb-2"><label class="form-label">Medical Diagnosis:</label>
-                    <textarea class="form-control" rows="2" name="meddiag"></textarea></div>
+                    <textarea class="form-control" rows="2" name="meddiag" id="meddiag"></textarea></div>
                 <div class="mb-2"><label class="form-label">Medical History/HNP:</label>
-                    <textarea class="form-control" rows="2" name="history"></textarea></div>
+                    <textarea class="form-control" rows="2" name="history" id="history-field"></textarea></div>
                 <div class="mb-2"><label class="form-label">Subjective (HPI):</label>
-                    <textarea class="form-control" rows="3" name="subjective"></textarea></div>
+                    <textarea class="form-control" rows="3" name="subjective" id="subjective"></textarea></div>
                 <div class="mb-2"><label class="form-label">Current Medication(s):</label>
-                    <textarea class="form-control" rows="2" name="meds"></textarea></div>
+                    <textarea class="form-control" rows="2" name="meds" id="meds"></textarea></div>
                 <div class="mb-2"><label class="form-label">Diagnostic Test(s):</label>
-                    <textarea class="form-control" rows="2" name="tests"></textarea></div>
+                    <textarea class="form-control" rows="2" name="tests" id="tests"></textarea></div>
                 <div class="mb-2"><label class="form-label">DME/Assistive Device:</label>
-                    <textarea class="form-control" rows="2" name="dme"></textarea></div>
+                    <textarea class="form-control" rows="2" name="dme" id="dme"></textarea></div>
                 <div class="mb-2"><label class="form-label">PLOF:</label>
-                    <textarea class="form-control" rows="2" name="plof"></textarea></div>
+                    <textarea class="form-control" rows="2" name="plof" id="plof"></textarea></div>
             </div>
             <!-- Pain Tab -->
             <div class="tab-pane fade" id="pain" role="tabpanel">
                 <div class="row">
-                    <div class="col-md-4"><label class="form-label">Area/Location of Injury</label><input class="form-control" name="pain_location"></div>
-                    <div class="col-md-4"><label class="form-label">Onset/Exacerbation Date</label><input class="form-control" name="pain_onset"></div>
-                    <div class="col-md-4"><label class="form-label">Condition of Injury</label><input class="form-control" name="pain_condition"></div>
+                    <div class="col-md-4"><label class="form-label">Area/Location of Injury</label><input class="form-control" name="pain_location" id="pain_location"></div>
+                    <div class="col-md-4"><label class="form-label">Onset/Exacerbation Date</label><input class="form-control" name="pain_onset" id="pain_onset"></div>
+                    <div class="col-md-4"><label class="form-label">Condition of Injury</label><input class="form-control" name="pain_condition" id="pain_condition"></div>
                 </div>
                 <div class="row mt-2">
-                    <div class="col-md-4"><label class="form-label">Mechanism of Injury</label><input class="form-control" name="pain_mechanism"></div>
-                    <div class="col-md-4"><label class="form-label">Pain Rating (P/B/W)</label><input class="form-control" name="pain_rating"></div>
-                    <div class="col-md-4"><label class="form-label">Pain Frequency</label><input class="form-control" name="pain_frequency"></div>
+                    <div class="col-md-4"><label class="form-label">Mechanism of Injury</label><input class="form-control" name="pain_mechanism" id="pain_mechanism"></div>
+                    <div class="col-md-4"><label class="form-label">Pain Rating (P/B/W)</label><input class="form-control" name="pain_rating" id="pain_rating"></div>
+                    <div class="col-md-4"><label class="form-label">Pain Frequency</label><input class="form-control" name="pain_frequency" id="pain_frequency"></div>
                 </div>
                 <div class="row mt-2">
-                    <div class="col-md-4"><label class="form-label">Description</label><input class="form-control" name="pain_description"></div>
-                    <div class="col-md-4"><label class="form-label">Aggravating Factor</label><input class="form-control" name="pain_aggravating"></div>
-                    <div class="col-md-4"><label class="form-label">Relieved By</label><input class="form-control" name="pain_relieved"></div>
+                    <div class="col-md-4"><label class="form-label">Description</label><input class="form-control" name="pain_description" id="pain_description"></div>
+                    <div class="col-md-4"><label class="form-label">Aggravating Factor</label><input class="form-control" name="pain_aggravating" id="pain_aggravating"></div>
+                    <div class="col-md-4"><label class="form-label">Relieved By</label><input class="form-control" name="pain_relieved" id="pain_relieved"></div>
                 </div>
                 <div class="row mt-2">
-                    <div class="col-md-4"><label class="form-label">Interferes With</label><input class="form-control" name="pain_interferes"></div>
+                    <div class="col-md-4"><label class="form-label">Interferes With</label><input class="form-control" name="pain_interferes" id="pain_interferes"></div>
                 </div>
             </div>
             <!-- Objective Tab -->
             <div class="tab-pane fade" id="objective" role="tabpanel">
                 <div class="mb-2"><label class="form-label">Posture:</label>
-                    <textarea class="form-control" rows="2" name="posture"></textarea></div>
+                    <textarea class="form-control" rows="2" name="posture" id="posture"></textarea></div>
                 <div class="mb-2"><label class="form-label">ROM:</label>
-                    <textarea class="form-control" rows="2" name="rom"></textarea></div>
+                    <textarea class="form-control" rows="2" name="rom" id="rom"></textarea></div>
                 <div class="mb-2"><label class="form-label">Muscle Strength Test:</label>
-                    <textarea class="form-control" rows="2" name="strength"></textarea></div>
+                    <textarea class="form-control" rows="2" name="strength" id="strength"></textarea></div>
                 <div class="mb-2"><label class="form-label">Palpation:</label>
-                    <textarea class="form-control" rows="2" name="palpation"></textarea></div>
+                    <textarea class="form-control" rows="2" name="palpation" id="palpation"></textarea></div>
                 <div class="mb-2"><label class="form-label">Functional Test(s):</label>
-                    <textarea class="form-control" rows="2" name="functional"></textarea></div>
+                    <textarea class="form-control" rows="2" name="functional" id="functional"></textarea></div>
                 <div class="mb-2"><label class="form-label">Special Test(s):</label>
-                    <textarea class="form-control" rows="2" name="special"></textarea></div>
+                    <textarea class="form-control" rows="2" name="special" id="special"></textarea></div>
                 <div class="mb-2"><label class="form-label">Current Functional Mobility Impairment(s):</label>
-                    <textarea class="form-control" rows="2" name="impairments"></textarea></div>
+                    <textarea class="form-control" rows="2" name="impairments" id="impairments"></textarea></div>
             </div>
             <!-- Diff Dx Tab -->
             <div class="tab-pane fade" id="diffdx" role="tabpanel">
@@ -112,7 +112,7 @@
                     <label class="form-label mb-0 me-2">Best-Fit Diagnosis</label>
                     <button type="button" class="btn btn-outline-success btn-sm ai-btn" id="ai-generate-diffdx">AI Generate</button>
                 </div>
-                <textarea class="form-control" rows="2" name="diffdx" id="diffdx-text"></textarea>
+                <textarea class="form-control" rows="2" name="diffdx" id="diffdx"></textarea>
             </div>
             <!-- Assessment Summary Tab -->
             <div class="tab-pane fade" id="summary" role="tabpanel">
@@ -130,11 +130,11 @@
                 </div>
                 <textarea class="form-control" rows="6" name="goals" id="goals-text"></textarea>
                 <div class="mb-2 mt-3"><label class="form-label">Frequency/Duration:</label>
-                    <input class="form-control" name="frequency"></div>
+                    <input class="form-control" name="frequency" id="frequency"></div>
                 <div class="mb-2"><label class="form-label">Intervention:</label>
-                    <textarea class="form-control" rows="2" name="intervention"></textarea></div>
+                    <textarea class="form-control" rows="2" name="intervention" id="intervention"></textarea></div>
                 <div class="mb-2"><label class="form-label">Treatment Procedures:</label>
-                    <textarea class="form-control" rows="2" name="procedures"></textarea></div>
+                    <textarea class="form-control" rows="2" name="procedures" id="procedures"></textarea></div>
             </div>
         </div>
     </form>
@@ -162,7 +162,7 @@ document.getElementById('ai-generate-diffdx').onclick = function() {
     })
     .then(r => r.text())
     .then(t => {
-        document.getElementById('diffdx-text').value = t;
+        document.getElementById('diffdx').value = t;
         setStatus("Diff Dx generated!", "green");
     }).catch(e => setStatus("AI error", "red"));
 };
@@ -194,7 +194,7 @@ document.getElementById('ai-generate-goals').onclick = function() {
         setStatus("Goals generated!", "green");
     }).catch(e => setStatus("AI error", "red"));
 };
-// Template loader (FIXED)
+// Template loader
 document.getElementById('load-template-btn').onclick = function() {
     const tmpl = document.getElementById('template-select').value;
     fetch('/load_template', {
