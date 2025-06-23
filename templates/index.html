@@ -143,17 +143,17 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-function getAllFields() {
-    const data = {};
-    document.querySelectorAll('input, textarea, select').forEach(el => {
-        if (el.name) data[el.name] = el.value;
-    });
-    return data;
-}
-function setStatus(msg, color="green") {
-    document.getElementById('status-msg').textContent = msg;
-    document.getElementById('status-msg').style.color = color;
-}
+    function getAllFields() {
+        const data = {};
+        document.querySelectorAll('input, textarea, select').forEach(el => {
+            if (el.name) data[el.name] = el.value;
+        });
+        return data;
+    }
+    function setStatus(msg, color="green") {
+        document.getElementById('status-msg').textContent = msg;
+        document.getElementById('status-msg').style.color = color;
+    }
     document.getElementById('ai-generate-diffdx').onclick = function() {
         setStatus("Generating Diff Dx...", "orange");
         fetch('/generate_diffdx', {
@@ -167,86 +167,85 @@ function setStatus(msg, color="green") {
             setStatus("Diff Dx generated!", "green");
         }).catch(e => setStatus("AI error", "red"));
     };
-};
-document.getElementById('ai-generate-summary').onclick = function() {
-    setStatus("Generating summary...", "orange");
-    fetch('/generate_summary', {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({fields: getAllFields()})
-    })
-    .then(r => r.text())
-    .then(t => {
-        document.getElementById('summary-text').value = t;
-        setStatus("Assessment summary generated!", "green");
-    }).catch(e => setStatus("AI error", "red"));
-};
-document.getElementById('ai-generate-goals').onclick = function() {
-    setStatus("Generating goals...", "orange");
-    fetch('/generate_goals', {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({fields: getAllFields()})
-    })
-    .then(r => r.text())
-    .then(t => {
-        document.getElementById('goals-text').value = t;
-        setStatus("Goals generated!", "green");
-    }).catch(e => setStatus("AI error", "red"));
-};
-document.getElementById('load-template-btn').onclick = function() {
-    const tmpl = document.getElementById('template-select').value;
-    fetch('/load_template', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({template: tmpl})
-    })
-    .then(resp => resp.json())
-    .then(data => {
-        for (const [k, v] of Object.entries(data)) {
-            let fld = document.getElementById(k) || document.querySelector(`[name='${k}']`);
-            if (fld) fld.value = v || "";
-        }
-    });
-};
-// Export Word
-document.getElementById('save-word-btn').onclick = function() {
-    fetch('/export_word', {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(getAllFields())
-    })
-    .then(resp => resp.blob())
-    .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "PT_Eval.docx";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-    });
-};
-// Export PDF
-document.getElementById('save-pdf-btn').onclick = function() {
-    fetch('/export_pdf', {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(getAllFields())
-    })
-    .then(resp => resp.blob())
-    .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "PT_Eval.pdf";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-    });
-};
+    document.getElementById('ai-generate-summary').onclick = function() {
+        setStatus("Generating summary...", "orange");
+        fetch('/generate_summary', {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({fields: getAllFields()})
+        })
+        .then(r => r.text())
+        .then(t => {
+            document.getElementById('summary-text').value = t;
+            setStatus("Assessment summary generated!", "green");
+        }).catch(e => setStatus("AI error", "red"));
+    };
+    document.getElementById('ai-generate-goals').onclick = function() {
+        setStatus("Generating goals...", "orange");
+        fetch('/generate_goals', {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify(getAllFields())
+        })
+        .then(r => r.text())
+        .then(t => {
+            document.getElementById('goals-text').value = t;
+            setStatus("Goals generated!", "green");
+        }).catch(e => setStatus("AI error", "red"));
+    };
+    document.getElementById('load-template-btn').onclick = function() {
+        const tmpl = document.getElementById('template-select').value;
+        fetch('/load_template', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({template: tmpl})
+        })
+        .then(resp => resp.json())
+        .then(data => {
+            for (const [k, v] of Object.entries(data)) {
+                let fld = document.getElementById(k) || document.querySelector(`[name='${k}']`);
+                if (fld) fld.value = v || "";
+            }
+        });
+    };
+    // Export Word
+    document.getElementById('save-word-btn').onclick = function() {
+        fetch('/export_word', {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(getAllFields())
+        })
+        .then(resp => resp.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "PT_Eval.docx";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        });
+    };
+    // Export PDF
+    document.getElementById('save-pdf-btn').onclick = function() {
+        fetch('/export_pdf', {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(getAllFields())
+        })
+        .then(resp => resp.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "PT_Eval.pdf";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        });
+    };
 </script>
 </body>
 </html>

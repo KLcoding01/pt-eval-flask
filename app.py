@@ -219,13 +219,15 @@ def generate_diffdx():
         f"Subjective:\n{hpi}\n\nPain:\n{pain}\n\nObjective:\n{obj}"
     )
     response = openai.ChatCompletion.create(
-        model="gpt-4o-mini",
+        model="gpt-4o",
         messages=[{"role": "system", "content": prompt}],
         max_tokens=200
     )
     diffdx = response.choices[0].message["content"].strip()
     return diffdx
-    
+ };
+ };
+ 
 @app.route('/generate_summary', methods=['POST'])
 def generate_summary():
     fields = request.json.get('fields', {})
