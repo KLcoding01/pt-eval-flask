@@ -190,47 +190,74 @@ def load_template():
     fields = parse_template(template)
     return jsonify(fields)
 
-@app.route("/generate_summary", methods=["POST"])
-def generate_summary():
-    data = request.json
-    fields = data.get("fields", {})
-    prompt = f"""
-Generate a concise, 7-8 sentence Physical Therapy assessment summary for PT documentation. Use clinical, professional language and abbreviations only (e.g., use HEP, ADLs, LBP, STM, TherEx, etc.—do not spell out the abbreviation and do not write both full term and abbreviation). Never use 'The patient'; use 'Pt' at the start of sentences.
-History: {fields.get('history','')}
-Subjective: {fields.get('subjective','')}
-Objective: {fields.get('objective','')}
-Diff Diagnosis: {fields.get('diffdx','')}
-Functional Limitations: {fields.get('functional','')}
-Impairments: {fields.get('impairments','')}
-ROM: {fields.get('rom','')}
-Strength: {fields.get('strength','')}
-Prognosis: {fields.get('prognosis','')}
-Write as a single paragraph.
-"""
-    summary = gpt_call(prompt)
-    return summary
-
-@app.route("/generate_diffdx", methods=["POST"])
 @app.route('/generate_diffdx', methods=['POST'])
-
 def generate_diffdx():
     fields = request.json.get('fields', {})
-    # Compose a prompt for the AI using relevant fields
-    prompt = (
-        "You are an expert PT. Given the following PT eval, generate a concise, clinical differential diagnosis.\n\n"
-        f"Subjective: {fields.get('subjective', '')}\n"
-        f"Pain: {fields.get('pain_description', '')}\n"
-        f"Objective: {fields.get('posture', '')} {fields.get('rom', '')} {fields.get('strength', '')}\n"
-        f"Special Tests: {fields.get('special', '')}\n"
-        f"Functional: {fields.get('functional', '')}\n"
-        f"Medical History: {fields.get('history', '')}\n"
-        "Differential Diagnosis:"
+    hpi  = fields.get("subjective", "")
+    pain = "; ".join([
+        f"{label}: {fields.get(key, '')}"
+        for label, key in [
+            ("Area/Location", "pain_location"),
+            ("Onset", "pain_onset"),
+            ("Condition", "pain_condition"),
+            ("Mechanism", "pain_mechanism"),
+            ("Rating", "pain_rating"),
+            ("Frequency", "pain_frequency"),
+            ("Description", "pain_description"),
+            ("Aggravating", "pain_aggravating"),
+            ("Relieved", "pain_relieved"),
+            ("Interferes", "pain_interferes"),
+        ]
+    ])
+    obj = (
+        f"Posture: {fields.get('posture', '')}\n"
+        f"ROM: {fields.get('rom', '')}\n"
+        f"Strength: {fields.get('strength', '')}\n"
     )
-    # Use the OpenAI API (v1 or v0 depending on your setup)
+    prompt = (
+        "You are a PT clinical assistant. Provide the single best-fit diagnosis:\n\n"
+        f"Subjective:\n{hpi}\n\nPain:\n{pain}\n\nObjective:\n{obj}"
+    )
     response = openai.ChatCompletion.create(
-        model="gpt-4o mini",
+        model="gpt-4o-mini",
         messages=[{"role": "system", "content": prompt}],
-        max_tokens=150
+        max_tokens=80
+    )
+    diffdx = response.choices[0].message["content"].strip()
+    return diffdx
+
+@app.route('/generate_diffdx', methods=['POST'])
+def generate_diffdx():
+    fields = request.json.get('fields', {})
+    hpi  = fields.get("subjective", "")
+    pain = "; ".join([
+        f"{label}: {fields.get(key, '')}"
+        for label, key in [
+            ("Area/Location", "pain_location"),
+            ("Onset", "pain_onset"),
+            ("Condition", "pain_condition"),
+            ("Mechanism", "pain_mechanism"),
+            ("Rating", "pain_rating"),
+            ("Frequency", "pain_frequency"),
+            ("Description", "pain_description"),
+            ("Aggravating", "pain_aggravating"),
+            ("Relieved", "pain_relieved"),
+            ("Interferes", "pain_interferes"),
+        ]
+    ])
+    obj = (
+        f"Posture: {fields.get('posture', '')}\n"
+        f"ROM: {fields.get('rom', '')}\n"
+        f"Strength: {fields.get('strength', '')}\n"
+    )
+    prompt = (
+        "You are a PT clinical assistant. Provide the single best-fit diagnosis:\n\n"
+        f"Subjective:\n{hpi}\n\nPain:\n{pain}\n\nObjective:\n{obj}"
+    )
+    response = openai.ChatCompletion.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "system", "content": prompt}],
+        max_tokens=200
     )
     diffdx = response.choices[0].message["content"].strip()
     return diffdx

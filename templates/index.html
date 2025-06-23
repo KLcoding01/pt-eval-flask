@@ -154,18 +154,19 @@ function setStatus(msg, color="green") {
     document.getElementById('status-msg').textContent = msg;
     document.getElementById('status-msg').style.color = color;
 }
-document.getElementById('ai-generate-diffdx').onclick = function() {
-    setStatus("Generating Diff Dx...", "orange");
-    fetch('/generate_diffdx', {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({fields: getAllFields()})
-    })
-    .then(r => r.text())
-    .then(t => {
-        document.getElementById('diffdx').value = t;
-        setStatus("Diff Dx generated!", "green");
-    }).catch(e => setStatus("AI error", "red"));
+    document.getElementById('ai-generate-diffdx').onclick = function() {
+        setStatus("Generating Diff Dx...", "orange");
+        fetch('/generate_diffdx', {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({fields: getAllFields()})
+        })
+        .then(r => r.text())
+        .then(t => {
+            document.getElementById('diffdx').value = t;
+            setStatus("Diff Dx generated!", "green");
+        }).catch(e => setStatus("AI error", "red"));
+    };
 };
 document.getElementById('ai-generate-summary').onclick = function() {
     setStatus("Generating summary...", "orange");
