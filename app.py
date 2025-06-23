@@ -241,7 +241,7 @@ def generate_summary():
 Include: 
 1) How/when/why pt was seen (PT initial eval on {today} for {subj}), 
 2) mechanism of injury if available ({moi}),
-3) main differential dx ({dx}),
+3) main differential dx ({diffdx}),
 4) current impairments (strength: {strg}; ROM: {rom}; balance/mobility: {impair}), 
 5) functional/activity/participation limitations: {func},
 6) a professional prognosis and 
