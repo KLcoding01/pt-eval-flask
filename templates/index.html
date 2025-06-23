@@ -194,10 +194,21 @@ document.getElementById('ai-generate-goals').onclick = function() {
         setStatus("Goals generated!", "green");
     }).catch(e => setStatus("AI error", "red"));
 };
-// Load Template (stub: loads default text, can be expanded)
-document.getElementById('load-template-btn').onclick = function() {
-    // In real use, parse and populate fields!
-    setStatus("Loaded template!", "green");
+// Template loader
+document.getElementById('loadTemplateBtn').onclick = function() {
+    const tmpl = document.getElementById('templateSelect').value;
+    fetch('/load_template', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({template: tmpl})
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        for (const [k, v] of Object.entries(data)) {
+            const fld = document.getElementById(k);
+            if (fld) fld.value = v || "";
+        }
+    });
 };
 </script>
 </body>
