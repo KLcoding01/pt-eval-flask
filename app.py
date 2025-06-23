@@ -123,40 +123,44 @@ Treatment Procedures:
 
 # Helper: Parse template text into fields
 def parse_template(template):
-    fields = {k:"" for k in [
-        "med_diag","med_hist","subj","meds","tests","dme","plof","posture","rom","str","palpation","func",
-        "special","impair","goals","freq","interv","proc","pain_area","pain_onset","pain_cond","pain_mech",
-        "pain_rating","pain_freq","pain_desc","pain_aggrav","pain_relieve","pain_interfere"
+    fields = {k: "" for k in [
+        "meddiag", "history", "subjective", "meds", "tests", "dme", "plof",
+        "posture", "rom", "strength", "palpation", "functional", "special",
+        "impairments", "goals", "frequency", "intervention", "procedures",
+        "pain_location", "pain_onset", "pain_condition", "pain_mechanism",
+        "pain_rating", "pain_frequency", "pain_description", "pain_aggravating",
+        "pain_relieved", "pain_interferes"
     ]}
     key_map = {
-        "Medical Diagnosis": "med_diag",
-        "Medical History/HNP": "med_hist",
-        "Subjective": "subj",
+        "Medical Diagnosis": "meddiag",
+        "Medical History/HNP": "history",
+        "Subjective": "subjective",
+        "Subjective (HPI)": "subjective",
         "Current Medication(s)": "meds",
         "Diagnostic Test(s)": "tests",
         "DME/Assistive Device": "dme",
         "PLOF": "plof",
         "Posture": "posture",
         "ROM": "rom",
-        "Muscle Strength Test": "str",
+        "Muscle Strength Test": "strength",
         "Palpation": "palpation",
-        "Functional Test(s)": "func",
+        "Functional Test(s)": "functional",
         "Special Test(s)": "special",
-        "Current Functional Mobility Impairment(s)": "impair",
+        "Current Functional Mobility Impairment(s)": "impairments",
         "Goals": "goals",
-        "Frequency/Duration": "freq",
-        "Intervention": "interv",
-        "Treatment Procedures": "proc",
-        "Area/Location of Injury": "pain_area",
+        "Frequency/Duration": "frequency",
+        "Intervention": "intervention",
+        "Treatment Procedures": "procedures",
+        "Area/Location of Injury": "pain_location",
         "Onset/Exacerbation Date": "pain_onset",
-        "Condition of Injury": "pain_cond",
-        "Mechanism of Injury": "pain_mech",
+        "Condition of Injury": "pain_condition",
+        "Mechanism of Injury": "pain_mechanism",
         "Pain Rating (P/B/W)": "pain_rating",
-        "Pain Frequency": "pain_freq",
-        "Description": "pain_desc",
-        "Aggravating Factor": "pain_aggrav",
-        "Relieved By": "pain_relieve",
-        "Interferes With": "pain_interfere"
+        "Pain Frequency": "pain_frequency",
+        "Description": "pain_description",
+        "Aggravating Factor": "pain_aggravating",
+        "Relieved By": "pain_relieved",
+        "Interferes With": "pain_interferes"
     }
     curr = None
     for line in template.splitlines():

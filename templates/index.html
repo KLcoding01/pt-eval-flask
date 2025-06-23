@@ -23,6 +23,8 @@
             </select>
             <button type="button" class="btn btn-outline-primary btn-sm me-2" id="load-template-btn">Load</button>
             <button type="submit" class="btn btn-success btn-sm">Save/Preview</button>
+            <button type="button" class="btn btn-info btn-sm me-2" id="save-word-btn">Export Word</button>
+            <button type="button" class="btn btn-danger btn-sm me-2" id="save-pdf-btn">Export PDF</button>
             <span id="status-msg" class="ms-3"></span>
         </div>
         <ul class="nav nav-tabs" id="evalTabs" role="tablist">
@@ -56,7 +58,7 @@
                 <div class="mb-2"><label class="form-label">Medical Diagnosis:</label>
                     <textarea class="form-control" rows="2" name="meddiag" id="meddiag"></textarea></div>
                 <div class="mb-2"><label class="form-label">Medical History/HNP:</label>
-                    <textarea class="form-control" rows="2" name="history" id="history-field"></textarea></div>
+                    <textarea class="form-control" rows="2" name="history" id="history"></textarea></div>
                 <div class="mb-2"><label class="form-label">Subjective (HPI):</label>
                     <textarea class="form-control" rows="3" name="subjective" id="subjective"></textarea></div>
                 <div class="mb-2"><label class="form-label">Current Medication(s):</label>
@@ -152,7 +154,6 @@ function setStatus(msg, color="green") {
     document.getElementById('status-msg').textContent = msg;
     document.getElementById('status-msg').style.color = color;
 }
-// AI Generate Diff Dx
 document.getElementById('ai-generate-diffdx').onclick = function() {
     setStatus("Generating Diff Dx...", "orange");
     fetch('/generate_diffdx', {
@@ -166,7 +167,6 @@ document.getElementById('ai-generate-diffdx').onclick = function() {
         setStatus("Diff Dx generated!", "green");
     }).catch(e => setStatus("AI error", "red"));
 };
-// AI Generate Assessment Summary
 document.getElementById('ai-generate-summary').onclick = function() {
     setStatus("Generating summary...", "orange");
     fetch('/generate_summary', {
@@ -180,7 +180,6 @@ document.getElementById('ai-generate-summary').onclick = function() {
         setStatus("Assessment summary generated!", "green");
     }).catch(e => setStatus("AI error", "red"));
 };
-// AI Generate Goals
 document.getElementById('ai-generate-goals').onclick = function() {
     setStatus("Generating goals...", "orange");
     fetch('/generate_goals', {
@@ -194,7 +193,6 @@ document.getElementById('ai-generate-goals').onclick = function() {
         setStatus("Goals generated!", "green");
     }).catch(e => setStatus("AI error", "red"));
 };
-// Template loader
 document.getElementById('load-template-btn').onclick = function() {
     const tmpl = document.getElementById('template-select').value;
     fetch('/load_template', {
@@ -208,6 +206,44 @@ document.getElementById('load-template-btn').onclick = function() {
             let fld = document.getElementById(k) || document.querySelector(`[name='${k}']`);
             if (fld) fld.value = v || "";
         }
+    });
+};
+// Export Word
+document.getElementById('save-word-btn').onclick = function() {
+    fetch('/export_word', {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(getAllFields())
+    })
+    .then(resp => resp.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "PT_Eval.docx";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    });
+};
+// Export PDF
+document.getElementById('save-pdf-btn').onclick = function() {
+    fetch('/export_pdf', {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(getAllFields())
+    })
+    .then(resp => resp.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "PT_Eval.pdf";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
     });
 };
 </script>
