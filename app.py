@@ -1,6 +1,7 @@
 import os
 from flask import Flask, request, send_file, render_template, jsonify
 from docx import Document
+from docx.shared import Pt
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from datetime import date
@@ -210,17 +211,28 @@ Write as a single paragraph.
     return summary
 
 @app.route("/generate_diffdx", methods=["POST"])
+@app.route('/generate_diffdx', methods=['POST'])
+
 def generate_diffdx():
-    data = request.json
-    fields = data.get("fields", {})
-    prompt = f"""
-You are a PT clinical assistant. Provide the single best-fit diagnosis for this patient:
-History: {fields.get('history','')}
-Subjective: {fields.get('subjective','')}
-Pain: {fields.get('pain','')}
-Objective: {fields.get('objective','')}
-"""
-    diffdx = gpt_call(prompt, max_tokens=200)
+    fields = request.json.get('fields', {})
+    # Compose a prompt for the AI using relevant fields
+    prompt = (
+        "You are an expert PT. Given the following PT eval, generate a concise, clinical differential diagnosis.\n\n"
+        f"Subjective: {fields.get('subjective', '')}\n"
+        f"Pain: {fields.get('pain_description', '')}\n"
+        f"Objective: {fields.get('posture', '')} {fields.get('rom', '')} {fields.get('strength', '')}\n"
+        f"Special Tests: {fields.get('special', '')}\n"
+        f"Functional: {fields.get('functional', '')}\n"
+        f"Medical History: {fields.get('history', '')}\n"
+        "Differential Diagnosis:"
+    )
+    # Use the OpenAI API (v1 or v0 depending on your setup)
+    response = openai.ChatCompletion.create(
+        model="gpt-4o mini",
+        messages=[{"role": "system", "content": prompt}],
+        max_tokens=150
+    )
+    diffdx = response.choices[0].message["content"].strip()
     return diffdx
 
 @app.route("/generate_goals", methods=["POST"])
@@ -252,15 +264,68 @@ Functional Limitations: {fields.get('functional','')}
 def export_word():
     data = request.get_json()
     doc = Document()
-    doc.add_heading("PT Evaluation", 0)
-    table = doc.add_table(rows=1, cols=2)
-    hdr_cells = table.rows[0].cells
-    hdr_cells[0].text = 'Field'
-    hdr_cells[1].text = 'Value'
-    for k, v in data.items():
-        row_cells = table.add_row().cells
-        row_cells[0].text = str(k)
-        row_cells[1].text = str(v)
+    doc.add_heading("Physical Therapy Evaluation", 0)
+    
+    def add_section(title, value):
+        doc.add_paragraph(title, style='Heading2')
+        doc.add_paragraph(value if value else "", style='Normal')
+        doc.add_paragraph('-'*114)
+
+    # Section: Medical Diagnosis
+    add_section("Medical Diagnosis:", data.get("meddiag", ""))
+    # Section: Medical History/HNP
+    add_section("Medical History/HNP:", data.get("history", ""))
+    # Section: Subjective
+    add_section("Subjective:", data.get("subjective", ""))
+    # Section: Pain
+    doc.add_paragraph("Pain:", style='Heading2')
+    pain_fields = [
+        ("Area/Location of Injury", "pain_location"),
+        ("Onset/Exacerbation Date", "pain_onset"),
+        ("Condition of Injury", "pain_condition"),
+        ("Mechanism of Injury", "pain_mechanism"),
+        ("Pain Rating (Present/Best/Worst)", "pain_rating"),
+        ("Frequency", "pain_frequency"),
+        ("Description", "pain_description"),
+        ("Aggravating Factor", "pain_aggravating"),
+        ("Relieved By", "pain_relieved"),
+        ("Interferes With", "pain_interferes"),
+    ]
+    for label, key in pain_fields:
+        doc.add_paragraph(f"{label}: {data.get(key, '')}")
+    doc.add_paragraph('-'*114)
+    # Medications, Tests, DME, PLOF
+    add_section("Current Medication(s):", data.get("meds", ""))
+    add_section("Diagnostic Test(s):", data.get("tests", ""))
+    add_section("DME/Assistive Device:", data.get("dme", ""))
+    add_section("PLOF:", data.get("plof", ""))
+
+    # Objective
+    doc.add_paragraph("Objective:", style='Heading2')
+    obj_fields = [
+        ("Posture", "posture"),
+        ("ROM", "rom"),
+        ("Muscle Strength Test", "strength"),
+        ("Palpation", "palpation"),
+        ("Functional Test(s)", "functional"),
+        ("Special Test(s)", "special"),
+        ("Current Functional Mobility Impairment(s)", "impairments"),
+    ]
+    for label, key in obj_fields:
+        doc.add_paragraph(f"{label}: {data.get(key, '')}")
+    doc.add_paragraph('-'*114)
+
+    # Assessment Summary
+    add_section("Assessment Summary:", data.get("summary", ""))
+    # Goals
+    add_section("Goals:", data.get("goals", ""))
+    # Frequency
+    add_section("Frequency:", data.get("frequency", ""))
+    # Intervention
+    add_section("Intervention:", data.get("intervention", ""))
+    # Procedures
+    add_section("Treatment Procedures:", data.get("procedures", ""))
+
     buffer = io.BytesIO()
     doc.save(buffer)
     buffer.seek(0)
@@ -278,18 +343,89 @@ def export_pdf():
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
     y = height - 40
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(40, y, "PT Evaluation")
-    c.setFont("Helvetica", 12)
-    y -= 30
-    for k, v in data.items():
-        text = f"{k}: {v}"
-        if y < 50:
-            c.showPage()
-            y = height - 40
-            c.setFont("Helvetica", 12)
-        c.drawString(40, y, text[:110])
+
+    def add_section(title, value):
+        nonlocal y
+        c.setFont("Helvetica-Bold", 13)
+        c.drawString(40, y, title)
         y -= 18
+        c.setFont("Helvetica", 11)
+        for line in (value or "").split('\n'):
+            c.drawString(48, y, line)
+            y -= 14
+            if y < 60: c.showPage(); y = height - 40
+        y -= 8
+        c.setLineWidth(0.5)
+        c.line(40, y, width - 40, y)
+        y -= 16
+
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(40, y, "Physical Therapy Evaluation")
+    y -= 30
+
+    # Add all main sections in the same order
+    add_section("Medical Diagnosis:", data.get("meddiag", ""))
+    add_section("Medical History/HNP:", data.get("history", ""))
+    add_section("Subjective:", data.get("subjective", ""))
+
+    # Pain block
+    c.setFont("Helvetica-Bold", 13)
+    c.drawString(40, y, "Pain:")
+    y -= 18
+    c.setFont("Helvetica", 11)
+    pain_fields = [
+        ("Area/Location of Injury", "pain_location"),
+        ("Onset/Exacerbation Date", "pain_onset"),
+        ("Condition of Injury", "pain_condition"),
+        ("Mechanism of Injury", "pain_mechanism"),
+        ("Pain Rating (Present/Best/Worst)", "pain_rating"),
+        ("Frequency", "pain_frequency"),
+        ("Description", "pain_description"),
+        ("Aggravating Factor", "pain_aggravating"),
+        ("Relieved By", "pain_relieved"),
+        ("Interferes With", "pain_interferes"),
+    ]
+    for label, key in pain_fields:
+        c.drawString(48, y, f"{label}: {data.get(key, '')}")
+        y -= 14
+        if y < 60: c.showPage(); y = height - 40
+    y -= 8
+    c.line(40, y, width - 40, y)
+    y -= 16
+
+    add_section("Current Medication(s):", data.get("meds", ""))
+    add_section("Diagnostic Test(s):", data.get("tests", ""))
+    add_section("DME/Assistive Device:", data.get("dme", ""))
+    add_section("PLOF:", data.get("plof", ""))
+
+    # Objective block
+    c.setFont("Helvetica-Bold", 13)
+    c.drawString(40, y, "Objective:")
+    y -= 18
+    c.setFont("Helvetica", 11)
+    obj_fields = [
+        ("Posture", "posture"),
+        ("ROM", "rom"),
+        ("Muscle Strength Test", "strength"),
+        ("Palpation", "palpation"),
+        ("Functional Test(s)", "functional"),
+        ("Special Test(s)", "special"),
+        ("Current Functional Mobility Impairment(s)", "impairments"),
+    ]
+    for label, key in obj_fields:
+        c.drawString(48, y, f"{label}: {data.get(key, '')}")
+        y -= 14
+        if y < 60: c.showPage(); y = height - 40
+    y -= 8
+    c.line(40, y, width - 40, y)
+    y -= 16
+
+    add_section("Assessment Summary:", data.get("summary", ""))
+    add_section("Goals:", data.get("goals", ""))
+    add_section("Frequency:", data.get("frequency", ""))
+    add_section("Intervention:", data.get("intervention", ""))
+    add_section("Treatment Procedures:", data.get("procedures", ""))
+
     c.save()
     buffer.seek(0)
     return send_file(
