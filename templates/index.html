@@ -194,9 +194,9 @@ document.getElementById('ai-generate-goals').onclick = function() {
         setStatus("Goals generated!", "green");
     }).catch(e => setStatus("AI error", "red"));
 };
-// Template loader
-document.getElementById('loadTemplateBtn').onclick = function() {
-    const tmpl = document.getElementById('templateSelect').value;
+// Template loader (FIXED)
+document.getElementById('load-template-btn').onclick = function() {
+    const tmpl = document.getElementById('template-select').value;
     fetch('/load_template', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -205,10 +205,12 @@ document.getElementById('loadTemplateBtn').onclick = function() {
     .then(resp => resp.json())
     .then(data => {
         for (const [k, v] of Object.entries(data)) {
-            const fld = document.getElementById(k);
+            // Try name if no id
+            let fld = document.getElementById(k) || document.querySelector(`[name='${k}']`);
             if (fld) fld.value = v || "";
         }
     });
+};
 };
 </script>
 </body>
