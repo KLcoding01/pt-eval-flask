@@ -93,7 +93,7 @@
         <!-- Diff Dx -->
         <div class="tab-pane fade" id="diffdx">
           <button type="button" id="ai-generate-diffdx" class="btn btn-outline-success btn-sm mb-2">AI Generate</button>
-          <textarea name="diffdx" id="diffdx" class="form-control" rows="2"></textarea>
+          <textarea name="diffdx" id="diffdx" class="form-control" rows="8"></textarea>
         </div>
 
         <!-- Assessment Summary -->
@@ -154,8 +154,9 @@
       })
       .then(r => r.text())
       .then(t => {
-        console.log("DIFFDX RAW TEXT:", t);
-        // Clean up any literal \n to real newlines:
+        // See what you actually received:
+        console.log("DIFFDX RESULT:", t);
+        // Set text and handle literal "\n" as real line breaks:
         document.getElementById('diffdx').value = t.replace(/\\n/g, '\n');
         setStatus("Diff Dx generated!","green");
       }).catch(()=> setStatus("AI error","red"));
