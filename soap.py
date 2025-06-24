@@ -26,7 +26,6 @@ def replace_terms(text):
     return text
 
 def gpt_call(prompt, max_tokens=350, system_msg=None):
-    # Adds a little variety to the temperature each call
     temperature = random.uniform(0.65, 0.85)
     try:
         msgs = []
@@ -43,10 +42,10 @@ def gpt_call(prompt, max_tokens=350, system_msg=None):
     except Exception as e:
         return f"OpenAI error: {e}"
 
+# ---- SOAP Note tab ----
 def generate_soap(fields, use_ai=True):
     """
-    Generate a PT SOAP note summary from eval builder fields.
-    If use_ai is True, uses OpenAI.
+    Generate a PT SOAP note summary from SOAP note tab fields.
     """
     if use_ai:
         note = (
@@ -75,3 +74,50 @@ def generate_soap(fields, use_ai=True):
         s.append("Progress: " + (fields.get('prog', '').strip() or ''))
         s.append("Plan: " + (fields.get('plan', '').strip() or ''))
         return "\n".join(s)
+
+# ---- PT Eval tab ----
+def generate_eval(fields, use_ai=True):
+    """
+    Generate a summary from PT Eval tab fields.
+    """
+    if use_ai:
+        prompt = (
+            "Summarize this PT evaluation for EMR using clinical abbreviations and a professional tone. "
+            "Bullet points are okay for findings. Do not use full patient name, just 'Pt'.\n\n"
+            f"Name: {fields.get('name','')}\n"
+            f"Diagnosis: {fields.get('meddiag','')}\n"
+            f"History: {fields.get('history','')}\n"
+        )
+        system_msg = "You are a PT summarizing a PT evaluation for EMR."
+        return gpt_call(prompt, max_tokens=400, system_msg=system_msg)
+    else:
+        return (
+            f"Name: {fields.get('name','')}\n"
+            f"Diagnosis: {fields.get('meddiag','')}\n"
+            f"History: {fields.get('history','')}"
+        )
+
+# ---- Daily Note tab ----
+def generate_daily_note(fields, use_ai=True):
+    """
+    Generate a summary from Daily Note tab fields.
+    """
+    if use_ai:
+        prompt = (
+            "Write a concise daily PT SOAP note summary for the medical record. Use only these fields, "
+            "using clinical abbreviations and a professional tone. Avoid headers (S:, O:, A:, P:) and only use info provided:\n\n"
+            f"Subjective: {fields.get('subjective','')}\n"
+            f"Objective: {fields.get('objective','')}\n"
+            f"Assessment: {fields.get('assessment','')}\n"
+            f"Plan: {fields.get('plan','')}\n"
+        )
+        system_msg = "You are a PT writing a daily SOAP progress note."
+        return gpt_call(prompt, max_tokens=350, system_msg=system_msg)
+    else:
+        return (
+            f"S: {fields.get('subjective','')}\n"
+            f"O: {fields.get('objective','')}\n"
+            f"A: {fields.get('assessment','')}\n"
+            f"P: {fields.get('plan','')}"
+        )
+

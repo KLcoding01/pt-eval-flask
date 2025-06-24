@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>GPTW Note Builder</title>
+  <title>GPTW - PT Note Builder</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background: #f4f4f4; }
@@ -15,198 +15,147 @@
 <body>
   <div class="container">
     <h2>GPTW - PT Note Builder</h2>
-    <!-- Main workflow tabs -->
     <ul class="nav nav-tabs main-tabs" id="mainTab" role="tablist">
       <li class="nav-item" role="presentation">
         <button class="nav-link active" id="eval-tab" data-bs-toggle="tab" data-bs-target="#eval" type="button" role="tab">PT Eval Builder</button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="soap-tab" data-bs-toggle="tab" data-bs-target="#soap" type="button" role="tab">Daily Note Builder</button>
+        <button class="nav-link" id="daily-tab" data-bs-toggle="tab" data-bs-target="#daily" type="button" role="tab">Daily Note Builder</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="soap-tab" data-bs-toggle="tab" data-bs-target="#soap" type="button" role="tab">SOAP Note Generator</button>
       </li>
     </ul>
     <div class="tab-content" id="mainTabContent">
-      <!-- PT Eval Builder workflow -->
+
+      <!-- PT Eval Builder tab -->
       <div class="tab-pane fade show active" id="eval" role="tabpanel" aria-labelledby="eval-tab">
-        <div class="d-flex align-items-center mb-3">
-          <label class="fw-bold me-2">Template:</label>
-          <select id="template-select" class="form-select w-auto me-2">
-            {% for t in templates %}
-              <option>{{ t }}</option>
-            {% endfor %}
-          </select>
-          <button id="load-template-btn" class="btn btn-outline-primary btn-sm">Load</button>
-          <button id="save-word-btn" class="btn btn-info btn-sm">Export Word</button>
-          <button id="save-pdf-btn" class="btn btn-danger btn-sm">Export PDF</button>
-        </div>
-        <ul class="nav nav-tabs mb-3">
-          <li class="nav-item"><a class="nav-link active" href="#patientinfo" data-bs-toggle="tab">Patient Info</a></li>
-          <li class="nav-item"><a class="nav-link" href="#history" data-bs-toggle="tab">History</a></li>
-          <li class="nav-item"><a class="nav-link" href="#pain" data-bs-toggle="tab">Pain</a></li>
-          <li class="nav-item"><a class="nav-link" href="#objective" data-bs-toggle="tab">Objective</a></li>
-          <li class="nav-item"><a class="nav-link" href="#diffdx" data-bs-toggle="tab">Diff Dx</a></li>
-          <li class="nav-item"><a class="nav-link" href="#summary" data-bs-toggle="tab">Assessment Summary</a></li>
-          <li class="nav-item"><a class="nav-link" href="#plan" data-bs-toggle="tab">Plan</a></li>
-        </ul>
         <form id="ptevalform">
-          <div class="tab-content">
-            <!-- Patient Info -->
-            <div class="tab-pane fade show active" id="patientinfo">
-              <div class="row mb-2">
-                <div class="col"><input name="name" id="name" class="form-control" placeholder="Patient Name"></div>
-                <div class="col">
-                  <select name="gender" id="gender" class="form-select">
-                    <option>Female</option><option>Male</option>
-                  </select>
-                </div>
-                <div class="col"><input name="dob" id="dob" class="form-control" placeholder="DOB (MM/DD/YYYY)"></div>
-                <div class="col"><input name="age" id="age" class="form-control" placeholder="Age"></div>
-              </div>
-              <div class="row">
-                <div class="col"><input name="currentdate" id="currentdate" class="form-control" placeholder="Current Date"></div>
-              </div>
-            </div>
-            <!-- History -->
-            <div class="tab-pane fade" id="history">
-              <textarea name="meddiag" id="meddiag" class="form-control mb-2" placeholder="Medical Diagnosis"></textarea>
-              <textarea name="history" id="history" class="form-control mb-2" placeholder="Medical History/HNP"></textarea>
-              <textarea name="subjective" id="subjective" class="form-control mb-2" placeholder="Subjective (HPI)"></textarea>
-              <textarea name="meds" id="meds" class="form-control mb-2" placeholder="Current Medication(s)"></textarea>
-              <textarea name="tests" id="tests" class="form-control mb-2" placeholder="Diagnostic Test(s)"></textarea>
-              <textarea name="dme" id="dme" class="form-control mb-2" placeholder="DME/Assistive Device"></textarea>
-              <textarea name="plof" id="plof" class="form-control mb-2" placeholder="PLOF"></textarea>
-            </div>
-            <!-- Pain -->
-            <div class="tab-pane fade" id="pain">
-              <input name="pain_location" id="pain_location" class="form-control mb-2" placeholder="Area/Location of Injury">
-              <input name="pain_onset"     id="pain_onset"     class="form-control mb-2" placeholder="Onset/Exacerbation Date">
-              <input name="pain_condition" id="pain_condition" class="form-control mb-2" placeholder="Condition of Injury">
-              <input name="pain_mechanism" id="pain_mechanism" class="form-control mb-2" placeholder="Mechanism of Injury">
-              <input name="pain_rating"    id="pain_rating"    class="form-control mb-2" placeholder="Pain Rating (P/B/W)">
-              <input name="pain_frequency" id="pain_frequency" class="form-control mb-2" placeholder="Pain Frequency">
-              <input name="pain_description" id="pain_description" class="form-control mb-2" placeholder="Description">
-              <input name="pain_aggravating" id="pain_aggravating" class="form-control mb-2" placeholder="Aggravating Factor">
-              <input name="pain_relieved"    id="pain_relieved"    class="form-control mb-2" placeholder="Relieved By">
-              <input name="pain_interferes"  id="pain_interferes"  class="form-control mb-2" placeholder="Interferes With">
-            </div>
-            <!-- Objective -->
-            <div class="tab-pane fade" id="objective">
-              <textarea name="posture"    id="posture"    class="form-control mb-2" placeholder="Posture"></textarea>
-              <textarea name="rom"        id="rom"        class="form-control mb-2" placeholder="ROM"></textarea>
-              <textarea name="strength"   id="strength"   class="form-control mb-2" placeholder="Muscle Strength Test"></textarea>
-              <textarea name="palpation"  id="palpation"  class="form-control mb-2" placeholder="Palpation"></textarea>
-              <textarea name="functional" id="functional" class="form-control mb-2" placeholder="Functional Test(s)"></textarea>
-              <textarea name="special"    id="special"    class="form-control mb-2" placeholder="Special Test(s)"></textarea>
-              <textarea name="impairments" id="impairments" class="form-control mb-2" placeholder="Current Functional Mobility Impairment(s)"></textarea>
-            </div>
-            <!-- Diff Dx -->
-            <div class="tab-pane fade" id="diffdx">
-              <button type="button" id="ai-generate-diffdx" class="btn btn-outline-success btn-sm mb-2">AI Generate</button>
-              <textarea name="diffdx" id="diffdx-text" class="form-control" rows="4"></textarea>
-            </div>
-            <!-- Assessment Summary -->
-            <div class="tab-pane fade" id="summary">
-              <div class="d-flex mb-2">
-                <button type="button" id="ai-generate-summary" class="btn btn-outline-success btn-sm me-2">AI Generate</button>
-                <button type="button" id="ai-regenerate-summary" class="btn btn-outline-warning btn-sm">Regenerate AI Summary</button>
-              </div>
-              <textarea name="summary" id="summary-text" class="form-control" rows="4"></textarea>
-            </div>
-            <!-- Plan -->
-            <div class="tab-pane fade" id="plan">
-              <button type="button" id="ai-generate-goals" class="btn btn-outline-success btn-sm mb-2">AI Generate Goals</button>
-              <textarea name="goals" id="goals-text" class="form-control mb-2" rows="6"></textarea>
-              <input name="frequency" id="frequency" class="form-control mb-2" placeholder="Frequency/Duration">
-              <textarea name="intervention" id="intervention" class="form-control mb-2" placeholder="Intervention"></textarea>
-              <textarea name="procedures"  id="procedures"  class="form-control mb-2" placeholder="Treatment Procedures"></textarea>
-            </div>
+          <div class="mb-3"><input name="name" id="eval-name" class="form-control" placeholder="Patient Name"></div>
+          <div class="mb-3"><textarea name="meddiag" id="eval-meddiag" class="form-control" placeholder="Medical Diagnosis"></textarea></div>
+          <div class="mb-3"><textarea name="history" id="eval-history" class="form-control" placeholder="History"></textarea></div>
+          <div class="d-flex mb-2">
+            <button type="button" id="ai-generate-summary" class="btn btn-outline-success btn-sm me-2">AI Generate Eval Summary</button>
+            <button type="button" id="ai-regenerate-summary" class="btn btn-outline-warning btn-sm">Regenerate</button>
           </div>
+          <textarea name="summary" id="summary-text" class="form-control" rows="4" placeholder="Eval summary will appear here..."></textarea>
+          <span id="eval-status-msg"></span>
         </form>
       </div>
-      <!-- SOAP Note Generator -->
-           <div class="tab-pane fade" id="soap" role="tabpanel" aria-labelledby="soap-tab">
-             <form id="soapform" autocomplete="off">
-               <div class="mb-2">
-                 <label for="dx">Dx Summary</label>
-                 <input name="dx" id="dx" class="form-control mb-2" placeholder="E.g. LBP with tight QLs and lumbar paraspinals.">
-                 <label for="iv">Interventions</label>
-                 <input name="iv" id="iv" class="form-control mb-2" placeholder="E.g. STM to lumbar spine, TherEx for core, etc.">
-                 <label for="tol">Tolerance</label>
-                 <input name="tol" id="tol" class="form-control mb-2" placeholder="E.g. Tolerated well, mild discomfort during TherEx.">
-                 <label for="prog">Progress</label>
-                 <input name="prog" id="prog" class="form-control mb-2" placeholder="E.g. Improved trunk control and decreased pain.">
-                 <label for="plan">Plan</label>
-                 <input name="plan" id="plan" class="form-control mb-2" placeholder="E.g. Continue STM and core TherEx to address LBP.">
-               </div>
-               <div class="mb-2">
-                 <button type="button" id="ai-generate-soap" class="btn btn-outline-success btn-sm me-2">AI Generate SOAP Summary</button>
-                 <button type="button" id="ai-regenerate-soap" class="btn btn-outline-warning btn-sm">Regenerate</button>
-               </div>
-               <textarea name="soap-summary" id="soap-summary-text" class="form-control" rows="6" placeholder="Your AI-generated SOAP summary will appear here..."></textarea>
-               <span id="soap-status-msg"></span>
-             </form>
-           </div>
-         </div>
-         <span id="status-msg" class="ms-3"></span>
-       </div>
-       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-       <script>
-         // PT Eval
-         function getEvalFields() {
-           const data = {};
-           document.querySelectorAll('#ptevalform input, #ptevalform textarea, #ptevalform select').forEach(el => {
-             if (el.name) data[el.name] = el.value;
-           });
-           return data;
-         }
-         function setEvalStatus(msg, color="green") {
-           const s = document.getElementById('eval-status-msg');
-           s.textContent = msg; s.style.color = color;
-         }
-         function generateEvalSummary() {
-           setEvalStatus("Generating summary…", "orange");
-           fetch('/generate_eval_summary', {
-             method:'POST',
-             headers:{'Content-Type':'application/json'},
-             body: JSON.stringify({ fields: getEvalFields() })
-           })
-           .then(r=>r.text())
-           .then(t=>{
-             document.getElementById('summary-text').value = t;
-             setEvalStatus("Summary generated!", "green");
-           }).catch(()=> setEvalStatus("AI error", "red"));
-         }
-         document.getElementById('ai-generate-eval').onclick = generateEvalSummary;
-         document.getElementById('ai-regenerate-eval').onclick = generateEvalSummary;
 
-         // SOAP Note Generator
-         function getSoapFields() {
-           return {
-             dx:   document.getElementById('dx').value,
-             iv:   document.getElementById('iv').value,
-             tol:  document.getElementById('tol').value,
-             prog: document.getElementById('prog').value,
-             plan: document.getElementById('plan').value
-           };
-         }
-         function setSoapStatus(msg, color="green") {
-           const s = document.getElementById('soap-status-msg');
-           s.textContent = msg; s.style.color = color;
-         }
-         function generateSoapSummary() {
-           setSoapStatus("Generating summary…", "orange");
-           fetch('/generate_soap_summary', {
-             method:'POST',
-             headers:{'Content-Type':'application/json'},
-             body: JSON.stringify({ fields: getSoapFields() })
-           })
-           .then(r=>r.text())
-           .then(t=>{
-             document.getElementById('soap-summary-text').value = t;
-             setSoapStatus("Summary generated!", "green");
-           }).catch(()=> setSoapStatus("AI error", "red"));
-         }
-         document.getElementById('ai-generate-soap').onclick = generateSoapSummary;
-         document.getElementById('ai-regenerate-soap').onclick = generateSoapSummary;
-       </script>
-     </body>
-     </html>
+      <!-- SOAP Note Generator tab -->
+      <div class="tab-pane fade" id="soap" role="tabpanel" aria-labelledby="soap-tab">
+        <form id="soapform" autocomplete="off">
+          <div class="mb-2">
+            <label for="dx">Dx Summary</label>
+            <input name="dx" id="dx" class="form-control mb-2" placeholder="E.g. LBP with tight QLs and lumbar paraspinals.">
+            <label for="iv">Interventions</label>
+            <input name="iv" id="iv" class="form-control mb-2" placeholder="E.g. STM to lumbar spine, TherEx for core, etc.">
+            <label for="tol">Tolerance</label>
+            <input name="tol" id="tol" class="form-control mb-2" placeholder="E.g. Tolerated well, mild discomfort during TherEx.">
+            <label for="prog">Progress</label>
+            <input name="prog" id="prog" class="form-control mb-2" placeholder="E.g. Improved trunk control and decreased pain.">
+            <label for="plan">Plan</label>
+            <input name="plan" id="plan" class="form-control mb-2" placeholder="E.g. Continue STM and core TherEx to address LBP.">
+          </div>
+          <div class="mb-2">
+            <button type="button" id="ai-generate-soap" class="btn btn-outline-success btn-sm me-2">AI Generate SOAP Summary</button>
+            <button type="button" id="ai-regenerate-soap" class="btn btn-outline-warning btn-sm">Regenerate</button>
+          </div>
+          <textarea name="soap-summary" id="soap-summary-text" class="form-control" rows="6" placeholder="Your AI-generated SOAP summary will appear here..."></textarea>
+          <span id="soap-status-msg"></span>
+        </form>
+      </div>
+    </div>
+    <span id="status-msg" class="ms-3"></span>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // PT Eval
+    function getEvalFields() {
+      return {
+        name: document.getElementById('eval-name').value,
+        meddiag: document.getElementById('eval-meddiag').value,
+        history: document.getElementById('eval-history').value
+      };
+    }
+    function setEvalStatus(msg, color="green") {
+      const s = document.getElementById('eval-status-msg');
+      s.textContent = msg; s.style.color = color;
+    }
+    function generateEvalSummary() {
+      setEvalStatus("Generating summary…", "orange");
+      fetch('/generate_summary', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ fields: getEvalFields() })
+      })
+      .then(r=>r.text())
+      .then(t=>{
+        document.getElementById('summary-text').value = t;
+        setEvalStatus("Summary generated!", "green");
+      }).catch(()=> setEvalStatus("AI error", "red"));
+    }
+    document.getElementById('ai-generate-summary').onclick = generateEvalSummary;
+    document.getElementById('ai-regenerate-summary').onclick = generateEvalSummary;
+
+    // Daily Note
+    function setDailyStatus(msg, color="green") {
+      const s = document.getElementById('daily-status-msg');
+      s.textContent = msg; s.style.color = color;
+    }
+    document.getElementById('dn-ai-generate').onclick = () => {
+      setDailyStatus("Generating Daily Note…","orange");
+      const fields = {
+        name: document.getElementById('dn-name').value,
+        date: document.getElementById('dn-date').value,
+        subjective: document.getElementById('dn-subjective').value,
+        objective: document.getElementById('dn-objective').value,
+        assessment: document.getElementById('dn-assessment').value,
+        plan: document.getElementById('dn-plan').value,
+      };
+      fetch('/generate_daily_note', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ fields: fields })
+      })
+      .then(r=>r.text())
+      .then(t=>{
+        document.getElementById('dn-output').value = t;
+        setDailyStatus("Daily Note generated!","green");
+      }).catch(()=> setDailyStatus("AI error","red"));
+    };
+
+    // SOAP Note Generator
+    function getSoapFields() {
+      return {
+        dx:   document.getElementById('dx').value,
+        iv:   document.getElementById('iv').value,
+        tol:  document.getElementById('tol').value,
+        prog: document.getElementById('prog').value,
+        plan: document.getElementById('plan').value
+      };
+    }
+    function setSoapStatus(msg, color="green") {
+      const s = document.getElementById('soap-status-msg');
+      s.textContent = msg; s.style.color = color;
+    }
+    function generateSoapSummary() {
+      setSoapStatus("Generating summary…", "orange");
+      fetch('/generate_soap_summary', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ fields: getSoapFields() })
+      })
+      .then(r=>r.text())
+      .then(t=>{
+        document.getElementById('soap-summary-text').value = t;
+        setSoapStatus("Summary generated!", "green");
+      }).catch(()=> setSoapStatus("AI error", "red"));
+    }
+    document.getElementById('ai-generate-soap').onclick = generateSoapSummary;
+    document.getElementById('ai-regenerate-soap').onclick = generateSoapSummary;
+  </script>
+</body>
+</html>
+
