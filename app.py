@@ -256,7 +256,7 @@ def generate_soap_summary_route():
 def generate_goals():
     f = request.json.get("fields", {})
     prompt = (
-        "You are a clinical assistant helping a PT write documentation. Using the following information, generate short-term and long-term PT goals in this format (adapt based on the summary):\n"
+        "You are a clinical assistant helping a PT write documentation. Using the following information, generate short-term and long-term PT goals in this format (adapt based on the summary, objective, strength, rom, impairments, functional limitations):\n"
         "Short-Term Goals (1–12 visits):\n"
         "1. Pt will report a reduction in low back pain to ≤1/10 to allow safe and comfortable participation in functional activities.\n"
         "2. Pt will demonstrate a ≥10% improvement in trunk AROM to enhance mobility and reduce risk of reinjury during daily tasks.\n"
@@ -285,6 +285,8 @@ def generate_daily_summary():
         f"Current Progress: {data.get('progress','')}\n"
         f"Next Visit Plan: {data.get('plan','')}\n"
         "Do not use the phrases 'patient reported' or 'the patient'."
+        "Do not spell out, use abbreviation only, avoid using both next to each other"
+        "After summarizes skip a row write a 1-2 sentences for next visit plan of care utilizing something along Focusing on PT POC to improve strength, endurance, mechancis, activity tolerance with manual therapy, ther-ex, ther-act, IASTM. Improve activity tolerance to return to safe ADLs and community participation and ambulation."
     )
     completion = client.chat.completions.create(
         model="gpt-4o-mini",  # or your preferred model
