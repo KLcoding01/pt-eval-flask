@@ -93,7 +93,7 @@
         <!-- Diff Dx -->
         <div class="tab-pane fade" id="diffdx">
           <button type="button" id="ai-generate-diffdx" class="btn btn-outline-success btn-sm mb-2">AI Generate</button>
-          <textarea name="diffdx" id="diffdx-text" class="form-control" rows="2"></textarea>
+          <textarea name="diffdx" id="diffdx-text" class="form-control" rows="4"></textarea>
         </div>
 
         <!-- Assessment Summary -->
@@ -144,18 +144,17 @@
       });
     };
     document.getElementById('ai-generate-diffdx').onclick = () => {
-       setStatus("Generating Diff Dx…","orange");
-       fetch('/generate_diffdx', {
+      setStatus("Generating Diff Dx…","orange");
+      fetch('/generate_diffdx', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ fields: getAllFields() })
-    })
-       .then(r => r.text())
-       .then(t => {
-        console.log("DIFFDX RAW:", t); // You should see your AI text here!
-        document.getElementById('diffdx').value = t.replace(/\\n/g, '\n');
-        setStatus("Diff Dx generated!","green");
-       }).catch(()=> setStatus("AI error","red"));
+      })
+      .then(r=>r.text())
+      .then(t=>{
+        document.getElementById('diffdx-text').value = t;
+        setStatus("Summary generated!","green");
+      }).catch(()=> setStatus("AI error","red"));
     };
     document.getElementById('ai-generate-summary').onclick = () => {
       setStatus("Generating summary…","orange");
@@ -170,7 +169,6 @@
         setStatus("Summary generated!","green");
       }).catch(()=> setStatus("AI error","red"));
     };
-
     document.getElementById('ai-generate-goals').onclick = () => {
       setStatus("Generating goals…","orange");
       fetch('/generate_goals', {
@@ -184,7 +182,6 @@
         setStatus("Goals generated!","green");
       }).catch(()=> setStatus("AI error","red"));
     };
-
     // Export Word
     document.getElementById('save-word-btn').onclick = () => {
       setStatus("Exporting Word...","orange");
@@ -205,7 +202,6 @@
         setStatus("Word downloaded!","green");
       });
     };
-
     // Export PDF
     document.getElementById('save-pdf-btn').onclick = () => {
       setStatus("Exporting PDF...","orange");
