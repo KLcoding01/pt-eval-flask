@@ -4,9 +4,11 @@ from flask import Flask, request, jsonify, render_template, send_file
 from dotenv import load_dotenv
 from openai import OpenAI
 from docx import Document
+from docx.shared import Pt
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from datetime import date
+from soap import generate_soap, generate_eval, generate_daily_note
 
 load_dotenv()
 app = Flask(__name__)
@@ -208,6 +210,9 @@ def generate_diffdx():
     print("RESULT:", repr(result))  # Print exactly what is returned
     return result
 
+# ------------------- PT EVAL AI SUMMARY (PT EVAL TAB) -------------------
+from soap import generate_eval, generate_daily_note
+
 @app.route("/generate_summary", methods=["POST"])
 def generate_summary():
     f = request.json.get("fields", {})
@@ -240,6 +245,13 @@ def generate_summary():
         "Do not use bulleted or numbered lists—just a single, well-written summary paragraph."
     )
     return gpt_call(prompt, max_tokens=350)
+    
+# ------------------- SOAP NOTE AI SUMMARY (SOAP NOTE TAB) -------------------
+@app.route('/generate_soap_summary', methods=['POST'])
+def generate_soap_summary_route():
+    data = request.get_json()
+    fields = data.get('fields', {})
+    return generate_soap(fields, use_ai=True)
 
 @app.route("/generate_goals", methods=["POST"])
 def generate_goals():
@@ -259,68 +271,89 @@ def generate_goals():
         f"Summary: {f.get('summary','')}\nDiagnosis: {f.get('diffdx','')}\nImpairments: {f.get('impairments','')}\nFunctional Limitations: {f.get('functional','')}"
     )
     return gpt_call(prompt, max_tokens=350)
-
+    
 @app.route("/export_word", methods=["POST"])
-def export_word():
-    data = request.get_json()
+def export_to_word(data):
     doc = Document()
 
-    def add_section(title, content):
-        doc.add_paragraph(title)
-        doc.add_paragraph(content.strip() if content else "")
+    def add_separator():
+        doc.add_paragraph('-' * 115)
+    
+    # Medical Diagnosis
+    doc.add_paragraph(f"Medical Diagnosis: {data.get('meddiag', '')}\n")
+    add_separator()
 
-    add_section("Medical Diagnosis:", data.get("meddiag", ""))
-    add_section("Medical History/HNP:", data.get("history", ""))
-    add_section("Subjective:", data.get("subjective", ""))
-    pain_lines = [
-        f"Area/Location of Injury: {data.get('pain_location','')}",
-        f"Onset/Exacerbation Date: {data.get('pain_onset','')}",
-        f"Condition of Injury: {data.get('pain_condition','')}",
-        f"Mechanism of Injury: {data.get('pain_mechanism','')}",
-        f"Pain Rating (Present/Best/Worst): {data.get('pain_rating','')}",
-        f"Frequency: {data.get('pain_frequency','')}",
-        f"Description: {data.get('pain_description','')}",
-        f"Aggravating Factor: {data.get('pain_aggravating','')}",
-        f"Relieved By: {data.get('pain_relieved','')}",
-        f"Interferes With: {data.get('pain_interferes','')}",
-        "",
-        f"Current Medication(s): {data.get('meds','')}",
-        f"Diagnostic Test(s): {data.get('tests','')}",
-        f"DME/Assistive Device: {data.get('dme','')}",
-        f"PLOF: {data.get('plof','')}",
-    ]
-    add_section("Pain:", "\n".join(pain_lines))
-    obj_lines = [
-        f"Posture: {data.get('posture','')}",
-        "",
-        f"ROM: \n{data.get('rom','')}",
-        "",
-        f"Muscle Strength Test: \n{data.get('strength','')}",
-        "",
-        f"Palpation: \n{data.get('palpation','')}",
-        "",
-        f"Functional Test(s): \n{data.get('functional','')}",
-        "",
-        f"Special Test(s): \n{data.get('special','')}",
-        "",
-        f"Current Functional Mobility Impairment(s): \n{data.get('impairments','')}",
-    ]
-    add_section("Objective:", "\n".join(obj_lines))
-    add_section("Assessment Summary:", data.get("summary", ""))
-    add_section("Goals:", data.get("goals", ""))
-    add_section("Frequency:", data.get("frequency", ""))
-    add_section("Intervention:", data.get("intervention", ""))
-    add_section("Treatment Procedures:", data.get("procedures", ""))
+    # Medical History, Subjective
+    doc.add_paragraph(f"Medical History/HNP:\n\n{data.get('history', '')}\n")
+    add_separator()
+    doc.add_paragraph(f"Subjective:\n\n{data.get('subjective', '')}\n")
+    add_separator()
 
-    buffer = io.BytesIO()
-    doc.save(buffer)
-    buffer.seek(0)
-    return send_file(
-        buffer,
-        as_attachment=True,
-        download_name="PT_Eval.docx",
-        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    )
+    # Pain Section
+    doc.add_paragraph("Pain:\n")
+    pain_fields = [
+        ("Area/Location of Injury", "pain_location"),
+        ("Onset/Exacerbation Date", "pain_onset"),
+        ("Condition of Injury", "pain_condition"),
+        ("Mechanism of Injury", "pain_mechanism"),
+        ("Pain Rating (Present/Best/Worst)", "pain_rating"),
+        ("Frequency", "pain_frequency"),
+        ("Description", "pain_description"),
+        ("Aggravating Factor", "pain_aggravating"),
+        ("Relieved By", "pain_relieved"),
+        ("Interferes With", "pain_interferes"),
+    ]
+    for label, key in pain_fields:
+        doc.add_paragraph(f"{label}: {data.get(key, '')}")
+
+    # Other History
+    doc.add_paragraph(f"\nCurrent Medication(s): {data.get('meds', '')}")
+    doc.add_paragraph(f"Diagnostic Test(s): {data.get('tests', '')}")
+    doc.add_paragraph(f"DME/Assistive Device: {data.get('dme', '')}")
+    doc.add_paragraph(f"PLOF: {data.get('plof', '')}\n")
+    add_separator()
+
+    # Objective
+    doc.add_paragraph("Objective:\n")
+    obj_fields = [
+        ("Posture", "posture"),
+        ("ROM", "rom"),
+        ("Muscle Strength Test", "strength"),
+        ("Palpation", "palpation"),
+        ("Functional Test(s)", "functional"),
+        ("Special Test(s)", "special"),
+        ("Current Functional Mobility Impairment(s)", "impairments"),
+    ]
+    for label, key in obj_fields:
+        doc.add_paragraph(f"{label}: \n{data.get(key, '')}\n")
+    add_separator()
+
+    # Assessment Summary
+    doc.add_paragraph("Assessment Summary:\n")
+    doc.add_paragraph(data.get('summary', '') + "\n")
+    add_separator()
+
+    # Goals Section
+    doc.add_paragraph("Goals:\n")
+    doc.add_paragraph(data.get('goals', '') + "\n")
+    add_separator()
+
+    # Frequency
+    doc.add_paragraph("Frequency:\n")
+    doc.add_paragraph(data.get('frequency', '') + "\n")
+    add_separator()
+
+    # Intervention
+    doc.add_paragraph("Intervention:\n")
+    doc.add_paragraph(data.get('intervention', '') + "\n")
+    add_separator()
+
+    # Treatment Procedures
+    doc.add_paragraph("Treatment Procedures:\n")
+    doc.add_paragraph(data.get('procedures', '') + "\n")
+    add_separator()
+
+    return doc
 
 @app.route("/export_pdf", methods=["POST"])
 def export_pdf():
@@ -403,4 +436,3 @@ def export_pdf():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
