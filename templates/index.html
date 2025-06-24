@@ -14,17 +14,14 @@
 </head>
 <body>
   <div class="container">
-    <h2>PT App</h2>
+    <h2>GPTW - PT Note Builder</h2>
     <!-- Main workflow tabs -->
     <ul class="nav nav-tabs main-tabs" id="mainTab" role="tablist">
       <li class="nav-item" role="presentation">
         <button class="nav-link active" id="eval-tab" data-bs-toggle="tab" data-bs-target="#eval" type="button" role="tab">PT Eval Builder</button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="daily-tab" data-bs-toggle="tab" data-bs-target="#daily" type="button" role="tab">Daily Note Generator</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="soap-tab" data-bs-toggle="tab" data-bs-target="#soap" type="button" role="tab">SOAP Note Generator</button>
+        <button class="nav-link" id="soap-tab" data-bs-toggle="tab" data-bs-target="#soap" type="button" role="tab">Daily Note Builder</button>
       </li>
     </ul>
     <div class="tab-content" id="mainTabContent">
@@ -129,23 +126,23 @@
       <div class="tab-pane fade" id="soap" role="tabpanel" aria-labelledby="soap-tab">
         <form id="soapform" autocomplete="off">
           <div class="mb-2">
-            <label for="soap-dx">Dx Summary</label>
-            <input name="dx" id="soap-dx" class="form-control mb-2" placeholder="E.g. LBP with tight QLs and lumbar paraspinals.">
-            <label for="soap-iv">Interventions</label>
-            <input name="iv" id="soap-iv" class="form-control mb-2" placeholder="E.g. STM to lumbar spine, TherEx for core, etc.">
-            <label for="soap-tol">Tolerance</label>
-            <input name="tol" id="soap-tol" class="form-control mb-2" placeholder="E.g. Tolerated well, mild discomfort during TherEx.">
-            <label for="soap-prog">Progress</label>
-            <input name="prog" id="soap-prog" class="form-control mb-2" placeholder="E.g. Improved trunk control and decreased pain.">
-            <label for="soap-plan">Plan</label>
-            <input name="plan" id="soap-plan" class="form-control mb-2" placeholder="E.g. Continue STM and core TherEx to address LBP.">
+            <label for="dx">Dx Summary</label>
+            <input name="dx" id="dx" class="form-control mb-2" placeholder="E.g. LBP with tight QLs and lumbar paraspinals.">
+            <label for="iv">Interventions</label>
+            <input name="iv" id="iv" class="form-control mb-2" placeholder="E.g. STM to lumbar spine, TherEx for core, etc.">
+            <label for="tol">Tolerance</label>
+            <input name="tol" id="tol" class="form-control mb-2" placeholder="E.g. Tolerated well, mild discomfort during TherEx.">
+            <label for="prog">Progress</label>
+            <input name="prog" id="prog" class="form-control mb-2" placeholder="E.g. Improved trunk control and decreased pain.">
+            <label for="plan">Plan</label>
+            <input name="plan" id="plan" class="form-control mb-2" placeholder="E.g. Continue STM and core TherEx to address LBP.">
           </div>
           <div class="mb-2">
             <button type="button" id="ai-generate-soap" class="btn btn-outline-success btn-sm me-2">AI Generate</button>
             <button type="button" id="ai-regenerate-soap" class="btn btn-outline-warning btn-sm">Regenerate</button>
           </div>
           <div class="mb-2">
-            <label for="soap-summary-text">AI SOAP Summary</label>
+            <label for="soap-summary-text">Generate Daily Summary</label>
             <textarea name="soap-summary" id="soap-summary-text" class="form-control" rows="6" placeholder="Your AI-generated summary will appear here..."></textarea>
           </div>
           <span id="soap-status-msg"></span>
@@ -263,37 +260,14 @@
         setStatus("PDF downloaded!","green");
       });
     };
-    // Daily Note Generator logic (independent from PT Eval)
-    document.getElementById('dn-ai-generate').onclick = () => {
-      setStatus("Generating Daily Note…","orange");
-      const fields = {
-        name: document.getElementById('dn-name').value,
-        date: document.getElementById('dn-date').value,
-        subjective: document.getElementById('dn-subjective').value,
-        objective: document.getElementById('dn-objective').value,
-        assessment: document.getElementById('dn-assessment').value,
-        plan: document.getElementById('dn-plan').value,
-      };
-      fetch('/generate_daily_note', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ fields: fields })
-      })
-      .then(r=>r.text())
-      .then(t=>{
-        document.getElementById('dn-output').value = t;
-        setStatus("Daily Note generated!","green");
-      }).catch(()=> setStatus("AI error","red"));
-    };
-
     // --- SOAP Note Generator logic (independent tab) ---
     function getSoapFields() {
       return {
-        dx:   document.getElementById('soap-dx').value,
-        iv:   document.getElementById('soap-iv').value,
-        tol:  document.getElementById('soap-tol').value,
-        prog: document.getElementById('soap-prog').value,
-        plan: document.getElementById('soap-plan').value
+        dx:   document.getElementById('dx').value,
+        iv:   document.getElementById('iv').value,
+        tol:  document.getElementById('tol').value,
+        prog: document.getElementById('prog').value,
+        plan: document.getElementById('plan').value
       };
     }
     function setSoapStatus(msg, color="green") {
