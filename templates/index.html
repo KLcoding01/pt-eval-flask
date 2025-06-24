@@ -122,173 +122,135 @@
           </div>
         </form>
       </div>
-      <!-- SOAP Note Generator tab (NEW, fully independent) -->
-      <div class="tab-pane fade" id="soap" role="tabpanel" aria-labelledby="soap-tab">
-        <form id="soapform" autocomplete="off">
-          <div class="mb-2">
-            <label for="dx">Dx Summary</label>
-            <input name="dx" id="dx" class="form-control mb-2" placeholder="E.g. LBP with tight QLs and lumbar paraspinals.">
-            <label for="iv">Interventions</label>
-            <input name="iv" id="iv" class="form-control mb-2" placeholder="E.g. STM to lumbar spine, TherEx for core, etc.">
-            <label for="tol">Tolerance</label>
-            <input name="tol" id="tol" class="form-control mb-2" placeholder="E.g. Tolerated well, mild discomfort during TherEx.">
-            <label for="prog">Progress</label>
-            <input name="prog" id="prog" class="form-control mb-2" placeholder="E.g. Improved trunk control and decreased pain.">
-            <label for="plan">Plan</label>
-            <input name="plan" id="plan" class="form-control mb-2" placeholder="E.g. Continue STM and core TherEx to address LBP.">
-          </div>
-          <div class="mb-2">
-            <button type="button" id="ai-generate-soap" class="btn btn-outline-success btn-sm me-2">AI Generate</button>
-            <button type="button" id="ai-regenerate-soap" class="btn btn-outline-warning btn-sm">Regenerate</button>
-          </div>
-          <div class="mb-2">
-            <label for="soap-summary-text">Daily Summary Generate</label>
-            <textarea name="soap-summary" id="soap-summary-text" class="form-control" rows="6" placeholder="Your AI-generated summary will appear here..."></textarea>
-          </div>
-          <span id="soap-status-msg"></span>
-        </form>
-      </div>
-    </div>
-    <span id="status-msg" class="ms-3"></span>
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    function getAllFields() {
-      const data = {};
-      document.querySelectorAll('#ptevalform input, #ptevalform textarea, #ptevalform select').forEach(el => {
-        if (el.name) data[el.name] = el.value;
-      });
-      return data;
-    }
-    function setStatus(msg, color="green") {
-      const s = document.getElementById('status-msg');
-      s.textContent = msg; s.style.color = color;
-    }
-    // Load template
-    document.getElementById('load-template-btn').onclick = () => {
-      fetch('/load_template', {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({ template: document.getElementById('template-select').value })
-      })
-      .then(r=>r.json())
-      .then(data=>{
-        for (let k in data) {
-          const fld = document.getElementById(k) || document.querySelector(`[name="${k}"]`);
-          if (fld) fld.value = data[k];
-        }
-      });
-    };
-    document.getElementById('ai-generate-diffdx').onclick = () => {
-      setStatus("Generating Diff Dx…","orange");
-      fetch('/generate_diffdx', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ fields: getAllFields() })
-      })
-      .then(r=>r.text())
-      .then(t=>{
-        document.getElementById('diffdx-text').value = t;
-        setStatus("Summary generated!","green");
-      }).catch(()=> setStatus("AI error","red"));
-    };
-    function generateSummary() {
-      setStatus("Generating summary…", "orange");
-      fetch('/generate_summary', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ fields: getAllFields() })
-      })
-      .then(r=>r.text())
-      .then(t=>{
-        document.getElementById('summary-text').value = t;
-        setStatus("Summary generated!", "green");
-      }).catch(()=> setStatus("AI error", "red"));
-    }
-    // AI Generate + Regenerate both use the same handler for new AI summary
-    document.getElementById('ai-generate-summary').onclick = generateSummary;
-    document.getElementById('ai-regenerate-summary').onclick = generateSummary;
+     <!-- Daily Note tab -->
+       <div class="tab-pane fade" id="daily" role="tabpanel" aria-labelledby="daily-tab">
+          <form id="dailynoteform">
+            <div class="mb-3">
+              <input name="name" id="dn-name" class="form-control mb-2" placeholder="Patient Name">
+              <input name="date" id="dn-date" class="form-control mb-2" placeholder="Date">
+              <textarea name="subjective" id="dn-subjective" class="form-control mb-2" rows="2" placeholder="Subjective"></textarea>
+              <textarea name="objective" id="dn-objective" class="form-control mb-2" rows="2" placeholder="Objective"></textarea>
+              <textarea name="assessment" id="dn-assessment" class="form-control mb-2" rows="2" placeholder="Assessment"></textarea>
+              <textarea name="plan" id="dn-plan" class="form-control mb-2" rows="2" placeholder="Plan"></textarea>
+              <button type="button" id="dn-ai-generate" class="btn btn-outline-success btn-sm mb-2">AI Generate Daily SOAP</button>
+              <textarea name="dn-output" id="dn-output" class="form-control mb-2" rows="7" placeholder="Generated daily note will appear here"></textarea>
+              <span id="daily-status-msg"></span>
+            </div>
+          </form>
+        </div>
+        <!-- SOAP Note Generator tab -->
+        <div class="tab-pane fade" id="soap" role="tabpanel" aria-labelledby="soap-tab">
+          <form id="soapform" autocomplete="off">
+            <div class="mb-2">
+              <label for="dx">Dx Summary</label>
+              <input name="dx" id="dx" class="form-control mb-2" placeholder="E.g. LBP with tight QLs and lumbar paraspinals.">
+              <label for="iv">Interventions</label>
+              <input name="iv" id="iv" class="form-control mb-2" placeholder="E.g. STM to lumbar spine, TherEx for core, etc.">
+              <label for="tol">Tolerance</label>
+              <input name="tol" id="tol" class="form-control mb-2" placeholder="E.g. Tolerated well, mild discomfort during TherEx.">
+              <label for="prog">Progress</label>
+              <input name="prog" id="prog" class="form-control mb-2" placeholder="E.g. Improved trunk control and decreased pain.">
+              <label for="plan">Plan</label>
+              <input name="plan" id="plan" class="form-control mb-2" placeholder="E.g. Continue STM and core TherEx to address LBP.">
+            </div>
+            <div class="mb-2">
+              <button type="button" id="ai-generate-soap" class="btn btn-outline-success btn-sm me-2">AI Generate SOAP Summary</button>
+              <button type="button" id="ai-regenerate-soap" class="btn btn-outline-warning btn-sm">Regenerate</button>
+            </div>
+            <textarea name="soap-summary" id="soap-summary-text" class="form-control" rows="6" placeholder="Your AI-generated SOAP summary will appear here..."></textarea>
+            <span id="soap-status-msg"></span>
+          </form>
+        </div>
 
-    document.getElementById('ai-generate-goals').onclick = () => {
-      setStatus("Generating goals…","orange");
-      fetch('/generate_goals', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ fields: getAllFields() })
-      })
-      .then(r=>r.text())
-      .then(t=>{
-        document.getElementById('goals-text').value = t;
-        setStatus("Goals generated!","green");
-      }).catch(()=> setStatus("AI error","red"));
-    };
-    document.getElementById('save-word-btn').onclick = () => {
-      setStatus("Exporting Word...","orange");
-      fetch('/export_word', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(getAllFields())
-      })
-      .then(r=>r.blob())
-      .then(blob=>{
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "PT_Eval.docx";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setStatus("Word downloaded!","green");
-      });
-    };
-    document.getElementById('save-pdf-btn').onclick = () => {
-      setStatus("Exporting PDF...","orange");
-      fetch('/export_pdf', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(getAllFields())
-      })
-      .then(r=>r.blob())
-      .then(blob=>{
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "PT_Eval.pdf";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setStatus("PDF downloaded!","green");
-      });
-    };
-    // --- SOAP Note Generator logic (independent tab) ---
-    function getSoapFields() {
-      return {
-        dx:   document.getElementById('dx').value,
-        iv:   document.getElementById('iv').value,
-        tol:  document.getElementById('tol').value,
-        prog: document.getElementById('prog').value,
-        plan: document.getElementById('plan').value
+      </div>
+      <span id="status-msg" class="ms-3"></span>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // PT Eval
+      function getEvalFields() {
+        const data = {};
+        document.querySelectorAll('#ptevalform input, #ptevalform textarea, #ptevalform select').forEach(el => {
+          if (el.name) data[el.name] = el.value;
+        });
+        return data;
+      }
+      function setEvalStatus(msg, color="green") {
+        const s = document.getElementById('eval-status-msg');
+        s.textContent = msg; s.style.color = color;
+      }
+      function generateEvalSummary() {
+        setEvalStatus("Generating summary…", "orange");
+        fetch('/generate_eval_summary', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ fields: getEvalFields() })
+        })
+        .then(r=>r.text())
+        .then(t=>{
+          document.getElementById('summary-text').value = t;
+          setEvalStatus("Summary generated!", "green");
+        }).catch(()=> setEvalStatus("AI error", "red"));
+      }
+      document.getElementById('ai-generate-eval').onclick = generateEvalSummary;
+      document.getElementById('ai-regenerate-eval').onclick = generateEvalSummary;
+
+      // Daily Note
+      function setDailyStatus(msg, color="green") {
+        const s = document.getElementById('daily-status-msg');
+        s.textContent = msg; s.style.color = color;
+      }
+      document.getElementById('dn-ai-generate').onclick = () => {
+        setDailyStatus("Generating Daily Note…","orange");
+        const fields = {
+          name: document.getElementById('dn-name').value,
+          date: document.getElementById('dn-date').value,
+          subjective: document.getElementById('dn-subjective').value,
+          objective: document.getElementById('dn-objective').value,
+          assessment: document.getElementById('dn-assessment').value,
+          plan: document.getElementById('dn-plan').value,
+        };
+        fetch('/generate_daily_note', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ fields: fields })
+        })
+        .then(r=>r.text())
+        .then(t=>{
+          document.getElementById('dn-output').value = t;
+          setDailyStatus("Daily Note generated!","green");
+        }).catch(()=> setDailyStatus("AI error","red"));
       };
-    }
-    function setSoapStatus(msg, color="green") {
-      const s = document.getElementById('soap-status-msg');
-      s.textContent = msg; s.style.color = color;
-    }
-    function generateSoapSummary() {
-      setSoapStatus("Generating summary…", "orange");
-      fetch('/generate_summary', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ fields: getSoapFields() })
-      })
-      .then(r=>r.text())
-      .then(t=>{
-        document.getElementById('soap-summary-text').value = t;
-        setSoapStatus("Summary generated!", "green");
-      }).catch(()=> setSoapStatus("AI error", "red"));
-    }
-    document.getElementById('ai-generate-soap').onclick = generateSoapSummary;
-    document.getElementById('ai-regenerate-soap').onclick = generateSoapSummary;
-  </script>
-</body>
-</html>
+
+      // SOAP Note Generator
+      function getSoapFields() {
+        return {
+          dx:   document.getElementById('dx').value,
+          iv:   document.getElementById('iv').value,
+          tol:  document.getElementById('tol').value,
+          prog: document.getElementById('prog').value,
+          plan: document.getElementById('plan').value
+        };
+      }
+      function setSoapStatus(msg, color="green") {
+        const s = document.getElementById('soap-status-msg');
+        s.textContent = msg; s.style.color = color;
+      }
+      function generateSoapSummary() {
+        setSoapStatus("Generating summary…", "orange");
+        fetch('/generate_soap_summary', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ fields: getSoapFields() })
+        })
+        .then(r=>r.text())
+        .then(t=>{
+          document.getElementById('soap-summary-text').value = t;
+          setSoapStatus("Summary generated!", "green");
+        }).catch(()=> setSoapStatus("AI error", "red"));
+      }
+      document.getElementById('ai-generate-soap').onclick = generateSoapSummary;
+      document.getElementById('ai-regenerate-soap').onclick = generateSoapSummary;
+    </script>
+  </body>
+  </html>
