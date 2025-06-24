@@ -257,6 +257,7 @@ def generate_goals():
     f = request.json.get("fields", {})
     prompt = (
         "You are a clinical assistant helping a PT write documentation. Using the following information, generate short-term and long-term PT goals in this format (adapt based on the summary, objective, strength, rom, impairments, functional limitations):\n"
+        "follow the following format and just update based on AI generated, the content can be change, but don't add anything extrat to this format."
         "Short-Term Goals (1–12 visits):\n"
         "1. Pt will report a reduction in low back pain to ≤1/10 to allow safe and comfortable participation in functional activities.\n"
         "2. Pt will demonstrate a ≥10% improvement in trunk AROM to enhance mobility and reduce risk of reinjury during daily tasks.\n"
@@ -267,7 +268,7 @@ def generate_goals():
         "2. Pt will complete ≥14 repetitions on the 30-second chair sit-to-stand test to reduce fall risk.\n"
         "3. Pt will tolerate ≥30 minutes of activity to safely resume household tasks without limitation.\n"
         "4. Pt will demonstrate independence with HEP, using proper body mechanics and strength to support safe return to ADLs without difficulty.\n\n"
-        f"Summary: {f.get('summary','')}\nDiagnosis: {f.get('diffdx','')}\nImpairments: {f.get('impairments','')}\nFunctional Limitations: {f.get('functional','')}"
+        
     )
     return gpt_call(prompt, max_tokens=350)
     
