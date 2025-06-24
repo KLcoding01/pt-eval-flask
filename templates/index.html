@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>PT App</title>
+  <title>GPTW Note Builder</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background: #f4f4f4; }
@@ -22,6 +22,9 @@
       </li>
       <li class="nav-item" role="presentation">
         <button class="nav-link" id="daily-tab" data-bs-toggle="tab" data-bs-target="#daily" type="button" role="tab">Daily Note Generator</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="soap-tab" data-bs-toggle="tab" data-bs-target="#soap" type="button" role="tab">SOAP Note Generator</button>
       </li>
     </ul>
     <div class="tab-content" id="mainTabContent">
@@ -122,19 +125,30 @@
           </div>
         </form>
       </div>
-      <!-- Daily Note Generator workflow -->
-      <div class="tab-pane fade" id="daily" role="tabpanel" aria-labelledby="daily-tab">
-        <form id="dailynoteform">
-          <div class="mb-3">
-            <input name="name" id="dn-name" class="form-control mb-2" placeholder="Patient Name">
-            <input name="date" id="dn-date" class="form-control mb-2" placeholder="Date">
-            <textarea name="subjective" id="dn-subjective" class="form-control mb-2" rows="2" placeholder="Subjective"></textarea>
-            <textarea name="objective" id="dn-objective" class="form-control mb-2" rows="2" placeholder="Objective"></textarea>
-            <textarea name="assessment" id="dn-assessment" class="form-control mb-2" rows="2" placeholder="Assessment"></textarea>
-            <textarea name="plan" id="dn-plan" class="form-control mb-2" rows="2" placeholder="Plan"></textarea>
-            <button type="button" id="dn-ai-generate" class="btn btn-outline-success btn-sm mb-2">AI Generate Daily SOAP</button>
-            <textarea name="dn-output" id="dn-output" class="form-control mb-2" rows="7" placeholder="Generated daily note will appear here"></textarea>
+      <!-- SOAP Note Generator tab (NEW, fully independent) -->
+      <div class="tab-pane fade" id="soap" role="tabpanel" aria-labelledby="soap-tab">
+        <form id="soapform" autocomplete="off">
+          <div class="mb-2">
+            <label for="soap-dx">Dx Summary</label>
+            <input name="dx" id="soap-dx" class="form-control mb-2" placeholder="E.g. LBP with tight QLs and lumbar paraspinals.">
+            <label for="soap-iv">Interventions</label>
+            <input name="iv" id="soap-iv" class="form-control mb-2" placeholder="E.g. STM to lumbar spine, TherEx for core, etc.">
+            <label for="soap-tol">Tolerance</label>
+            <input name="tol" id="soap-tol" class="form-control mb-2" placeholder="E.g. Tolerated well, mild discomfort during TherEx.">
+            <label for="soap-prog">Progress</label>
+            <input name="prog" id="soap-prog" class="form-control mb-2" placeholder="E.g. Improved trunk control and decreased pain.">
+            <label for="soap-plan">Plan</label>
+            <input name="plan" id="soap-plan" class="form-control mb-2" placeholder="E.g. Continue STM and core TherEx to address LBP.">
           </div>
+          <div class="mb-2">
+            <button type="button" id="ai-generate-soap" class="btn btn-outline-success btn-sm me-2">AI Generate</button>
+            <button type="button" id="ai-regenerate-soap" class="btn btn-outline-warning btn-sm">Regenerate</button>
+          </div>
+          <div class="mb-2">
+            <label for="soap-summary-text">AI SOAP Summary</label>
+            <textarea name="soap-summary" id="soap-summary-text" class="form-control" rows="6" placeholder="Your AI-generated summary will appear here..."></textarea>
+          </div>
+          <span id="soap-status-msg"></span>
         </form>
       </div>
     </div>
@@ -271,7 +285,36 @@
         setStatus("Daily Note generated!","green");
       }).catch(()=> setStatus("AI error","red"));
     };
+
+    // --- SOAP Note Generator logic (independent tab) ---
+    function getSoapFields() {
+      return {
+        dx:   document.getElementById('soap-dx').value,
+        iv:   document.getElementById('soap-iv').value,
+        tol:  document.getElementById('soap-tol').value,
+        prog: document.getElementById('soap-prog').value,
+        plan: document.getElementById('soap-plan').value
+      };
+    }
+    function setSoapStatus(msg, color="green") {
+      const s = document.getElementById('soap-status-msg');
+      s.textContent = msg; s.style.color = color;
+    }
+    function generateSoapSummary() {
+      setSoapStatus("Generating summary…", "orange");
+      fetch('/generate_summary', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ fields: getSoapFields() })
+      })
+      .then(r=>r.text())
+      .then(t=>{
+        document.getElementById('soap-summary-text').value = t;
+        setSoapStatus("Summary generated!", "green");
+      }).catch(()=> setSoapStatus("AI error", "red"));
+    }
+    document.getElementById('ai-generate-soap').onclick = generateSoapSummary;
+    document.getElementById('ai-regenerate-soap').onclick = generateSoapSummary;
   </script>
 </body>
 </html>
-
