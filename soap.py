@@ -1,33 +1,77 @@
-# soap.py
+import os
+import re
+import random
+from dotenv import load_dotenv
+from openai import OpenAI
 
-def generate_soap(fields):
+load_dotenv()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+MODEL = "gpt-4o-mini"
+
+REPLACEMENTS = {
+    "gme": "Give me 6 sentences summary for PT tx utilizing manual therapy, stretching, TherEx, TherAct, good tolerance, decrease stiffness/tenderness, progressing with tx focusing on",
+    "gpoc": "Give me 1 sentence PT POC for STM, TherEx, TherAct to address pain, weakness, and re-integrate to ADLs.",
+    "1tx": "ther-ex, ther-act, manual therapy, stretch, TPRs",
+    "1tol": "fair+, reduce tension, improved",
+    "1slow": "slowly progressing, some functional improvement, pain reduction",
+    "1fair": "fair progression, marked improvement with activity and ther-ex",
+    "1good": "good progression, expected to meet goals, good prognosis to meet goals",
+    "1poc": "Continue with POC work on improving strength, mobility, flexibility, pain management, ther-ex, ther-act, manual therapy."
+}
+
+def replace_terms(text):
+    for short, full in REPLACEMENTS.items():
+        pattern = r'(?<!\w)' + re.escape(short) + r'(?!\w)'
+        text = re.sub(pattern, full, text, flags=re.IGNORECASE)
+    return text
+
+def gpt_call(prompt, max_tokens=350, system_msg=None):
+    # Adds a little variety to the temperature each call
+    temperature = random.uniform(0.65, 0.85)
+    try:
+        msgs = []
+        if system_msg:
+            msgs.append({"role": "system", "content": system_msg})
+        msgs.append({"role": "user", "content": prompt})
+        resp = client.chat.completions.create(
+            model=MODEL,
+            messages=msgs,
+            max_tokens=max_tokens,
+            temperature=temperature
+        )
+        return resp.choices[0].message.content.strip()
+    except Exception as e:
+        return f"OpenAI error: {e}"
+
+def generate_soap(fields, use_ai=True):
     """
     Generate a PT SOAP note summary from eval builder fields.
+    If use_ai is True, uses OpenAI.
     """
-    s = []
-    s.append("S: " + (fields.get('subjective', '').strip() or 'No subjective findings noted.'))
-    # Compose Objective from individual fields if 'objective' field is empty
-    objective = fields.get('objective', '').strip()
-    if not objective:
-        obj_parts = [fields.get(k, '').strip() for k in [
-            'posture', 'rom', 'strength', 'palpation', 'functional', 'special', 'impairments'
-        ] if fields.get(k, '').strip()]
-        objective = "; ".join(obj_parts)
-    s.append("O: " + (objective or 'No objective findings noted.'))
-    s.append("A: " + (fields.get('summary', '').strip() or 'No assessment/summary provided.'))
-    # Plan: Use 'goals', 'plan', or 'intervention' in order of preference
-    plan = fields.get('goals', '').strip() or fields.get('plan', '').strip() or fields.get('intervention', '').strip()
-    s.append("P: " + (plan or 'No plan provided.'))
-    return "\n".join(s)
-
-def generate_daily_note(fields):
-    """
-    Generate a Daily SOAP note from daily note fields.
-    """
-    lines = []
-    lines.append(f"Patient: {fields.get('name','')} | Date: {fields.get('currentdate','') or fields.get('date','')}")
-    lines.append("Subjective: " + (fields.get('subjective','').strip() or 'N/A'))
-    lines.append("Objective: " + (fields.get('objective','').strip() or 'N/A'))
-    lines.append("Assessment: " + (fields.get('summary','').strip() or fields.get('assessment','').strip() or 'N/A'))
-    lines.append("Plan: " + (fields.get('plan','').strip() or 'N/A'))
-    return "\n".join(lines)
+    if use_ai:
+        note = (
+            f"Dx Summary: {fields.get('dx','')}. "
+            f"Interventions: {fields.get('iv','')}. "
+            f"Tolerance: {fields.get('tol','')}. "
+            f"Progress: {fields.get('prog','')}. "
+            f"Plan: {fields.get('plan','')}."
+        )
+        prompt = (
+            "Based on the following PT session details, write a concise 6-sentence paragraph summary. "
+            "Avoid 'pt reported', abbreviate 'Patient' to 'Pt', and always mention that Pt needs continued PT. "
+            "Use clinical abbreviations (e.g., STM, TherEx, TherAct, LBP), avoid section labels like S:, O:, A:, P:, "
+            "and do not include any headers.\n\n"
+            f"{replace_terms(note)}"
+        )
+        system_msg = (
+            "You are a licensed physical therapist writing concise, paragraph-style visit summaries using common clinical abbreviations."
+        )
+        return gpt_call(prompt, max_tokens=500, system_msg=system_msg)
+    else:
+        s = []
+        s.append("Dx Summary: " + (fields.get('dx', '').strip() or ''))
+        s.append("Interventions: " + (fields.get('iv', '').strip() or ''))
+        s.append("Tolerance: " + (fields.get('tol', '').strip() or ''))
+        s.append("Progress: " + (fields.get('prog', '').strip() or ''))
+        s.append("Plan: " + (fields.get('plan', '').strip() or ''))
+        return "\n".join(s)

@@ -9,6 +9,7 @@
     .main-tabs .nav-link { min-width: 180px; text-align: center; }
     .tab-content { margin-top: 24px; }
     .ai-btn, .btn { min-width: 100px; margin-left: 6px; }
+    label { font-weight: 500; }
   </style>
 </head>
 <body>
@@ -26,7 +27,6 @@
     <div class="tab-content" id="mainTabContent">
       <!-- PT Eval Builder workflow -->
       <div class="tab-pane fade show active" id="eval" role="tabpanel" aria-labelledby="eval-tab">
-        <!-- BEGIN: PT Eval Builder form -->
         <div class="d-flex align-items-center mb-3">
           <label class="fw-bold me-2">Template:</label>
           <select id="template-select" class="form-select w-auto me-2">
@@ -105,7 +105,10 @@
             </div>
             <!-- Assessment Summary -->
             <div class="tab-pane fade" id="summary">
-              <button type="button" id="ai-generate-summary" class="btn btn-outline-success btn-sm mb-2">AI Generate</button>
+              <div class="d-flex mb-2">
+                <button type="button" id="ai-generate-summary" class="btn btn-outline-success btn-sm me-2">AI Generate</button>
+                <button type="button" id="ai-regenerate-summary" class="btn btn-outline-warning btn-sm">Regenerate AI Summary</button>
+              </div>
               <textarea name="summary" id="summary-text" class="form-control" rows="4"></textarea>
             </div>
             <!-- Plan -->
@@ -118,7 +121,6 @@
             </div>
           </div>
         </form>
-        <!-- END: PT Eval Builder form -->
       </div>
       <!-- Daily Note Generator workflow -->
       <div class="tab-pane fade" id="daily" role="tabpanel" aria-labelledby="daily-tab">
@@ -140,7 +142,6 @@
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Helper to get all PT Eval fields
     function getAllFields() {
       const data = {};
       document.querySelectorAll('#ptevalform input, #ptevalform textarea, #ptevalform select').forEach(el => {
@@ -180,8 +181,8 @@
         setStatus("Summary generated!","green");
       }).catch(()=> setStatus("AI error","red"));
     };
-    document.getElementById('ai-generate-summary').onclick = () => {
-      setStatus("Generating summary…","orange");
+    function generateSummary() {
+      setStatus("Generating summary…", "orange");
       fetch('/generate_summary', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
@@ -190,9 +191,13 @@
       .then(r=>r.text())
       .then(t=>{
         document.getElementById('summary-text').value = t;
-        setStatus("Summary generated!","green");
-      }).catch(()=> setStatus("AI error","red"));
-    };
+        setStatus("Summary generated!", "green");
+      }).catch(()=> setStatus("AI error", "red"));
+    }
+    // AI Generate + Regenerate both use the same handler for new AI summary
+    document.getElementById('ai-generate-summary').onclick = generateSummary;
+    document.getElementById('ai-regenerate-summary').onclick = generateSummary;
+
     document.getElementById('ai-generate-goals').onclick = () => {
       setStatus("Generating goals…","orange");
       fetch('/generate_goals', {
@@ -244,7 +249,6 @@
         setStatus("PDF downloaded!","green");
       });
     };
-
     // Daily Note Generator logic (independent from PT Eval)
     document.getElementById('dn-ai-generate').onclick = () => {
       setStatus("Generating Daily Note…","orange");
@@ -270,3 +274,4 @@
   </script>
 </body>
 </html>
+
