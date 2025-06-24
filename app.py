@@ -7,7 +7,7 @@ from docx import Document
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from datetime import date
-from soap import generate_soap, generate_daily_note
+from soap import generate_soap
 
 load_dotenv()
 app = Flask(__name__)
