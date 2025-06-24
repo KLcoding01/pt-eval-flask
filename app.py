@@ -260,7 +260,13 @@ def generate_goals():
         f"Summary: {f.get('summary','')}\nDiagnosis: {f.get('diffdx','')}\nImpairments: {f.get('impairments','')}\nFunctional Limitations: {f.get('functional','')}"
     )
     return gpt_call(prompt, max_tokens=350)
-
+    
+@app.route('/generate_soap_summary', methods=['POST'])
+def generate_soap_summary_route():
+    data = request.get_json()
+    fields = data.get('fields', {})
+    return generate_soap(fields, use_ai=True)
+    
 @app.route("/export_word", methods=["POST"])
 def export_word():
     data = request.get_json()

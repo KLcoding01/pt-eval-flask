@@ -196,33 +196,6 @@
       document.getElementById('ai-regenerate-eval').onclick = generateEvalSummary;
 
       // Daily Note
-      function setDailyStatus(msg, color="green") {
-        const s = document.getElementById('daily-status-msg');
-        s.textContent = msg; s.style.color = color;
-      }
-      document.getElementById('dn-ai-generate').onclick = () => {
-        setDailyStatus("Generating Daily Note…","orange");
-        const fields = {
-          name: document.getElementById('dn-name').value,
-          date: document.getElementById('dn-date').value,
-          subjective: document.getElementById('dn-subjective').value,
-          objective: document.getElementById('dn-objective').value,
-          assessment: document.getElementById('dn-assessment').value,
-          plan: document.getElementById('dn-plan').value,
-        };
-        fetch('/generate_daily_note', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ fields: fields })
-        })
-        .then(r=>r.text())
-        .then(t=>{
-          document.getElementById('dn-output').value = t;
-          setDailyStatus("Daily Note generated!","green");
-        }).catch(()=> setDailyStatus("AI error","red"));
-      };
-
-      // SOAP Note Generator
       function getSoapFields() {
         return {
           dx:   document.getElementById('dx').value,
