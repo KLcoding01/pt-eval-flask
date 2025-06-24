@@ -271,6 +271,29 @@ def generate_goals():
     )
     return gpt_call(prompt, max_tokens=350)
     
+@app.route('/generate_daily_summary', methods=['POST'])
+def generate_daily_summary():
+    data = request.json
+    prompt = (
+        "You are a physical therapist. "
+        "Write a 6-sentence daily PT note summary in paragraph form. "
+        "Use professional tone, refer to 'patient' (not 'the patient' or 'patient reported'). "
+        "Summarize the following:\n"
+        f"Diagnosis: {data.get('diagnosis','')}\n"
+        f"Interventions: {data.get('interventions','')}\n"
+        f"Tx Tolerance: {data.get('tolerance','')}\n"
+        f"Current Progress: {data.get('progress','')}\n"
+        f"Next Visit Plan: {data.get('plan','')}\n"
+        "Do not use the phrases 'patient reported' or 'the patient'."
+    )
+    completion = client.chat.completions.create(
+        model="gpt-4o-mini",  # or your preferred model
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=250
+    )
+    summary = completion.choices[0].message.content.strip()
+    return summary
+    
 @app.route('/export_word', methods=['POST'])
 def export_word():
     data = request.json  # your form data as JSON
