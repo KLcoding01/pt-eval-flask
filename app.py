@@ -15,18 +15,8 @@ app = Flask(__name__)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-4o-mini"
 
-def gpt_call(prompt, max_tokens=350):
-    try:
-        resp = client.chat.completions.create(
-            model=MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=max_tokens
-        )
-        return resp.choices[0].message.content.strip()
-    except Exception as e:
-        return f"OpenAI error: {e}"
-
-TEMPLATES = {
+# ====== PT SECTION ======
+PT_TEMPLATES = {
     "LBP Eval Template": """Medical Diagnosis:
 Medical History/HNP:
 Subjective: Pt reports having LBP and is limiting daily functional activities. Pt would like to decrease pain and improve activity tolerance and return to PLOF. Pt agrees to PT evaluation.
@@ -123,7 +113,7 @@ Treatment Procedures:
 """
 }
 
-def parse_template(template):
+def pt_parse_template(template):
     key_map = {
         "Medical Diagnosis": "meddiag",
         "Medical History/HNP": "history",
@@ -172,16 +162,16 @@ def parse_template(template):
 
 @app.route("/", methods=["GET"])
 def index():
-    return render_template("index.html", templates=list(TEMPLATES.keys()))
+    return render_template("index.html", templates=list(PT_TEMPLATES.keys()))
 
-@app.route("/load_template", methods=["POST"])
-def load_template():
+@app.route("/pt_load_template", methods=["POST"])
+def pt_load_template():
     name = request.json.get("template", "")
-    text = TEMPLATES.get(name, "")
-    return jsonify(parse_template(text))
+    text = PT_TEMPLATES.get(name, "")
+    return jsonify(pt_parse_template(text))
 
-@app.route("/generate_diffdx", methods=["POST"])
-def generate_diffdx():
+@app.route("/pt_generate_diffdx", methods=["POST"])
+def pt_generate_diffdx():
     f = request.json.get("fields", {})
     pain = "; ".join(f"{lbl}: {f.get(key,'')}"
                       for lbl,key in [
@@ -204,16 +194,11 @@ def generate_diffdx():
         f"ROM: {f.get('rom','')}\n"
         f"Strength: {f.get('strength','')}\n"
     )
-    print("PROMPT:", prompt)  # Log the prompt for debugging
     result = gpt_call(prompt, max_tokens=200)
-    print("RESULT:", repr(result))  # Print exactly what is returned
     return result
 
-# ------------------- PT EVAL AI SUMMARY (PT EVAL TAB) -------------------
-from soap import generate_eval, generate_daily_note
-
-@app.route("/generate_summary", methods=["POST"])
-def generate_summary():
+@app.route("/pt_generate_summary", methods=["POST"])
+def pt_generate_summary():
     f = request.json.get("fields", {})
     name = f.get("name", "Pt Name")
     age = f.get("age", "X")
@@ -244,36 +229,37 @@ def generate_summary():
         "Do not use bulleted or numbered lists—just a single, well-written summary paragraph."
     )
     return gpt_call(prompt, max_tokens=350)
-    
-# ------------------- SOAP NOTE AI SUMMARY (SOAP NOTE TAB) -------------------
-@app.route('/generate_soap_summary', methods=['POST'])
-def generate_soap_summary_route():
-    data = request.get_json()
-    fields = data.get('fields', {})
-    return generate_soap(fields, use_ai=True)
 
-@app.route("/generate_goals", methods=["POST"])
-def generate_goals():
+@app.route("/pt_generate_goals", methods=["POST"])
+def pt_generate_goals():
     f = request.json.get("fields", {})
     prompt = (
-        "You are a clinical assistant helping a PT write documentation. Using the following information, generate short-term and long-term PT goals in this format (adapt based on the summary, objective, strength, rom, impairments, functional limitations):\n"
-        "follow the following format and just update based on AI generated, the content can be change, but don't add anything extrat to this format."
+        "You are a clinical assistant helping a PT write documentation. "
+        "Using ONLY the provided eval info (summary, objective findings, strength, ROM, impairments, and functional limitations), "
+        "generate clinically-appropriate short-term and long-term PT goals. "
+        "Decide the most relevant and individualized goals based on the data, but ALWAYS follow the exact goal format below. "
+        "DO NOT add extra formatting, explanations, or ChatGPT commentary—output should be concise and in bullet list format only. "
+        "Adapt content of each goal based on eval details. Do not repeat or copy the examples unless appropriate. "
+        "\n\n"
+        "FORMAT TO FOLLOW:\n"
         "Short-Term Goals (1–12 visits):\n"
-        "1. Pt will report a reduction in low back pain to ≤1/10 to allow safe and comfortable participation in functional activities.\n"
-        "2. Pt will demonstrate a ≥10% improvement in trunk AROM to enhance mobility and reduce risk of reinjury during daily tasks.\n"
-        "3. Pt will improve gross LE strength by at least 0.5 muscle grade to enhance safety during ADLs and minimize pain/injury risk.\n"
-        "4. Pt will self-report ≥50% improvement in functional limitations related to ADLs.\n"
+        "1. [goal statement]\n"
+        "2. [goal statement]\n"
+        "3. [goal statement]\n"
+        "4. [goal statement]\n"
         "Long-Term Goals (13–25 visits):\n"
-        "1. Pt will demonstrate B LE strength of ≥4/5 to independently and safely perform all ADLs.\n"
-        "2. Pt will complete ≥14 repetitions on the 30-second chair sit-to-stand test to reduce fall risk.\n"
-        "3. Pt will tolerate ≥30 minutes of activity to safely resume household tasks without limitation.\n"
-        "4. Pt will demonstrate independence with HEP, using proper body mechanics and strength to support safe return to ADLs without difficulty.\n\n"
-        
+        "1. [goal statement]\n"
+        "2. [goal statement]\n"
+        "3. [goal statement]\n"
+        "4. [goal statement]\n"
+        "\nOnly generate goals in this structure."
+        "\n\nEval info:\n"
+        f"{f}"
     )
     return gpt_call(prompt, max_tokens=350)
-    
-@app.route('/generate_daily_summary', methods=['POST'])
-def generate_daily_summary():
+
+@app.route('/pt_generate_daily_summary', methods=['POST'])
+def pt_generate_daily_summary():
     data = request.json
     prompt = (
         "You are a physical therapist. "
@@ -290,19 +276,17 @@ def generate_daily_summary():
         "After summarizes skip a row write a 1-2 sentences for next visit plan of care utilizing something along Focusing on PT POC to improve strength, endurance, mechancis, activity tolerance with manual therapy, ther-ex, ther-act, IASTM. Improve activity tolerance to return to safe ADLs and community participation and ambulation."
     )
     completion = client.chat.completions.create(
-        model="gpt-4o-mini",  # or your preferred model
+        model=MODEL,
         messages=[{"role": "user", "content": prompt}],
         max_tokens=250
     )
     summary = completion.choices[0].message.content.strip()
     return summary
-    
-@app.route('/export_word', methods=['POST'])
-def export_word():
-    data = request.json  # your form data as JSON
-    doc = export_to_word(data)  # fixed: use the right function name!
-    
-    # Save to a BytesIO buffer
+
+@app.route('/pt_export_word', methods=['POST'])
+def pt_export_word():
+    data = request.json
+    doc = pt_export_to_word(data)
     buf = BytesIO()
     doc.save(buf)
     buf.seek(0)
@@ -313,23 +297,16 @@ def export_word():
         download_name='PT_Eval.docx'
     )
 
-def export_to_word(data):
+def pt_export_to_word(data):
     doc = Document()
-
     def add_separator():
         doc.add_paragraph('-' * 114)
-    
-    # Medical Diagnosis
     doc.add_paragraph(f"Medical Diagnosis: {data.get('meddiag', '')}")
     add_separator()
-
-    # Medical History, Subjective
     doc.add_paragraph(f"Medical History/HNP:\n{data.get('history', '')}")
     add_separator()
     doc.add_paragraph(f"Subjective:\n{data.get('subjective', '')}")
     add_separator()
-
-    # Pain Section
     doc.add_paragraph("Pain:")
     pain_fields = [
         ("Area/Location of Injury", "pain_location"),
@@ -345,15 +322,11 @@ def export_to_word(data):
     ]
     for label, key in pain_fields:
         doc.add_paragraph(f"{label}: {data.get(key, '')}")
-
-    # Other History
     doc.add_paragraph(f"Current Medication(s): {data.get('meds', '')}")
     doc.add_paragraph(f"Diagnostic Test(s): {data.get('tests', '')}")
     doc.add_paragraph(f"DME/Assistive Device: {data.get('dme', '')}")
     doc.add_paragraph(f"PLOF: {data.get('plof', '')}")
     add_separator()
-
-    # Objective
     doc.add_paragraph("Objective:")
     obj_fields = [
         ("Posture", "posture"),
@@ -368,36 +341,25 @@ def export_to_word(data):
         doc.add_paragraph(f"{label}:")
         doc.add_paragraph(f"{data.get(key, '')}")
     add_separator()
-
-    # Assessment Summary
     doc.add_paragraph("Assessment Summary:")
     doc.add_paragraph(data.get('summary', ''))
     add_separator()
-
-    # Goals Section
     doc.add_paragraph("Goals:")
     doc.add_paragraph(data.get('goals', ''))
     add_separator()
-
-    # Frequency
     doc.add_paragraph("Frequency:")
     doc.add_paragraph(data.get('frequency', ''))
     add_separator()
-
-    # Intervention
     doc.add_paragraph("Intervention:")
     doc.add_paragraph(data.get('intervention', ''))
     add_separator()
-
-    # Treatment Procedures
     doc.add_paragraph("Treatment Procedures:")
     doc.add_paragraph(data.get('procedures', ''))
     add_separator()
-
     return doc
 
-@app.route("/export_pdf", methods=["POST"])
-def export_pdf():
+@app.route("/pt_export_pdf", methods=["POST"])
+def pt_export_pdf():
     data = request.get_json()
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
@@ -474,6 +436,407 @@ def export_pdf():
         download_name="PT_Eval.pdf",
         mimetype="application/pdf"
     )
+
+# ====== END PT SECTION ======
+
+
+# ====== OT SECTION ======
+OT_TEMPLATES = {
+    "OT Eval Template": """Medical Diagnosis:
+Medical History/HNP:
+Subjective: Pt reports upper extremity pain and is limiting ADLs. Pt would like to improve function and return to PLOF. Pt agrees to OT evaluation.
+Pain:
+Area/Location of Injury: R shoulder
+Onset/Exacerbation Date: 3 weeks ago
+Condition of Injury: Acute on chronic
+Mechanism of Injury: Lifting
+Pain Rating (P/B/W): 4/10, 1/10, 7/10
+Pain Frequency: Intermittent
+Description: Sharp, throbbing
+Aggravating Factor: Overhead activity, reaching
+Relieved By: Rest, ice
+Interferes With: Grooming, dressing, bathing
+
+Current Medication(s): See medication list
+
+Diagnostic Test(s): MRI right shoulder
+
+DME/Assistive Device: None
+
+PLOF: Independent
+
+Posture: Forward head, rounded shoulders
+
+ROM: R shoulder flexion 100°, abduction 80°
+
+Muscle Strength Test: R shoulder 3+/5
+
+Palpation: TTP R supraspinatus
+
+Functional Test(s): Unable to reach overhead
+
+Special Test(s): (+) Impingement
+
+Current Functional Mobility Impairment(s): Reaching, overhead activity
+
+Goals:
+Short-Term Goals (1–12 visits):
+1. Pt will decrease pain to ≤2/10 during ADLs.
+2. Pt will improve R shoulder ROM to 140° flexion.
+3. Pt will improve strength to 4/5.
+4. Pt will perform ADLs independently.
+
+Long-Term Goals (13–25 visits):
+1. Pt will maintain pain ≤1/10 with all activity.
+2. Pt will achieve full ROM and strength in R shoulder.
+3. Pt will return to all prior ADLs independently.
+4. Pt will independently complete HEP.
+
+Frequency/Duration: 2x/wk x 6wks
+
+Intervention: Manual Therapy, TherEx, HEP training, ADL retraining
+
+Treatment Procedures:
+97165 OT Eval
+97110 Ther Ex
+97530 Ther Activity
+97535 Self-care Mgmt
+"""
+}
+
+def ot_parse_template(template):
+    key_map = {
+        "Medical Diagnosis": "ot_meddiag",
+        "Medical History/HNP": "ot_history",
+        "Subjective": "ot_subjective",
+        "Current Medication(s)": "ot_meds",
+        "Diagnostic Test(s)": "ot_tests",
+        "DME/Assistive Device": "ot_dme",
+        "PLOF": "ot_plof",
+        "Posture": "ot_posture",
+        "ROM": "ot_rom",
+        "Muscle Strength Test": "ot_strength",
+        "Palpation": "ot_palpation",
+        "Functional Test(s)": "ot_functional",
+        "Special Test(s)": "ot_special",
+        "Current Functional Mobility Impairment(s)": "ot_impairments",
+        "Goals": "ot_goals",
+        "Frequency/Duration": "ot_frequency",
+        "Intervention": "ot_intervention",
+        "Treatment Procedures": "ot_procedures",
+        "Area/Location of Injury": "ot_pain_location",
+        "Onset/Exacerbation Date": "ot_pain_onset",
+        "Condition of Injury": "ot_pain_condition",
+        "Mechanism of Injury": "ot_pain_mechanism",
+        "Pain Rating (P/B/W)": "ot_pain_rating",
+        "Pain Frequency": "ot_pain_frequency",
+        "Description": "ot_pain_description",
+        "Aggravating Factor": "ot_pain_aggravating",
+        "Relieved By": "ot_pain_relieved",
+        "Interferes With": "ot_pain_interferes"
+    }
+    fields = {v: "" for v in key_map.values()}
+    curr = None
+    for line in template.splitlines():
+        stripped = line.strip()
+        matched = False
+        for label, key in key_map.items():
+            if stripped.startswith(label + ":"):
+                curr = key
+                _, val = stripped.split(":", 1)
+                fields[key] = val.strip()
+                matched = True
+                break
+        if not matched and curr and stripped:
+            fields[curr] += "\n" + stripped
+    return fields
+
+@app.route("/ot_load_template", methods=["POST"])
+def ot_load_template():
+    name = request.json.get("template", "")
+    text = OT_TEMPLATES.get(name, "")
+    return jsonify(ot_parse_template(text))
+
+@app.route("/ot_generate_diffdx", methods=["POST"])
+def ot_generate_diffdx():
+    f = request.json.get("fields", {})
+    pain = "; ".join(f"{lbl}: {f.get(key,'')}"
+                      for lbl,key in [
+                          ("Area/Location", "ot_pain_location"),
+                          ("Onset", "ot_pain_onset"),
+                          ("Condition", "ot_pain_condition"),
+                          ("Mechanism", "ot_pain_mechanism"),
+                          ("Rating", "ot_pain_rating"),
+                          ("Frequency", "ot_pain_frequency"),
+                          ("Description", "ot_pain_description"),
+                          ("Aggravating", "ot_pain_aggravating"),
+                          ("Relieved", "ot_pain_relieved"),
+                          ("Interferes", "ot_pain_interferes"),
+                      ])
+    prompt = (
+        "You are an OT clinical assistant. Provide the single best-fit diagnosis:\n\n"
+        f"Subjective:\n{f.get('ot_subjective','')}\n\n"
+        f"Pain:\n{pain}\n\n"
+        f"Objective:\nPosture: {f.get('ot_posture','')}\n"
+        f"ROM: {f.get('ot_rom','')}\n"
+        f"Strength: {f.get('ot_strength','')}\n"
+    )
+    result = gpt_call(prompt, max_tokens=200)
+    return result
+
+@app.route("/ot_generate_summary", methods=["POST"])
+def ot_generate_summary():
+    f = request.json.get("fields", {})
+    name = f.get("ot_name", "Pt Name")
+    age = f.get("ot_age", "X")
+    gender = f.get("ot_gender", "patient").lower()
+    pmh = f.get("ot_history", "no significant history")
+    today = f.get("ot_currentdate", date.today().strftime("%m/%d/%Y"))
+    subj = f.get("ot_subjective", "")
+    moi = f.get("ot_pain_mechanism", "")
+    dx = f.get("ot_diffdx", "")
+    strg = f.get("ot_strength", "")
+    rom = f.get("ot_rom", "")
+    impair = f.get("ot_impairments", "")
+    func = f.get("ot_functional", "")
+
+    prompt = (
+        "Generate a concise, 7-8 sentence Occupational Therapy assessment summary for OT documentation. "
+        "Use clinical, professional language and use abbreviations only (e.g., HEP, ADLs, STM, TherEx, etc.; "
+        "do not spell out the abbreviation and do not write both full term and abbreviation). "
+        "Never use the phrase 'The patient'; instead, use 'Pt' at the start of each relevant sentence. "
+        f"Start with: \"{name}, a {age} y/o {gender} with relevant history of {pmh}.\" "
+        f"Include: "
+        f"How/when/why pt was seen (OT initial eval on {today} for {subj}), "
+        f"mechanism of injury if available ({moi}), "
+        f"main differential dx ({dx}), "
+        f"current impairments (strength: {strg}; ROM: {rom}; balance/mobility: {impair}), "
+        f"functional/activity/participation limitations: {func}, "
+        "a professional prognosis and that skilled OT will help pt return to PLOF. "
+        "Do not use bulleted or numbered lists—just a single, well-written summary paragraph."
+    )
+    return gpt_call(prompt, max_tokens=350)
+
+@app.route("/ot_generate_goals", methods=["POST"])
+def ot_generate_goals():
+    f = request.json.get("fields", {})
+    prompt = (
+        "You are a clinical assistant helping an OT write documentation. "
+        "Using ONLY the provided eval info (summary, objective findings, strength, ROM, impairments, and functional limitations), "
+        "generate clinically-appropriate short-term and long-term OT goals. "
+        "Decide the most relevant and individualized goals based on the data, but ALWAYS follow the exact goal format below. "
+        "DO NOT add extra formatting, explanations, or ChatGPT commentary—output should be concise and in bullet list format only. "
+        "Adapt content of each goal based on eval details. Do not repeat or copy the examples unless appropriate. "
+        "\n\n"
+        "FORMAT TO FOLLOW:\n"
+        "Short-Term Goals (1–12 visits):\n"
+        "1. [goal statement]\n"
+        "2. [goal statement]\n"
+        "3. [goal statement]\n"
+        "4. [goal statement]\n"
+        "Long-Term Goals (13–25 visits):\n"
+        "1. [goal statement]\n"
+        "2. [goal statement]\n"
+        "3. [goal statement]\n"
+        "4. [goal statement]\n"
+        "\nOnly generate goals in this structure."
+        "\n\nEval info:\n"
+        f"{f}"
+    )
+    return gpt_call(prompt, max_tokens=350)
+
+@app.route('/ot_generate_daily_summary', methods=['POST'])
+def ot_generate_daily_summary():
+    data = request.json
+    prompt = (
+        "You are an occupational therapist. "
+        "Write a 6-sentence daily OT note summary in paragraph form. "
+        "Use professional tone, refer to 'patient' (not 'the patient' or 'patient reported'). "
+        "Summarize the following:\n"
+        f"Diagnosis: {data.get('diagnosis','')}\n"
+        f"Interventions: {data.get('interventions','')}\n"
+        f"Tx Tolerance: {data.get('tolerance','')}\n"
+        f"Current Progress: {data.get('progress','')}\n"
+        f"Next Visit Plan: {data.get('plan','')}\n"
+        "Do not use the phrases 'patient reported' or 'the patient'."
+        "Do not spell out, use abbreviation only, avoid using both next to each other"
+        "After summarizes skip a row write a 1-2 sentences for next visit plan of care utilizing something along Focusing on OT POC to improve strength, endurance, mechanics, activity tolerance with manual therapy, ther-ex, ther-act, HEP, ADL retraining. Improve function to return to safe ADLs and community participation."
+    )
+    completion = client.chat.completions.create(
+        model=MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=250
+    )
+    summary = completion.choices[0].message.content.strip()
+    return summary
+
+@app.route('/ot_export_word', methods=['POST'])
+def ot_export_word():
+    data = request.json
+    doc = ot_export_to_word(data)
+    buf = BytesIO()
+    doc.save(buf)
+    buf.seek(0)
+    return send_file(
+        buf,
+        mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        as_attachment=True,
+        download_name='OT_Eval.docx'
+    )
+
+def ot_export_to_word(data):
+    doc = Document()
+    def add_separator():
+        doc.add_paragraph('-' * 114)
+    doc.add_paragraph(f"Medical Diagnosis: {data.get('ot_meddiag', '')}")
+    add_separator()
+    doc.add_paragraph(f"Medical History/HNP:\n{data.get('ot_history', '')}")
+    add_separator()
+    doc.add_paragraph(f"Subjective:\n{data.get('ot_subjective', '')}")
+    add_separator()
+    doc.add_paragraph("Pain:")
+    pain_fields = [
+        ("Area/Location of Injury", "ot_pain_location"),
+        ("Onset/Exacerbation Date", "ot_pain_onset"),
+        ("Condition of Injury", "ot_pain_condition"),
+        ("Mechanism of Injury", "ot_pain_mechanism"),
+        ("Pain Rating (Present/Best/Worst)", "ot_pain_rating"),
+        ("Frequency", "ot_pain_frequency"),
+        ("Description", "ot_pain_description"),
+        ("Aggravating Factor", "ot_pain_aggravating"),
+        ("Relieved By", "ot_pain_relieved"),
+        ("Interferes With", "ot_pain_interferes"),
+    ]
+    for label, key in pain_fields:
+        doc.add_paragraph(f"{label}: {data.get(key, '')}")
+    doc.add_paragraph(f"Current Medication(s): {data.get('ot_meds', '')}")
+    doc.add_paragraph(f"Diagnostic Test(s): {data.get('ot_tests', '')}")
+    doc.add_paragraph(f"DME/Assistive Device: {data.get('ot_dme', '')}")
+    doc.add_paragraph(f"PLOF: {data.get('ot_plof', '')}")
+    add_separator()
+    doc.add_paragraph("Objective:")
+    obj_fields = [
+        ("Posture", "ot_posture"),
+        ("ROM", "ot_rom"),
+        ("Muscle Strength Test", "ot_strength"),
+        ("Palpation", "ot_palpation"),
+        ("Functional Test(s)", "ot_functional"),
+        ("Special Test(s)", "ot_special"),
+        ("Current Functional Mobility Impairment(s)", "ot_impairments"),
+    ]
+    for label, key in obj_fields:
+        doc.add_paragraph(f"{label}:")
+        doc.add_paragraph(f"{data.get(key, '')}")
+    add_separator()
+    doc.add_paragraph("Assessment Summary:")
+    doc.add_paragraph(data.get('ot_summary', ''))
+    add_separator()
+    doc.add_paragraph("Goals:")
+    doc.add_paragraph(data.get('ot_goals', ''))
+    add_separator()
+    doc.add_paragraph("Frequency:")
+    doc.add_paragraph(data.get('ot_frequency', ''))
+    add_separator()
+    doc.add_paragraph("Intervention:")
+    doc.add_paragraph(data.get('ot_intervention', ''))
+    add_separator()
+    doc.add_paragraph("Treatment Procedures:")
+    doc.add_paragraph(data.get('ot_procedures', ''))
+    add_separator()
+    return doc
+
+@app.route("/ot_export_pdf", methods=["POST"])
+def ot_export_pdf():
+    data = request.get_json()
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    y = height - 40
+
+    def add_section(title, value):
+        nonlocal y
+        c.setFont("Helvetica-Bold", 13)
+        c.drawString(40, y, title)
+        y -= 18
+        c.setFont("Helvetica", 11)
+        for line in (value or "").split('\n'):
+            c.drawString(48, y, line)
+            y -= 14
+            if y < 60: c.showPage(); y = height - 40
+        y -= 8
+        c.setLineWidth(0.5)
+        c.line(40, y, width - 40, y)
+        y -= 16
+
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(40, y, "Occupational Therapy Evaluation")
+    y -= 30
+
+    add_section("Medical Diagnosis:", data.get("ot_meddiag", ""))
+    add_section("Medical History/HNP:", data.get("ot_history", ""))
+    add_section("Subjective:", data.get("ot_subjective", ""))
+    pain_lines = [
+        f"Area/Location of Injury: {data.get('ot_pain_location','')}",
+        f"Onset/Exacerbation Date: {data.get('ot_pain_onset','')}",
+        f"Condition of Injury: {data.get('ot_pain_condition','')}",
+        f"Mechanism of Injury: {data.get('ot_pain_mechanism','')}",
+        f"Pain Rating (Present/Best/Worst): {data.get('ot_pain_rating','')}",
+        f"Frequency: {data.get('ot_pain_frequency','')}",
+        f"Description: {data.get('ot_pain_description','')}",
+        f"Aggravating Factor: {data.get('ot_pain_aggravating','')}",
+        f"Relieved By: {data.get('ot_pain_relieved','')}",
+        f"Interferes With: {data.get('ot_pain_interferes','')}",
+        "",
+        f"Current Medication(s): {data.get('ot_meds','')}",
+        f"Diagnostic Test(s): {data.get('ot_tests','')}",
+        f"DME/Assistive Device: {data.get('ot_dme','')}",
+        f"PLOF: {data.get('ot_plof','')}",
+    ]
+    add_section("Pain:", "\n".join(pain_lines))
+    obj_lines = [
+        f"Posture: {data.get('ot_posture','')}",
+        "",
+        f"ROM: \n{data.get('ot_rom','')}",
+        "",
+        f"Muscle Strength Test: \n{data.get('ot_strength','')}",
+        "",
+        f"Palpation: \n{data.get('ot_palpation','')}",
+        "",
+        f"Functional Test(s): \n{data.get('ot_functional','')}",
+        "",
+        f"Special Test(s): \n{data.get('ot_special','')}",
+        "",
+        f"Current Functional Mobility Impairment(s): \n{data.get('ot_impairments','')}",
+    ]
+    add_section("Objective:", "\n".join(obj_lines))
+    add_section("Assessment Summary:", data.get("ot_summary", ""))
+    add_section("Goals:", data.get("ot_goals", ""))
+    add_section("Frequency:", data.get("ot_frequency", ""))
+    add_section("Intervention:", data.get("ot_intervention", ""))
+    add_section("Treatment Procedures:", data.get("ot_procedures", ""))
+
+    c.save()
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="OT_Eval.pdf",
+        mimetype="application/pdf"
+    )
+
+# ====== END OT SECTION ======
+
+# --- OpenAI Utility ---
+def gpt_call(prompt, max_tokens=350):
+    try:
+        resp = client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=max_tokens
+        )
+        return resp.choices[0].message.content.strip()
+    except Exception as e:
+        return f"OpenAI error: {e}"
 
 if __name__ == '__main__':
     app.run(debug=True)
