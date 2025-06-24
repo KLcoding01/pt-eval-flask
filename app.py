@@ -181,7 +181,32 @@ def load_template():
 
 @app.route("/generate_diffdx", methods=["POST"])
 def generate_diffdx():
-    return "THIS IS A TEST RESULT\nWith a second line\nAnd a third line."
+    f = request.json.get("fields", {})
+    pain = "; ".join(f"{lbl}: {f.get(key,'')}"
+                      for lbl,key in [
+                          ("Area/Location", "pain_location"),
+                          ("Onset", "pain_onset"),
+                          ("Condition", "pain_condition"),
+                          ("Mechanism", "pain_mechanism"),
+                          ("Rating", "pain_rating"),
+                          ("Frequency", "pain_frequency"),
+                          ("Description", "pain_description"),
+                          ("Aggravating", "pain_aggravating"),
+                          ("Relieved", "pain_relieved"),
+                          ("Interferes", "pain_interferes"),
+                      ])
+    prompt = (
+        "You are a PT clinical assistant. Provide the single best-fit diagnosis:\n\n"
+        f"Subjective:\n{f.get('subjective','')}\n\n"
+        f"Pain:\n{pain}\n\n"
+        f"Objective:\nPosture: {f.get('posture','')}\n"
+        f"ROM: {f.get('rom','')}\n"
+        f"Strength: {f.get('strength','')}\n"
+    )
+    print("PROMPT:", prompt)  # Log the prompt for debugging
+    result = gpt_call(prompt, max_tokens=200)
+    print("RESULT:", repr(result))  # Print exactly what is returned
+    return result
 
 @app.route("/generate_summary", methods=["POST"])
 def generate_summary():
