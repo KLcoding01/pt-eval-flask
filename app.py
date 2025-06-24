@@ -7,7 +7,6 @@ from docx import Document
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from datetime import date
-from soap import generate_soap, generate_eval, generate_daily_note
 
 load_dotenv()
 app = Flask(__name__)
@@ -209,9 +208,6 @@ def generate_diffdx():
     print("RESULT:", repr(result))  # Print exactly what is returned
     return result
 
-# ------------------- PT EVAL AI SUMMARY (PT EVAL TAB) -------------------
-from soap import generate_eval, generate_daily_note
-
 @app.route("/generate_summary", methods=["POST"])
 def generate_summary():
     f = request.json.get("fields", {})
@@ -244,13 +240,6 @@ def generate_summary():
         "Do not use bulleted or numbered lists—just a single, well-written summary paragraph."
     )
     return gpt_call(prompt, max_tokens=350)
-    
-# ------------------- SOAP NOTE AI SUMMARY (SOAP NOTE TAB) -------------------
-@app.route('/generate_soap_summary', methods=['POST'])
-def generate_soap_summary_route():
-    data = request.get_json()
-    fields = data.get('fields', {})
-    return generate_soap(fields, use_ai=True)
 
 @app.route("/generate_goals", methods=["POST"])
 def generate_goals():
@@ -270,7 +259,7 @@ def generate_goals():
         f"Summary: {f.get('summary','')}\nDiagnosis: {f.get('diffdx','')}\nImpairments: {f.get('impairments','')}\nFunctional Limitations: {f.get('functional','')}"
     )
     return gpt_call(prompt, max_tokens=350)
-    
+
 @app.route("/export_word", methods=["POST"])
 def export_word():
     data = request.get_json()
@@ -414,3 +403,4 @@ def export_pdf():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
