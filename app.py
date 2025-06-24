@@ -291,7 +291,7 @@ def export_to_word(data):
     doc = Document()
 
     def add_separator():
-        doc.add_paragraph('-' * 115)
+        doc.add_paragraph('-' * 114)
     
     # Medical Diagnosis
     doc.add_paragraph(f"Medical Diagnosis: {data.get('meddiag', '')}")
