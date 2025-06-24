@@ -4,12 +4,10 @@ from flask import Flask, request, jsonify, render_template, send_file
 from dotenv import load_dotenv
 from openai import OpenAI
 from docx import Document
-from docx.shared import Pt
-from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from datetime import date
-from soap import generate_soap, generate_eval, generate_daily_note
+from io import BytesIO
 
 load_dotenv()
 app = Flask(__name__)
@@ -276,7 +274,7 @@ def generate_goals():
 @app.route('/export_word', methods=['POST'])
 def export_word():
     data = request.json  # your form data as JSON
-    doc = build_docx(data)  # your custom function (see below)
+    doc = export_to_word(data)  # fixed: use the right function name!
     
     # Save to a BytesIO buffer
     buf = BytesIO()
@@ -288,6 +286,7 @@ def export_word():
         as_attachment=True,
         download_name='PT_Eval.docx'
     )
+
 def export_to_word(data):
     doc = Document()
 
@@ -295,17 +294,17 @@ def export_to_word(data):
         doc.add_paragraph('-' * 115)
     
     # Medical Diagnosis
-    doc.add_paragraph(f"Medical Diagnosis: {data.get('meddiag', '')}\n")
+    doc.add_paragraph(f"Medical Diagnosis: {data.get('meddiag', '')}")
     add_separator()
 
     # Medical History, Subjective
-    doc.add_paragraph(f"Medical History/HNP:\n\n{data.get('history', '')}\n")
+    doc.add_paragraph(f"Medical History/HNP:\n{data.get('history', '')}")
     add_separator()
-    doc.add_paragraph(f"Subjective:\n\n{data.get('subjective', '')}\n")
+    doc.add_paragraph(f"Subjective:\n{data.get('subjective', '')}")
     add_separator()
 
     # Pain Section
-    doc.add_paragraph("Pain:\n")
+    doc.add_paragraph("Pain:")
     pain_fields = [
         ("Area/Location of Injury", "pain_location"),
         ("Onset/Exacerbation Date", "pain_onset"),
@@ -322,14 +321,14 @@ def export_to_word(data):
         doc.add_paragraph(f"{label}: {data.get(key, '')}")
 
     # Other History
-    doc.add_paragraph(f"\nCurrent Medication(s): {data.get('meds', '')}")
+    doc.add_paragraph(f"Current Medication(s): {data.get('meds', '')}")
     doc.add_paragraph(f"Diagnostic Test(s): {data.get('tests', '')}")
     doc.add_paragraph(f"DME/Assistive Device: {data.get('dme', '')}")
-    doc.add_paragraph(f"PLOF: {data.get('plof', '')}\n")
+    doc.add_paragraph(f"PLOF: {data.get('plof', '')}")
     add_separator()
 
     # Objective
-    doc.add_paragraph("Objective:\n")
+    doc.add_paragraph("Objective:")
     obj_fields = [
         ("Posture", "posture"),
         ("ROM", "rom"),
@@ -340,32 +339,33 @@ def export_to_word(data):
         ("Current Functional Mobility Impairment(s)", "impairments"),
     ]
     for label, key in obj_fields:
-        doc.add_paragraph(f"{label}: \n{data.get(key, '')}\n")
+        doc.add_paragraph(f"{label}:")
+        doc.add_paragraph(f"{data.get(key, '')}")
     add_separator()
 
     # Assessment Summary
-    doc.add_paragraph("Assessment Summary:\n")
-    doc.add_paragraph(data.get('summary', '') + "\n")
+    doc.add_paragraph("Assessment Summary:")
+    doc.add_paragraph(data.get('summary', ''))
     add_separator()
 
     # Goals Section
-    doc.add_paragraph("Goals:\n")
-    doc.add_paragraph(data.get('goals', '') + "\n")
+    doc.add_paragraph("Goals:")
+    doc.add_paragraph(data.get('goals', ''))
     add_separator()
 
     # Frequency
-    doc.add_paragraph("Frequency:\n")
-    doc.add_paragraph(data.get('frequency', '') + "\n")
+    doc.add_paragraph("Frequency:")
+    doc.add_paragraph(data.get('frequency', ''))
     add_separator()
 
     # Intervention
-    doc.add_paragraph("Intervention:\n")
-    doc.add_paragraph(data.get('intervention', '') + "\n")
+    doc.add_paragraph("Intervention:")
+    doc.add_paragraph(data.get('intervention', ''))
     add_separator()
 
     # Treatment Procedures
-    doc.add_paragraph("Treatment Procedures:\n")
-    doc.add_paragraph(data.get('procedures', '') + "\n")
+    doc.add_paragraph("Treatment Procedures:")
+    doc.add_paragraph(data.get('procedures', ''))
     add_separator()
 
     return doc
