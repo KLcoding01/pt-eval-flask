@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from docx import Document
 from docx.shared import Pt
+from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from datetime import date
@@ -272,6 +273,21 @@ def generate_goals():
     )
     return gpt_call(prompt, max_tokens=350)
     
+@app.route('/export_word', methods=['POST'])
+def export_word():
+    data = request.json  # your form data as JSON
+    doc = build_docx(data)  # your custom function (see below)
+    
+    # Save to a BytesIO buffer
+    buf = BytesIO()
+    doc.save(buf)
+    buf.seek(0)
+    return send_file(
+        buf,
+        mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        as_attachment=True,
+        download_name='PT_Eval.docx'
+    )
 @app.route("/export_word", methods=["POST"])
 def export_to_word(data):
     doc = Document()
