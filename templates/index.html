@@ -1,155 +1,169 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>PT & OT Eval Builder</title>
+  <title>PT/OT Eval Builder</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background: #f4f4f4; }
-    .container { max-width: 980px; margin: 30px auto; background: #fff; padding: 30px; border-radius: 12px; }
+    .main-flex { display: flex; gap: 30px; justify-content: center; }
+    .eval-box { background: #fff; padding: 26px; border-radius: 12px; min-width: 460px; box-shadow: 0 2px 10px #0001;}
     .ai-btn, .btn { min-width: 100px; margin-left: 6px; }
+    .mb-0 {margin-bottom: 0!important;}
+    .h2 {font-size: 1.5rem;}
+    .tab-content {margin-top: 12px;}
   </style>
 </head>
 <body>
-  <div class="container">
-    <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="pteval-tab" data-bs-toggle="tab" data-bs-target="#pteval" type="button" role="tab">PT Eval Builder</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="oteval-tab" data-bs-toggle="tab" data-bs-target="#oteval" type="button" role="tab">OT Eval Builder</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="dailynote-tab" data-bs-toggle="tab" data-bs-target="#dailynote-main" type="button" role="tab">Daily Note</button>
-      </li>
-    </ul>
-    <div class="tab-content">
-      <!-- PT Eval Builder Tab -->
-      <div class="tab-pane fade show active" id="pteval" role="tabpanel">
+  <div class="container py-4">
+    <div class="main-flex">
+
+      <!-- ========== PT EVAL BUILDER ========== -->
+      <div class="eval-box flex-fill">
+        <h2 class="h2">PT Eval Builder</h2>
         <div class="d-flex align-items-center mb-3">
           <label class="fw-bold me-2">Template:</label>
-          <select id="template-select" class="form-select w-auto me-2">
-            {% for t in templates %}
-              <option>{{ t }}</option>
-            {% endfor %}
-          </select>
-          <button id="load-template-btn" class="btn btn-outline-primary btn-sm">Load</button>
-          <button id="save-word-btn" class="btn btn-info btn-sm">Export Word</button>
-          <button id="save-pdf-btn" class="btn btn-danger btn-sm">Export PDF</button>
-          <span id="status-msg" class="ms-3"></span>
+          <select id="pt-template-select" class="form-select w-auto me-2"></select>
+          <button id="pt-load-template-btn" class="btn btn-outline-primary btn-sm">Load</button>
+          <button id="pt-save-word-btn" class="btn btn-info btn-sm">Export Word</button>
+          <button id="pt-save-pdf-btn" class="btn btn-danger btn-sm">Export PDF</button>
+          <span id="pt-status-msg" class="ms-3"></span>
         </div>
-        <form id="ptevalform">
-          <ul class="nav nav-tabs mb-3">
-            <li class="nav-item"><a class="nav-link active" href="#patientinfo" data-bs-toggle="tab">Patient Info</a></li>
-            <li class="nav-item"><a class="nav-link" href="#history" data-bs-toggle="tab">History</a></li>
-            <li class="nav-item"><a class="nav-link" href="#pain" data-bs-toggle="tab">Pain</a></li>
-            <li class="nav-item"><a class="nav-link" href="#objective" data-bs-toggle="tab">Objective</a></li>
-            <li class="nav-item"><a class="nav-link" href="#diffdx" data-bs-toggle="tab">Diff Dx</a></li>
-            <li class="nav-item"><a class="nav-link" href="#summary" data-bs-toggle="tab">Assessment Summary</a></li>
-            <li class="nav-item"><a class="nav-link" href="#plan" data-bs-toggle="tab">Plan</a></li>
-          </ul>
+        <ul class="nav nav-tabs mb-2" id="pt-tab">
+          <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#pt-patientinfo">Patient Info</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-history">History</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-pain">Pain</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-objective">Objective</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-diffdx">Diff Dx</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-summary">Assessment Summary</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-plan">Plan</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-dailynote">Daily Note</a></li>
+        </ul>
+        <form id="pt-evalform">
           <div class="tab-content">
             <!-- Patient Info -->
-            <div class="tab-pane fade show active" id="patientinfo">
+            <div class="tab-pane fade show active" id="pt-patientinfo">
               <div class="row mb-2">
-                <div class="col"><input name="name" id="name" class="form-control" placeholder="Patient Name"></div>
+                <div class="col"><input name="name" id="pt_name" class="form-control" placeholder="Patient Name"></div>
                 <div class="col">
-                  <select name="gender" id="gender" class="form-select">
+                  <select name="gender" id="pt_gender" class="form-select">
                     <option>Female</option><option>Male</option>
                   </select>
                 </div>
-                <div class="col"><input name="dob" id="dob" class="form-control" placeholder="DOB (MM/DD/YYYY)"></div>
-                <div class="col"><input name="age" id="age" class="form-control" placeholder="Age"></div>
+                <div class="col"><input name="dob" id="pt_dob" class="form-control" placeholder="DOB (MM/DD/YYYY)"></div>
+                <div class="col"><input name="age" id="pt_age" class="form-control" placeholder="Age"></div>
               </div>
               <div class="row">
-                <div class="col"><input name="currentdate" id="currentdate" class="form-control" placeholder="Current Date"></div>
+                <div class="col"><input name="currentdate" id="pt_currentdate" class="form-control" placeholder="Current Date"></div>
               </div>
             </div>
-
             <!-- History -->
-            <div class="tab-pane fade" id="history">
-              <textarea name="meddiag" id="meddiag" class="form-control mb-2" placeholder="Medical Diagnosis"></textarea>
-              <textarea name="history" id="history" class="form-control mb-2" placeholder="Medical History/HNP"></textarea>
-              <textarea name="subjective" id="subjective" class="form-control mb-2" placeholder="Subjective (HPI)"></textarea>
-              <textarea name="meds" id="meds" class="form-control mb-2" placeholder="Current Medication(s)"></textarea>
-              <textarea name="tests" id="tests" class="form-control mb-2" placeholder="Diagnostic Test(s)"></textarea>
-              <textarea name="dme" id="dme" class="form-control mb-2" placeholder="DME/Assistive Device"></textarea>
-              <textarea name="plof" id="plof" class="form-control mb-2" placeholder="PLOF"></textarea>
+            <div class="tab-pane fade" id="pt-history">
+              <textarea name="meddiag" id="pt_meddiag" class="form-control mb-2" placeholder="Medical Diagnosis"></textarea>
+              <textarea name="history" id="pt_history" class="form-control mb-2" placeholder="Medical History/HNP"></textarea>
+              <textarea name="subjective" id="pt_subjective" class="form-control mb-2" placeholder="Subjective (HPI)"></textarea>
+              <textarea name="meds" id="pt_meds" class="form-control mb-2" placeholder="Current Medication(s)"></textarea>
+              <textarea name="tests" id="pt_tests" class="form-control mb-2" placeholder="Diagnostic Test(s)"></textarea>
+              <textarea name="dme" id="pt_dme" class="form-control mb-2" placeholder="DME/Assistive Device"></textarea>
+              <textarea name="plof" id="pt_plof" class="form-control mb-2" placeholder="PLOF"></textarea>
             </div>
-
             <!-- Pain -->
-            <div class="tab-pane fade" id="pain">
-              <input name="pain_location" id="pain_location" class="form-control mb-2" placeholder="Area/Location of Injury">
-              <input name="pain_onset"     id="pain_onset"     class="form-control mb-2" placeholder="Onset/Exacerbation Date">
-              <input name="pain_condition" id="pain_condition" class="form-control mb-2" placeholder="Condition of Injury">
-              <input name="pain_mechanism" id="pain_mechanism" class="form-control mb-2" placeholder="Mechanism of Injury">
-              <input name="pain_rating"    id="pain_rating"    class="form-control mb-2" placeholder="Pain Rating (P/B/W)">
-              <input name="pain_frequency" id="pain_frequency" class="form-control mb-2" placeholder="Pain Frequency">
-              <input name="pain_description" id="pain_description" class="form-control mb-2" placeholder="Description">
-              <input name="pain_aggravating" id="pain_aggravating" class="form-control mb-2" placeholder="Aggravating Factor">
-              <input name="pain_relieved"    id="pain_relieved"    class="form-control mb-2" placeholder="Relieved By">
-              <input name="pain_interferes"  id="pain_interferes"  class="form-control mb-2" placeholder="Interferes With">
+            <div class="tab-pane fade" id="pt-pain">
+              <input name="pain_location" id="pt_pain_location" class="form-control mb-2" placeholder="Area/Location of Injury">
+              <input name="pain_onset"     id="pt_pain_onset"     class="form-control mb-2" placeholder="Onset/Exacerbation Date">
+              <input name="pain_condition" id="pt_pain_condition" class="form-control mb-2" placeholder="Condition of Injury">
+              <input name="pain_mechanism" id="pt_pain_mechanism" class="form-control mb-2" placeholder="Mechanism of Injury">
+              <input name="pain_rating"    id="pt_pain_rating"    class="form-control mb-2" placeholder="Pain Rating (P/B/W)">
+              <input name="pain_frequency" id="pt_pain_frequency" class="form-control mb-2" placeholder="Pain Frequency">
+              <input name="pain_description" id="pt_pain_description" class="form-control mb-2" placeholder="Description">
+              <input name="pain_aggravating" id="pt_pain_aggravating" class="form-control mb-2" placeholder="Aggravating Factor">
+              <input name="pain_relieved"    id="pt_pain_relieved"    class="form-control mb-2" placeholder="Relieved By">
+              <input name="pain_interferes"  id="pt_pain_interferes"  class="form-control mb-2" placeholder="Interferes With">
             </div>
-
             <!-- Objective -->
-            <div class="tab-pane fade" id="objective">
-              <textarea name="posture"    id="posture"    class="form-control mb-2" rows="8" placeholder="Posture"></textarea>
-              <textarea name="rom"        id="rom"        class="form-control mb-2" rows="8" placeholder="ROM"></textarea>
-              <textarea name="strength"   id="strength"   class="form-control mb-2" rows="8" placeholder="Muscle Strength Test"></textarea>
-              <textarea name="palpation"  id="palpation"  class="form-control mb-2" rows="8" placeholder="Palpation"></textarea>
-              <textarea name="functional" id="functional" class="form-control mb-2" rows="8" placeholder="Functional Test(s)"></textarea>
-              <textarea name="special"    id="special"    class="form-control mb-2" rows="8" placeholder="Special Test(s)"></textarea>
-              <textarea name="impairments" id="impairments" class="form-control mb-2" rows="8" placeholder="Current Functional Mobility Impairment(s)"></textarea>
+            <div class="tab-pane fade" id="pt-objective">
+              <textarea name="posture"    id="pt_posture"    class="form-control mb-2" rows="7" placeholder="Posture"></textarea>
+              <textarea name="rom"        id="pt_rom"        class="form-control mb-2" rows="7" placeholder="ROM"></textarea>
+              <textarea name="strength"   id="pt_strength"   class="form-control mb-2" rows="7" placeholder="Muscle Strength Test"></textarea>
+              <textarea name="palpation"  id="pt_palpation"  class="form-control mb-2" rows="7" placeholder="Palpation"></textarea>
+              <textarea name="functional" id="pt_functional" class="form-control mb-2" rows="7" placeholder="Functional Test(s)"></textarea>
+              <textarea name="special"    id="pt_special"    class="form-control mb-2" rows="7" placeholder="Special Test(s)"></textarea>
+              <textarea name="impairments" id="pt_impairments" class="form-control mb-2" rows="7" placeholder="Current Functional Mobility Impairment(s)"></textarea>
             </div>
-
             <!-- Diff Dx -->
-            <div class="tab-pane fade" id="diffdx">
-              <button type="button" id="ai-generate-diffdx" class="btn btn-outline-success btn-sm mb-2">AI Generate</button>
-              <textarea name="diffdx" id="diffdx-text" class="form-control" rows="10"></textarea>
+            <div class="tab-pane fade" id="pt-diffdx">
+              <button type="button" id="pt-ai-generate-diffdx" class="btn btn-outline-success btn-sm mb-2">AI Generate</button>
+              <textarea name="diffdx" id="pt_diffdx" class="form-control" rows="8"></textarea>
             </div>
-
             <!-- Assessment Summary -->
-            <div class="tab-pane fade" id="summary">
-              <button type="button" id="ai-generate-summary" class="btn btn-outline-success btn-sm mb-2">AI Generate</button>
-              <textarea name="summary" id="summary-text" class="form-control" rows="12"></textarea>
+            <div class="tab-pane fade" id="pt-summary">
+              <button type="button" id="pt-ai-generate-summary" class="btn btn-outline-success btn-sm mb-2">AI Generate</button>
+              <textarea name="summary" id="pt_summary" class="form-control" rows="10"></textarea>
             </div>
-
             <!-- Plan -->
-            <div class="tab-pane fade" id="plan">
-              <button type="button" id="ai-generate-goals" class="btn btn-outline-success btn-sm mb-2">AI Generate Goals</button>
-              <textarea name="goals" id="goals-text" class="form-control mb-2" rows="12"></textarea>
-              <input name="frequency" id="frequency" class="form-control mb-2" placeholder="Frequency/Duration">
-              <textarea name="intervention" id="intervention" class="form-control mb-2" placeholder="Intervention"></textarea>
-              <textarea name="procedures"  id="procedures"  class="form-control mb-2" placeholder="Treatment Procedures"></textarea>
+            <div class="tab-pane fade" id="pt-plan">
+              <button type="button" id="pt-ai-generate-goals" class="btn btn-outline-success btn-sm mb-2">AI Generate Goals</button>
+              <textarea name="goals" id="pt_goals" class="form-control mb-2" rows="10"></textarea>
+              <input name="frequency" id="pt_frequency" class="form-control mb-2" placeholder="Frequency/Duration">
+              <textarea name="intervention" id="pt_intervention" class="form-control mb-2" placeholder="Intervention"></textarea>
+              <textarea name="procedures"  id="pt_procedures"  class="form-control mb-2" placeholder="Treatment Procedures"></textarea>
+            </div>
+            <!-- Daily Note -->
+            <div class="tab-pane fade" id="pt-dailynote">
+              <div class="mb-2">
+                <label class="fw-bold">Diagnosis:</label>
+                <input type="text" id="pt_daily_diagnosis" class="form-control" placeholder="Enter Diagnosis">
+              </div>
+              <div class="mb-2">
+                <label class="fw-bold">Interventions:</label>
+                <textarea id="pt_daily_interventions" class="form-control" rows="2" placeholder="Enter Interventions"></textarea>
+              </div>
+              <div class="mb-2">
+                <label class="fw-bold">Tx Tolerance:</label>
+                <textarea id="pt_daily_tolerance" class="form-control" rows="2" placeholder="Enter Tx Tolerance"></textarea>
+              </div>
+              <div class="mb-2">
+                <label class="fw-bold">Current Progress:</label>
+                <textarea id="pt_daily_progress" class="form-control" rows="2" placeholder="Enter Current Progress"></textarea>
+              </div>
+              <div class="mb-2">
+                <label class="fw-bold">Next Visit Plan:</label>
+                <textarea id="pt_daily_plan" class="form-control" rows="2" placeholder="Enter Next Visit Plan"></textarea>
+              </div>
+              <div class="mb-2">
+                <label class="fw-bold">Summary:</label>
+                <textarea id="pt_daily_summary" class="form-control" rows="4" placeholder="Daily summary will appear here"></textarea>
+              </div>
+              <button type="button" id="pt-generate-daily-summary" class="btn btn-outline-success btn-sm">Generate Daily Summary</button>
+              <span id="pt-daily-summary-status" class="ms-2"></span>
             </div>
           </div>
         </form>
       </div>
-      <!-- OT Eval Builder Tab (CLONED) -->
-      <div class="tab-pane fade" id="oteval" role="tabpanel">
+
+      <!-- ========== OT EVAL BUILDER ========== -->
+      <div class="eval-box flex-fill">
+        <h2 class="h2">OT Eval Builder</h2>
         <div class="d-flex align-items-center mb-3">
           <label class="fw-bold me-2">Template:</label>
-          <select id="ot-template-select" class="form-select w-auto me-2">
-            {% for t in templates %}
-              <option>{{ t }}</option>
-            {% endfor %}
-          </select>
+          <select id="ot-template-select" class="form-select w-auto me-2"></select>
           <button id="ot-load-template-btn" class="btn btn-outline-primary btn-sm">Load</button>
           <button id="ot-save-word-btn" class="btn btn-info btn-sm">Export Word</button>
           <button id="ot-save-pdf-btn" class="btn btn-danger btn-sm">Export PDF</button>
           <span id="ot-status-msg" class="ms-3"></span>
         </div>
-        <form id="otevalform">
-          <ul class="nav nav-tabs mb-3">
-            <li class="nav-item"><a class="nav-link active" href="#ot-patientinfo" data-bs-toggle="tab">Patient Info</a></li>
-            <li class="nav-item"><a class="nav-link" href="#ot-history" data-bs-toggle="tab">History</a></li>
-            <li class="nav-item"><a class="nav-link" href="#ot-pain" data-bs-toggle="tab">Pain</a></li>
-            <li class="nav-item"><a class="nav-link" href="#ot-objective" data-bs-toggle="tab">Objective</a></li>
-            <li class="nav-item"><a class="nav-link" href="#ot-diffdx" data-bs-toggle="tab">Diff Dx</a></li>
-            <li class="nav-item"><a class="nav-link" href="#ot-summary" data-bs-toggle="tab">Assessment Summary</a></li>
-            <li class="nav-item"><a class="nav-link" href="#ot-plan" data-bs-toggle="tab">Plan</a></li>
-          </ul>
+        <ul class="nav nav-tabs mb-2" id="ot-tab">
+          <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#ot-patientinfo">Patient Info</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ot-history">History</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ot-pain">Pain</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ot-objective">Objective</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ot-diffdx">Diff Dx</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ot-summary">Assessment Summary</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ot-plan">Plan</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ot-dailynote">Daily Note</a></li>
+        </ul>
+        <form id="ot-evalform">
           <div class="tab-content">
-            <!-- OT Patient Info -->
+            <!-- Patient Info -->
             <div class="tab-pane fade show active" id="ot-patientinfo">
               <div class="row mb-2">
                 <div class="col"><input name="ot_name" id="ot_name" class="form-control" placeholder="Patient Name"></div>
@@ -165,7 +179,7 @@
                 <div class="col"><input name="ot_currentdate" id="ot_currentdate" class="form-control" placeholder="Current Date"></div>
               </div>
             </div>
-            <!-- OT History -->
+            <!-- History -->
             <div class="tab-pane fade" id="ot-history">
               <textarea name="ot_meddiag" id="ot_meddiag" class="form-control mb-2" placeholder="Medical Diagnosis"></textarea>
               <textarea name="ot_history" id="ot_history" class="form-control mb-2" placeholder="Medical History/HNP"></textarea>
@@ -175,7 +189,7 @@
               <textarea name="ot_dme" id="ot_dme" class="form-control mb-2" placeholder="DME/Assistive Device"></textarea>
               <textarea name="ot_plof" id="ot_plof" class="form-control mb-2" placeholder="PLOF"></textarea>
             </div>
-            <!-- OT Pain -->
+            <!-- Pain -->
             <div class="tab-pane fade" id="ot-pain">
               <input name="ot_pain_location" id="ot_pain_location" class="form-control mb-2" placeholder="Area/Location of Injury">
               <input name="ot_pain_onset"     id="ot_pain_onset"     class="form-control mb-2" placeholder="Onset/Exacerbation Date">
@@ -188,170 +202,164 @@
               <input name="ot_pain_relieved"    id="ot_pain_relieved"    class="form-control mb-2" placeholder="Relieved By">
               <input name="ot_pain_interferes"  id="ot_pain_interferes"  class="form-control mb-2" placeholder="Interferes With">
             </div>
-            <!-- OT Objective -->
+            <!-- Objective -->
             <div class="tab-pane fade" id="ot-objective">
-              <textarea name="ot_posture"    id="ot_posture"    class="form-control mb-2" rows="8" placeholder="Posture"></textarea>
-              <textarea name="ot_rom"        id="ot_rom"        class="form-control mb-2" rows="8" placeholder="ROM"></textarea>
-              <textarea name="ot_strength"   id="ot_strength"   class="form-control mb-2" rows="8" placeholder="Muscle Strength Test"></textarea>
-              <textarea name="ot_palpation"  id="ot_palpation"  class="form-control mb-2" rows="8" placeholder="Palpation"></textarea>
-              <textarea name="ot_functional" id="ot_functional" class="form-control mb-2" rows="8" placeholder="Functional Test(s)"></textarea>
-              <textarea name="ot_special"    id="ot_special"    class="form-control mb-2" rows="8" placeholder="Special Test(s)"></textarea>
-              <textarea name="ot_impairments" id="ot_impairments" class="form-control mb-2" rows="8" placeholder="Current Functional Mobility Impairment(s)"></textarea>
+              <textarea name="ot_posture"    id="ot_posture"    class="form-control mb-2" rows="7" placeholder="Posture"></textarea>
+              <textarea name="ot_rom"        id="ot_rom"        class="form-control mb-2" rows="7" placeholder="ROM"></textarea>
+              <textarea name="ot_strength"   id="ot_strength"   class="form-control mb-2" rows="7" placeholder="Muscle Strength Test"></textarea>
+              <textarea name="ot_palpation"  id="ot_palpation"  class="form-control mb-2" rows="7" placeholder="Palpation"></textarea>
+              <textarea name="ot_functional" id="ot_functional" class="form-control mb-2" rows="7" placeholder="Functional Test(s)"></textarea>
+              <textarea name="ot_special"    id="ot_special"    class="form-control mb-2" rows="7" placeholder="Special Test(s)"></textarea>
+              <textarea name="ot_impairments" id="ot_impairments" class="form-control mb-2" rows="7" placeholder="Current Functional Mobility Impairment(s)"></textarea>
             </div>
-            <!-- OT Diff Dx -->
+            <!-- Diff Dx -->
             <div class="tab-pane fade" id="ot-diffdx">
               <button type="button" id="ot-ai-generate-diffdx" class="btn btn-outline-success btn-sm mb-2">AI Generate</button>
-              <textarea name="ot_diffdx" id="ot-diffdx-text" class="form-control" rows="10"></textarea>
+              <textarea name="ot_diffdx" id="ot_diffdx" class="form-control" rows="8"></textarea>
             </div>
-            <!-- OT Assessment Summary -->
+            <!-- Assessment Summary -->
             <div class="tab-pane fade" id="ot-summary">
               <button type="button" id="ot-ai-generate-summary" class="btn btn-outline-success btn-sm mb-2">AI Generate</button>
-              <textarea name="ot_summary" id="ot-summary-text" class="form-control" rows="12"></textarea>
+              <textarea name="ot_summary" id="ot_summary" class="form-control" rows="10"></textarea>
             </div>
-            <!-- OT Plan -->
+            <!-- Plan -->
             <div class="tab-pane fade" id="ot-plan">
               <button type="button" id="ot-ai-generate-goals" class="btn btn-outline-success btn-sm mb-2">AI Generate Goals</button>
-              <textarea name="ot_goals" id="ot-goals-text" class="form-control mb-2" rows="12"></textarea>
+              <textarea name="ot_goals" id="ot_goals" class="form-control mb-2" rows="10"></textarea>
               <input name="ot_frequency" id="ot_frequency" class="form-control mb-2" placeholder="Frequency/Duration">
               <textarea name="ot_intervention" id="ot_intervention" class="form-control mb-2" placeholder="Intervention"></textarea>
               <textarea name="ot_procedures"  id="ot_procedures"  class="form-control mb-2" placeholder="Treatment Procedures"></textarea>
             </div>
+            <!-- Daily Note -->
+            <div class="tab-pane fade" id="ot-dailynote">
+              <div class="mb-2">
+                <label class="fw-bold">Diagnosis:</label>
+                <input type="text" id="ot_daily_diagnosis" class="form-control" placeholder="Enter Diagnosis">
+              </div>
+              <div class="mb-2">
+                <label class="fw-bold">Interventions:</label>
+                <textarea id="ot_daily_interventions" class="form-control" rows="2" placeholder="Enter Interventions"></textarea>
+              </div>
+              <div class="mb-2">
+                <label class="fw-bold">Tx Tolerance:</label>
+                <textarea id="ot_daily_tolerance" class="form-control" rows="2" placeholder="Enter Tx Tolerance"></textarea>
+              </div>
+              <div class="mb-2">
+                <label class="fw-bold">Current Progress:</label>
+                <textarea id="ot_daily_progress" class="form-control" rows="2" placeholder="Enter Current Progress"></textarea>
+              </div>
+              <div class="mb-2">
+                <label class="fw-bold">Next Visit Plan:</label>
+                <textarea id="ot_daily_plan" class="form-control" rows="2" placeholder="Enter Next Visit Plan"></textarea>
+              </div>
+              <div class="mb-2">
+                <label class="fw-bold">Summary:</label>
+                <textarea id="ot_daily_summary" class="form-control" rows="4" placeholder="Daily summary will appear here"></textarea>
+              </div>
+              <button type="button" id="ot-generate-daily-summary" class="btn btn-outline-success btn-sm">Generate Daily Summary</button>
+              <span id="ot-daily-summary-status" class="ms-2"></span>
+            </div>
           </div>
         </form>
       </div>
-      <!-- Daily Note Tab -->
-      <div class="tab-pane fade" id="dailynote-main" role="tabpanel">
-        <form id="dailynoteform">
-          <div class="mb-3 mt-2">
-            <label class="fw-bold">Diagnosis:</label>
-            <input type="text" id="daily_diagnosis" name="daily_diagnosis" class="form-control" placeholder="Enter Diagnosis">
-          </div>
-          <div class="mb-3">
-            <label class="fw-bold">Interventions:</label>
-            <textarea id="daily_interventions" name="daily_interventions" class="form-control" rows="4" placeholder="Enter Interventions"></textarea>
-          </div>
-          <div class="mb-3">
-            <label class="fw-bold">Tx Tolerance:</label>
-            <textarea id="daily_tolerance" name="daily_tolerance" class="form-control" rows="4" placeholder="Enter Tx Tolerance"></textarea>
-          </div>
-          <div class="mb-3">
-            <label class="fw-bold">Current Progress:</label>
-            <textarea id="daily_progress" name="daily_progress" class="form-control" rows="4" placeholder="Enter Current Progress"></textarea>
-          </div>
-          <div class="mb-3">
-            <label class="fw-bold">Next Visit Plan:</label>
-            <textarea id="daily_plan" name="daily_plan" class="form-control" rows="4" placeholder="Enter Next Visit Plan"></textarea>
-          </div>
-          <div class="mb-3">
-            <label class="fw-bold">Summary:</label>
-            <textarea id="daily_summary" name="daily_summary" class="form-control" rows="8" placeholder="Daily summary will appear here"></textarea>
-          </div>
-          <button type="button" id="generate-daily-summary" class="btn btn-outline-success btn-sm">Generate Daily Summary</button>
-          <span id="daily-summary-status" class="ms-2"></span>
-        </form>
-      </div>
+
     </div>
   </div>
+  
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // PT Eval JavaScript (same as before)
-    document.getElementById('generate-daily-summary').onclick = () => {
-      document.getElementById('daily-summary-status').textContent = "Generating summary…";
-      fetch('/generate_daily_summary', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          diagnosis: document.getElementById('daily_diagnosis').value,
-          interventions: document.getElementById('daily_interventions').value,
-          tolerance: document.getElementById('daily_tolerance').value,
-          progress: document.getElementById('daily_progress').value,
-          plan: document.getElementById('daily_plan').value
-        })
-      })
-      .then(r=>r.text())
-      .then(text=>{
-        document.getElementById('daily_summary').value = text;
-        document.getElementById('daily-summary-status').textContent = "Summary generated!";
-      })
-      .catch(()=>{
-        document.getElementById('daily-summary-status').textContent = "AI error";
+    // PT: Populate template selector on load
+    fetch(window.location.pathname, {headers: {"Accept": "application/json"}})
+      .then(resp => resp.json ? resp.json() : Promise.resolve([]))
+      .catch(()=>({}))
+      .then(() => {
+        fetch("/pt_load_template", {method: "POST", headers: {'Content-Type':'application/json'}, body: JSON.stringify({template: ""})});
+        fetch("/ot_load_template", {method: "POST", headers: {'Content-Type':'application/json'}, body: JSON.stringify({template: ""})});
       });
-    };
 
-    // PT getAllFields
-    function getAllFields(prefix="") {
-      const data = {};
-      document.querySelectorAll('input, textarea, select').forEach(el => {
-        if (el.name && (!prefix || el.name.startsWith(prefix))) data[el.name] = el.value;
-      });
+    // ========== PT ========== //
+    function ptGetFields() {
+      let data = {};
+      document.querySelectorAll('#pt-evalform [name]').forEach(el => data[el.name] = el.value);
       return data;
     }
-    function setStatus(msg, color="green", id='status-msg') {
-      const s = document.getElementById(id);
+    function ptSetStatus(msg, color="green") {
+      let s = document.getElementById('pt-status-msg');
       s.textContent = msg; s.style.color = color;
     }
 
-    // PT Buttons
-    document.getElementById('load-template-btn').onclick = () => {
-      fetch('/load_template', {
+    // PT: Load Templates
+    fetch("/pt_load_template", {
+      method: "POST",
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({template:""})
+    }).then(r=>r.json())
+      .then(()=> {
+        // This block is for demonstration; for more templates, update in app.py
+        let options = `<option>LBP Eval Template</option>`;
+        document.getElementById('pt-template-select').innerHTML = options;
+      });
+
+    document.getElementById('pt-load-template-btn').onclick = () => {
+      fetch('/pt_load_template', {
         method: 'POST',
         headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({ template: document.getElementById('template-select').value })
+        body: JSON.stringify({ template: document.getElementById('pt-template-select').value })
       })
       .then(r=>r.json())
       .then(data=>{
         for (let k in data) {
-          const fld = document.getElementById(k) || document.querySelector(`[name="${k}"]`);
+          let fld = document.getElementById('pt_'+k);
+          if (!fld) fld = document.querySelector(`#pt-evalform [name="${k}"]`);
           if (fld) fld.value = data[k];
         }
       });
     };
-    document.getElementById('ai-generate-diffdx').onclick = () => {
-      setStatus("Generating Diff Dx…","orange");
-      fetch('/generate_diffdx', {
+    document.getElementById('pt-ai-generate-diffdx').onclick = () => {
+      ptSetStatus("Generating Diff Dx…","orange");
+      fetch('/pt_generate_diffdx', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ fields: getAllFields() })
+        body: JSON.stringify({ fields: ptGetFields() })
       })
       .then(r=>r.text())
       .then(t=>{
-        document.getElementById('diffdx-text').value = t;
-        setStatus("Summary generated!","green");
-      }).catch(()=> setStatus("AI error","red"));
+        document.getElementById('pt_diffdx').value = t;
+        ptSetStatus("Summary generated!","green");
+      }).catch(()=> ptSetStatus("AI error","red"));
     };
-    document.getElementById('ai-generate-summary').onclick = () => {
-      setStatus("Generating summary…","orange");
-      fetch('/generate_summary', {
+    document.getElementById('pt-ai-generate-summary').onclick = () => {
+      ptSetStatus("Generating summary…","orange");
+      fetch('/pt_generate_summary', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ fields: getAllFields() })
+        body: JSON.stringify({ fields: ptGetFields() })
       })
       .then(r=>r.text())
       .then(t=>{
-        document.getElementById('summary-text').value = t;
-        setStatus("Summary generated!","green");
-      }).catch(()=> setStatus("AI error","red"));
+        document.getElementById('pt_summary').value = t;
+        ptSetStatus("Summary generated!","green");
+      }).catch(()=> ptSetStatus("AI error","red"));
     };
-    document.getElementById('ai-generate-goals').onclick = () => {
-      setStatus("Generating goals…","orange");
-      fetch('/generate_goals', {
+    document.getElementById('pt-ai-generate-goals').onclick = () => {
+      ptSetStatus("Generating goals…","orange");
+      fetch('/pt_generate_goals', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ fields: getAllFields() })
+        body: JSON.stringify({ fields: ptGetFields() })
       })
       .then(r=>r.text())
       .then(t=>{
-        document.getElementById('goals-text').value = t;
-        setStatus("Goals generated!","green");
-      }).catch(()=> setStatus("AI error","red"));
+        document.getElementById('pt_goals').value = t;
+        ptSetStatus("Goals generated!","green");
+      }).catch(()=> ptSetStatus("AI error","red"));
     };
-    // Export Word
-    document.getElementById('save-word-btn').onclick = () => {
-      setStatus("Exporting Word...","orange");
-      fetch('/export_word', {
+    document.getElementById('pt-save-word-btn').onclick = () => {
+      ptSetStatus("Exporting Word...","orange");
+      fetch('/pt_export_word', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(getAllFields())
+        body: JSON.stringify(ptGetFields())
       })
       .then(r=>r.blob())
       .then(blob=>{
@@ -362,16 +370,15 @@
         document.body.appendChild(a);
         a.click();
         a.remove();
-        setStatus("Word downloaded!","green");
+        ptSetStatus("Word downloaded!","green");
       });
     };
-    // Export PDF
-    document.getElementById('save-pdf-btn').onclick = () => {
-      setStatus("Exporting PDF...","orange");
-      fetch('/export_pdf', {
+    document.getElementById('pt-save-pdf-btn').onclick = () => {
+      ptSetStatus("Exporting PDF...","orange");
+      fetch('/pt_export_pdf', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(getAllFields())
+        body: JSON.stringify(ptGetFields())
       })
       .then(r=>r.blob())
       .then(blob=>{
@@ -382,13 +389,57 @@
         document.body.appendChild(a);
         a.click();
         a.remove();
-        setStatus("PDF downloaded!","green");
+        ptSetStatus("PDF downloaded!","green");
+      });
+    };
+    document.getElementById('pt-generate-daily-summary').onclick = () => {
+      document.getElementById('pt-daily-summary-status').textContent = "Generating summary…";
+      fetch('/pt_generate_daily_summary', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          diagnosis: document.getElementById('pt_daily_diagnosis').value,
+          interventions: document.getElementById('pt_daily_interventions').value,
+          tolerance: document.getElementById('pt_daily_tolerance').value,
+          progress: document.getElementById('pt_daily_progress').value,
+          plan: document.getElementById('pt_daily_plan').value
+        })
+      })
+      .then(r=>r.text())
+      .then(text=>{
+        document.getElementById('pt_daily_summary').value = text;
+        document.getElementById('pt-daily-summary-status').textContent = "Summary generated!";
+      })
+      .catch(()=>{
+        document.getElementById('pt-daily-summary-status').textContent = "AI error";
       });
     };
 
-    // OT Buttons and handlers
+    // ========== OT ========== //
+    function otGetFields() {
+      let data = {};
+      document.querySelectorAll('#ot-evalform [name]').forEach(el => data[el.name] = el.value);
+      return data;
+    }
+    function otSetStatus(msg, color="green") {
+      let s = document.getElementById('ot-status-msg');
+      s.textContent = msg; s.style.color = color;
+    }
+
+    // OT: Load Templates
+    fetch("/ot_load_template", {
+      method: "POST",
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({template:""})
+    }).then(r=>r.json())
+      .then(()=> {
+        // This block is for demonstration; for more templates, update in app.py
+        let options = `<option>OT Eval Template</option>`;
+        document.getElementById('ot-template-select').innerHTML = options;
+      });
+
     document.getElementById('ot-load-template-btn').onclick = () => {
-      fetch('/load_template', {
+      fetch('/ot_load_template', {
         method: 'POST',
         headers: { 'Content-Type':'application/json' },
         body: JSON.stringify({ template: document.getElementById('ot-template-select').value })
@@ -396,57 +447,57 @@
       .then(r=>r.json())
       .then(data=>{
         for (let k in data) {
-          const fld = document.getElementById("ot_" + k) || document.getElementById(k) || document.querySelector(`[name="ot_${k}"]`);
+          let fld = document.getElementById('ot_'+k);
+          if (!fld) fld = document.querySelector(`#ot-evalform [name="${k}"]`);
           if (fld) fld.value = data[k];
         }
       });
     };
     document.getElementById('ot-ai-generate-diffdx').onclick = () => {
-      setStatus("Generating Diff Dx…","orange","ot-status-msg");
-      fetch('/generate_diffdx', {
+      otSetStatus("Generating Diff Dx…","orange");
+      fetch('/ot_generate_diffdx', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ fields: getAllFields("ot_") })
+        body: JSON.stringify({ fields: otGetFields() })
       })
       .then(r=>r.text())
       .then(t=>{
-        document.getElementById('ot-diffdx-text').value = t;
-        setStatus("Summary generated!","green","ot-status-msg");
-      }).catch(()=> setStatus("AI error","red","ot-status-msg"));
+        document.getElementById('ot_diffdx').value = t;
+        otSetStatus("Summary generated!","green");
+      }).catch(()=> otSetStatus("AI error","red"));
     };
     document.getElementById('ot-ai-generate-summary').onclick = () => {
-      setStatus("Generating summary…","orange","ot-status-msg");
-      fetch('/generate_summary', {
+      otSetStatus("Generating summary…","orange");
+      fetch('/ot_generate_summary', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ fields: getAllFields("ot_") })
+        body: JSON.stringify({ fields: otGetFields() })
       })
       .then(r=>r.text())
       .then(t=>{
-        document.getElementById('ot-summary-text').value = t;
-        setStatus("Summary generated!","green","ot-status-msg");
-      }).catch(()=> setStatus("AI error","red","ot-status-msg"));
+        document.getElementById('ot_summary').value = t;
+        otSetStatus("Summary generated!","green");
+      }).catch(()=> otSetStatus("AI error","red"));
     };
     document.getElementById('ot-ai-generate-goals').onclick = () => {
-      setStatus("Generating goals…","orange","ot-status-msg");
-      fetch('/generate_goals', {
+      otSetStatus("Generating goals…","orange");
+      fetch('/ot_generate_goals', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ fields: getAllFields("ot_") })
+        body: JSON.stringify({ fields: otGetFields() })
       })
       .then(r=>r.text())
       .then(t=>{
-        document.getElementById('ot-goals-text').value = t;
-        setStatus("Goals generated!","green","ot-status-msg");
-      }).catch(()=> setStatus("AI error","red","ot-status-msg"));
+        document.getElementById('ot_goals').value = t;
+        otSetStatus("Goals generated!","green");
+      }).catch(()=> otSetStatus("AI error","red"));
     };
-    // Export Word OT
     document.getElementById('ot-save-word-btn').onclick = () => {
-      setStatus("Exporting Word...","orange","ot-status-msg");
-      fetch('/export_word', {
+      otSetStatus("Exporting Word...","orange");
+      fetch('/ot_export_word', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(getAllFields("ot_"))
+        body: JSON.stringify(otGetFields())
       })
       .then(r=>r.blob())
       .then(blob=>{
@@ -457,16 +508,15 @@
         document.body.appendChild(a);
         a.click();
         a.remove();
-        setStatus("Word downloaded!","green","ot-status-msg");
+        otSetStatus("Word downloaded!","green");
       });
     };
-    // Export PDF OT
     document.getElementById('ot-save-pdf-btn').onclick = () => {
-      setStatus("Exporting PDF...","orange","ot-status-msg");
-      fetch('/export_pdf', {
+      otSetStatus("Exporting PDF...","orange");
+      fetch('/ot_export_pdf', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(getAllFields("ot_"))
+        body: JSON.stringify(otGetFields())
       })
       .then(r=>r.blob())
       .then(blob=>{
@@ -477,7 +527,29 @@
         document.body.appendChild(a);
         a.click();
         a.remove();
-        setStatus("PDF downloaded!","green","ot-status-msg");
+        otSetStatus("PDF downloaded!","green");
+      });
+    };
+    document.getElementById('ot-generate-daily-summary').onclick = () => {
+      document.getElementById('ot-daily-summary-status').textContent = "Generating summary…";
+      fetch('/ot_generate_daily_summary', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          diagnosis: document.getElementById('ot_daily_diagnosis').value,
+          interventions: document.getElementById('ot_daily_interventions').value,
+          tolerance: document.getElementById('ot_daily_tolerance').value,
+          progress: document.getElementById('ot_daily_progress').value,
+          plan: document.getElementById('ot_daily_plan').value
+        })
+      })
+      .then(r=>r.text())
+      .then(text=>{
+        document.getElementById('ot_daily_summary').value = text;
+        document.getElementById('ot-daily-summary-status').textContent = "Summary generated!";
+      })
+      .catch(()=>{
+        document.getElementById('ot-daily-summary-status').textContent = "AI error";
       });
     };
   </script>
