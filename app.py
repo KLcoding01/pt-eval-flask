@@ -823,14 +823,6 @@ def ot_export_pdf():
         download_name="OT_Eval.pdf",
         mimetype="application/pdf"
     )
-    
-@app.route("/", methods=["GET"])
-def index():
-    return render_template(
-        "index.html",
-        pt_templates=list(PT_TEMPLATES.keys()),
-        ot_templates=list(OT_TEMPLATES.keys())
-    )
 # ====== END OT SECTION ======
 
 # --- OpenAI Utility ---
