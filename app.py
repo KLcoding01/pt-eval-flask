@@ -288,7 +288,6 @@ def export_word():
         as_attachment=True,
         download_name='PT_Eval.docx'
     )
-@app.route("/export_word", methods=["POST"])
 def export_to_word(data):
     doc = Document()
 
