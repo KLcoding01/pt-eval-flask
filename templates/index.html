@@ -271,22 +271,24 @@
       method: "POST",
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({template:""})
-    }).then(r=>r.json())
-      .then(()=> {
-        // For demo, update template list as needed
-        let options = `<option>LBP Eval Template</option>`;
-        document.getElementById('pt-template-select').innerHTML = options;
-      });
+    })
+    .then(r => r.json())
+    .then(names => {
+      let options = names.map(name => `<option>${name}</option>`).join("");
+      document.getElementById('pt-template-select').innerHTML = options;
+    });
+
+    // On click, fetch and load the template data
     document.getElementById('pt-load-template-btn').onclick = () => {
       fetch('/pt_load_template', {
         method: 'POST',
         headers: { 'Content-Type':'application/json' },
         body: JSON.stringify({ template: document.getElementById('pt-template-select').value })
       })
-      .then(r=>r.json())
-      .then(data=>{
+      .then(r => r.json())
+      .then(data => {
         for (let k in data) {
-          let fld = document.getElementById('pt_'+k);
+          let fld = document.getElementById('pt_' + k);
           if (!fld) fld = document.querySelector(`#pt-evalform [name="${k}"]`);
           if (fld) fld.value = data[k];
         }

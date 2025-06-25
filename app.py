@@ -249,14 +249,15 @@ def index():
 
 @app.route("/pt_load_template", methods=["POST"])
 def pt_load_template():
-    name = request.json.get("template", "")
-    text = PT_TEMPLATES.get(name, "")
-    return jsonify(pt_parse_template(text))
-    
-@app.route("/pt_templates", methods=["GET"])
-def pt_templates():
-    return jsonify(list(PT_TEMPLATES.keys()))
-    
+    data = request.get_json()
+    template_name = data.get("template", "")
+    if not template_name:
+        # Return all template names as a list
+        return jsonify(list(PT_TEMPLATES.keys()))
+    else:
+        # Return the template data (dict) for the selected name
+        return jsonify(PT_TEMPLATES.get(template_name, {}))
+        
 @app.route("/pt_generate_diffdx", methods=["POST"])
 def pt_generate_diffdx():
     f = request.json.get("fields", {})
