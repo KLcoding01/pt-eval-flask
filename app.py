@@ -247,16 +247,17 @@ def pt_parse_template(template):
 def index():
     return render_template("index.html", templates=list(PT_TEMPLATES.keys()))
 
+
 @app.route("/pt_load_template", methods=["POST"])
 def pt_load_template():
     data = request.get_json()
     template_name = data.get("template", "")
     if not template_name:
-        # Return all template names as a list
         return jsonify(list(PT_TEMPLATES.keys()))
     else:
-        # Return the template data (dict) for the selected name
-        return jsonify(PT_TEMPLATES.get(template_name, {}))
+        # Return the big text string, as plain text
+        return PT_TEMPLATES.get(template_name, ""), 200, {'Content-Type': 'text/plain; charset=utf-8'}
+
         
 @app.route("/pt_generate_diffdx", methods=["POST"])
 def pt_generate_diffdx():
