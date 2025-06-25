@@ -17,7 +17,7 @@ MODEL = "gpt-4o-mini"
 
 # ====== PT SECTION ======
 PT_TEMPLATES = {
-    "LBP Eval": """Medical Diagnosis:
+    "LBP Eval":"""Medical Diagnosis:
 Medical History/HNP:
 Subjective: Pt reports having LBP and is limiting daily functional activities. Pt would like to decrease pain and improve activity tolerance and return to PLOF. Pt agrees to PT evaluation.
 Pain:
