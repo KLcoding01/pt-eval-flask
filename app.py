@@ -111,7 +111,7 @@ Treatment Procedures:
 97112 Neuromuscular Re-ed
 97116 Gait Training
 """
-    "Knee TKA Eval": """Medical Diagnosis:
+    "Knee TKA Eval":"""Medical Diagnosis:
 Medical History/HNP:
 Subjective: Pt states s/p TKA and agreeable to PT evaluation. Pt report having pain and swelling to the knee region and hasn't been using ice too much. 
 Pain:
