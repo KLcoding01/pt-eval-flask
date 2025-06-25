@@ -252,7 +252,11 @@ def pt_load_template():
     name = request.json.get("template", "")
     text = PT_TEMPLATES.get(name, "")
     return jsonify(pt_parse_template(text))
-
+    
+@app.route("/pt_templates", methods=["GET"])
+def pt_templates():
+    return jsonify(list(PT_TEMPLATES.keys()))
+    
 @app.route("/pt_generate_diffdx", methods=["POST"])
 def pt_generate_diffdx():
     f = request.json.get("fields", {})
