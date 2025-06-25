@@ -17,7 +17,7 @@ MODEL = "gpt-4o-mini"
 
 # ====== PT SECTION ======
 PT_TEMPLATES = {
-    "LBP Eval Template": """Medical Diagnosis:
+    "LBP Eval": """Medical Diagnosis:
 Medical History/HNP:
 Subjective: Pt reports having LBP and is limiting daily functional activities. Pt would like to decrease pain and improve activity tolerance and return to PLOF. Pt agrees to PT evaluation.
 Pain:
@@ -88,6 +88,89 @@ Goals:
 Short-Term Goals (1–12 visits):
 1. Pt will report a reduction in low back pain to ≤1/10 to allow safe and comfortable participation in functional activities.
 2. Pt will demonstrate a ≥10% improvement in trunk AROM to enhance mobility and reduce risk of reinjury during daily tasks.
+3. Pt will improve gross LE strength by at least 0.5 muscle grade to enhance safety during ADLs and minimize pain/injury risk.
+4. Pt will self-report ≥50% improvement in functional limitations related to ADLs.
+
+Long-Term Goals (13–25 visits):
+1. Pt will demonstrate B LE strength of ≥4/5 to independently and safely perform all ADLs.
+2. Pt will complete ≥14 repetitions on the 30-second chair sit-to-stand test to reduce fall risk.
+3. Pt will tolerate ≥30 minutes of activity to safely resume household tasks without limitation.
+4. Pt will demonstrate independence with HEP, using proper body mechanics and strength to support safe return to ADLs without difficulty.
+
+Frequency/Duration: 1wk1, 2wk12
+
+Intervention: Manual Therapy (STM/IASTM/Joint Mob), Therapeutic Exercise, Therapeutic Activities, Neuromuscular Re-education, Gait Training, Balance Training, Pain Management Training, Modalities ice/heat 10-15min, E-Stim, Ultrasound, fall/injury prevention training, safety education/training, HEP education/training.
+
+Treatment Procedures:
+97161 Low Complexity
+97162 Moderate Complexity
+97163 High Complexity
+97140 Manual Therapy
+97110 Therapeutic Exercise
+97530 Therapeutic Activity
+97112 Neuromuscular Re-ed
+97116 Gait Training
+"""
+    "Knee TKA Eval": """Medical Diagnosis:
+Medical History/HNP:
+Subjective: Pt states s/p TKA and agreeable to PT evaluation. Pt report having pain and swelling to the knee region and hasn't been using ice too much. 
+Pain:
+Area/Location of Injury: Knee
+Onset/Exacerbation Date: 
+Condition of Injury: Acute
+Mechanism of Injury: Post op swelling due to surgery
+Pain Rating (P/B/W): 5/10, 3/10, 7/10
+Pain Frequency: Intermittent
+Description: Sharp, Tension, Aching, dull/heaviness
+Aggravating Factor: Sitting, standing, walking, bed mobility.
+Relieved By: Pain meds prn, ice, rest, elevation
+Interferes With: Functional mobility, ADLs, sleep.
+
+Current Medication(s): See medication list
+
+Diagnostic Test(s): N/A
+
+DME/Assistive Device: FWW
+
+PLOF: Independent with mobility and ADLs.
+
+Posture: Forward head lean, rounded shoulders, protracted scapular, slouch posture, decrease sitting postural awareness, loss of lumbar lordosis.
+
+ROM:               Left / Right
+    Hip Gross:      WNL / WNL
+    Knee Flex:  
+    Knee Ext:
+    Ankle Gross:    WNL / WNL
+   
+Strength Test:     Left / Right   
+    Hip Gross:      4/5 / 4/5
+    Knee Flex:     3/5* / 3/5*
+    Knee Ext:      3/5* / 3/5*
+    Ankle Gross:    4/5 / 4/5
+
+Palpation:
+    TTP: B Quads, hamstring, knee swelling, warmth, tendernesss periarticular
+
+Functional Test(s):
+     Bed Mobility: SBA 
+     30 seconds Chair Sit to Stand: 2x w/ Knee pain
+     SLB Test: Unable loss of balance
+     Single Heel Raises Test: 50% from full range, guarding at knee
+     Functional Squat: Unable
+
+Special Test(s): NT
+     
+
+Current Functional Mobility Impairment(s):
+     Prolonged sitting: 5 min
+     Standing: 5 min
+     Walking: 5 min
+     Step/stairs: 1 step
+
+Goals:
+Short-Term Goals (1–12 visits):
+1. Pt will report a reduction in knee pain to ≤1/10 to allow safe and comfortable participation in functional activities.
+2. Pt will demonstrate a ≥10% improvement in knee AROM to enhance mobility and reduce risk of reinjury during daily tasks.
 3. Pt will improve gross LE strength by at least 0.5 muscle grade to enhance safety during ADLs and minimize pain/injury risk.
 4. Pt will self-report ≥50% improvement in functional limitations related to ADLs.
 
