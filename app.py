@@ -17,7 +17,7 @@ MODEL = "gpt-4o-mini"
 
 # ====== PT SECTION ======
 PT_TEMPLATES = {
-    "LBP Eval":"""Medical Diagnosis:
+    "LBP Eval": """Medical Diagnosis:
 Medical History/HNP:
 Subjective: Pt reports having LBP and is limiting daily functional activities. Pt would like to decrease pain and improve activity tolerance and return to PLOF. Pt agrees to PT evaluation.
 Pain:
@@ -110,8 +110,8 @@ Treatment Procedures:
 97530 Therapeutic Activity
 97112 Neuromuscular Re-ed
 97116 Gait Training
-"""
-    "Knee TKA Eval":"""Medical Diagnosis:
+""",
+    "Knee TKA Eval": """Medical Diagnosis:
 Medical History/HNP:
 Subjective: Pt states s/p TKA and agreeable to PT evaluation. Pt report having pain and swelling to the knee region and hasn't been using ice too much. 
 Pain:
