@@ -10,20 +10,16 @@ from datetime import date
 from io import BytesIO
 from functools import wraps  # For login_required decorator
 
-load_dotenv()
 app = Flask(__name__)
-app.secret_key = "REPLACE_THIS_WITH_A_RANDOM_SECRET_KEY"  # Needed for session!
+app.secret_key = "REPLACE_THIS_WITH_A_RANDOM_SECRET_KEY"
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-MODEL = "gpt-4o-mini"
-
-# --- USER LOGIN SYSTEM ---
+# --- DEMO USERS ---
 USERS = {
     "kelvin": "Thanh123!",
     "test1": "test1",
-    # Add more users as needed
 }
 
+# --- LOGIN REQUIRED DECORATOR ---
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -32,11 +28,12 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# --- LOGIN ROUTE ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == "POST":
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form.get('username')
+        password = request.form.get('password')
         if username in USERS and USERS[username] == password:
             session['username'] = username
             return redirect(url_for('index'))
@@ -44,10 +41,17 @@ def login():
             return render_template('login.html', error="Invalid username or password")
     return render_template('login.html', error=None)
 
+# --- LOGOUT ROUTE ---
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
+
+# --- MAIN PAGE (PROTECTED) ---
+@app.route('/')
+@login_required
+def index():
+    return render_template('index.html')
     
 # ====== PT SECTION ======
 PT_TEMPLATES = {
