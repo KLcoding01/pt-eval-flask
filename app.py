@@ -48,11 +48,6 @@ def login():
 def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
-
-@app.route('/login required')
-@login_required
-def index():
-    return render_template('index.html')
     
 # ====== PT SECTION ======
 PT_TEMPLATES = {
