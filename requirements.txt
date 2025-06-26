@@ -4,3 +4,4 @@ python-dotenv
 python-docx
 gunicorn
 reportlab
+flask_sqlalchemy
