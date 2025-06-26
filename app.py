@@ -1,6 +1,6 @@
 import os
 import io
-from flask import Flask, request, jsonify, render_template, send_file
+from flask import Flask, request, jsonify, render_template, send_file, session, redirect, url_for
 from dotenv import load_dotenv
 from openai import OpenAI
 from docx import Document
@@ -8,12 +8,46 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from datetime import date
 from io import BytesIO
+from functools import wraps  # For login_required decorator
 
 load_dotenv()
 app = Flask(__name__)
+app.secret_key = "REPLACE_THIS_WITH_A_RANDOM_SECRET_KEY"  # Needed for session!
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-4o-mini"
+
+# --- USER LOGIN SYSTEM ---
+USERS = {
+    "kelvin": "Thanh123!",
+    "test1": "test1",
+    # Add more users as needed
+}
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == "POST":
+        username = request.form['username']
+        password = request.form['password']
+        if username in USERS and USERS[username] == password:
+            session['username'] = username
+            return redirect(url_for('index'))
+        else:
+            return render_template('login.html', error="Invalid username or password")
+    return render_template('login.html', error=None)
+
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    return redirect(url_for('login'))
 
 # ====== PT SECTION ======
 PT_TEMPLATES = {
