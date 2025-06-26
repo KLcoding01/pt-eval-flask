@@ -1,6 +1,6 @@
 import os
 import io
-from flask import Flask, request, jsonify, render_template, send_file, session, redirect, url_for
+from flask import Flask, request, jsonify, request, redirect, url_for, flash, render_template, send_file, session, redirect, url_for
 from dotenv import load_dotenv
 from openai import OpenAI
 from docx import Document
@@ -8,10 +8,18 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from datetime import date
 from io import BytesIO
-from functools import wraps  # For login_required decorator
+from functools import wraps
+from models import db, Patient, Attachment
+
 
 app = Flask(__name__)
 app.secret_key = "REPLACE_THIS_WITH_A_RANDOM_SECRET_KEY"
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = 'your-secret-key'
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+
+db.init_app(app)
 
 # --- DEMO USERS ---
 USERS = {
@@ -842,6 +850,35 @@ def ot_export_pdf():
         download_name="OT_Eval.pdf",
         mimetype="application/pdf"
     )
+    
+@app.route('/')
+def home():
+    patients = Patient.query.all()
+    return render_template('patient_list.html', patients=patients)
+
+@app.route('/patient/new', methods=['GET', 'POST'])
+def new_patient():
+    if request.method == 'POST':
+        patient = Patient(
+            first_name=request.form['first_name'],
+            last_name=request.form['last_name'],
+            dob=request.form['dob'],
+            address=request.form['address'],
+            phone=request.form['phone'],
+            email=request.form['email'],
+            notes=request.form['notes']
+        )
+        db.session.add(patient)
+        db.session.commit()
+        flash('Patient added successfully!')
+        return redirect(url_for('home'))
+    return render_template('patient_form.html')
+
+@app.route('/patient/<int:id>')
+def view_patient(id):
+    patient = Patient.query.get_or_404(id)
+    return render_template('patient_detail.html', patient=patient)
+    
 # ====== END OT SECTION ======
 
 # --- OpenAI Utility ---
@@ -857,4 +894,7 @@ def gpt_call(prompt, max_tokens=350):
         return f"OpenAI error: {e}"
 
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
+
