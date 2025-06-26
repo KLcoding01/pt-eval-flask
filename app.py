@@ -48,9 +48,9 @@ def logout():
     return redirect(url_for('login'))
 
 # --- MAIN PAGE (PROTECTED) ---
-@app.route('/')
+@app.route('/GPTW')
 @login_required
-def index():
+def other():
     return render_template('index.html')
     
 # ====== PT SECTION ======
