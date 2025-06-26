@@ -12,6 +12,7 @@ from functools import wraps
 from models import db, Patient, Attachment
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+MODEL = "gpt-4o-mini"
 
 app = Flask(__name__)
 app.secret_key = "REPLACE_THIS_WITH_A_RANDOM_SECRET_KEY"
