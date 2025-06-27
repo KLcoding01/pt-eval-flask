@@ -889,7 +889,7 @@ def pt_eval():
 @login_required
 def uploads():
     return "<h3>Uploads module coming soon</h3>"
-
+    
 @app.route('/dashboard')
 @login_required
 def dashboard():
