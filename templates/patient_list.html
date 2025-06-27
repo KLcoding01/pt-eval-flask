@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Patient List</h2>
+<a href="{{ url_for('patient_form') }}" class="btn btn-success mb-3">Add New Patient</a>
+<ul class="list-group">
+  {% for patient in patients %}
+  <li class="list-group-item">
+    <a href="{{ url_for('patient_detail', id=patient.id) }}">
+      {{ patient.first_name }} {{ patient.last_name }}
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

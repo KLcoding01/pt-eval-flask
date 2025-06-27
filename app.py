@@ -11,6 +11,16 @@ from io import BytesIO
 from functools import wraps
 from models import db, Patient, Attachment
 
+
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
+
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-4o-mini"
 
@@ -23,6 +33,9 @@ app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
 db.init_app(app)
 
+with app.app_context():
+    db.create_all()
+    
 # --- DEMO USERS ---
 USERS = {
     "kelvin": "Thanh123!",
@@ -55,7 +68,7 @@ def login():
 @app.route('/')
 @login_required
 def index():
-    resp = make_response(render_template('index.html'))
+    resp = make_response(render_template('index.html', templates=list(PT_TEMPLATES.keys())))
     resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     resp.headers['Pragma'] = 'no-cache'
     resp.headers['Expires'] = '-1'
@@ -193,11 +206,6 @@ def pt_parse_template(template):
         if not matched and curr and stripped:
             fields[curr] += "\n" + stripped
     return fields
-
-@app.route("/", methods=["GET"])
-def index():
-    return render_template("index.html", templates=list(PT_TEMPLATES.keys()))
-
 
 @app.route("/pt_load_template", methods=["POST"])
 def pt_load_template():
@@ -861,33 +869,34 @@ def ot_export_pdf():
         download_name="OT_Eval.pdf",
         mimetype="application/pdf"
     )
-@app.route('/')
-def home():
+@app.route('/patients')
+def patient_list():
     patients = Patient.query.all()
     return render_template('patient_list.html', patients=patients)
 
-@app.route('/patient/new', methods=['GET', 'POST'])
-def new_patient():
+@app.route('/patients/new', methods=['GET', 'POST'])
+def patient_form():
     if request.method == 'POST':
-        patient = Patient(
+        new_patient = Patient(
             first_name=request.form['first_name'],
             last_name=request.form['last_name'],
             dob=request.form['dob'],
+            gender=request.form['gender'],
             address=request.form['address'],
             phone=request.form['phone'],
             email=request.form['email'],
             notes=request.form['notes']
         )
-        db.session.add(patient)
+        db.session.add(new_patient)
         db.session.commit()
-        flash('Patient added successfully!')
-        return redirect(url_for('home'))
+        return redirect(url_for('patient_list'))
     return render_template('patient_form.html')
 
-@app.route('/patient/<int:id>')
-def view_patient(id):
+@app.route('/patients/<int:id>')
+def patient_detail(id):
     patient = Patient.query.get_or_404(id)
     return render_template('patient_detail.html', patient=patient)
+
     
 # ====== END OT SECTION ======
 
