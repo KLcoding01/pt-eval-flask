@@ -50,7 +50,8 @@ def login():
         else:
             return render_template('login.html', error="Invalid username or password")
     return render_template('login.html', error=None)
-    
+
+# --- MAIN PAGE (PROTECTED, NO-CACHE) ---
 @app.route('/')
 @login_required
 def index():
@@ -59,19 +60,21 @@ def index():
     resp.headers['Pragma'] = 'no-cache'
     resp.headers['Expires'] = '-1'
     return resp
-    
+
 # --- LOGOUT ROUTE ---
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
 
-# --- MAIN PAGE (PROTECTED) ---
+# --- ANOTHER PROTECTED PAGE EXAMPLE ---
 @app.route('/GPTW')
 @login_required
 def other():
+    # You should use a **different template** if this is not the main page.
+    # If you want a different page, do: return render_template('gptw.html')
+    # Otherwise, this will just show the same index.html as /
     return render_template('index.html')
-    
 # ====== PT SECTION ======
 PT_TEMPLATES = {
     "LBP Eval": {
