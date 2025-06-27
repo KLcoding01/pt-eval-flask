@@ -50,7 +50,16 @@ def login():
         else:
             return render_template('login.html', error="Invalid username or password")
     return render_template('login.html', error=None)
-
+    
+@app.route('/')
+@login_required
+def index():
+    resp = make_response(render_template('index.html'))
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '-1'
+    return resp
+    
 # --- LOGOUT ROUTE ---
 @app.route('/logout')
 def logout():
