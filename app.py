@@ -61,20 +61,17 @@ def index():
     resp.headers['Expires'] = '-1'
     return resp
 
+@app.route('/GPTW')
+@login_required
+def gptw():
+    return render_template('index.html')
+    
 # --- LOGOUT ROUTE ---
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
 
-# --- ANOTHER PROTECTED PAGE EXAMPLE ---
-@app.route('/GPTW')
-@login_required
-def other():
-    # You should use a **different template** if this is not the main page.
-    # If you want a different page, do: return render_template('gptw.html')
-    # Otherwise, this will just show the same index.html as /
-    return render_template('index.html')
 # ====== PT SECTION ======
 PT_TEMPLATES = {
     "LBP Eval": {
@@ -864,15 +861,6 @@ def ot_export_pdf():
         download_name="OT_Eval.pdf",
         mimetype="application/pdf"
     )
-@app.route('/')
-@login_required
-def index():
-    resp = make_response(render_template('index.html'))
-    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-    resp.headers['Pragma'] = 'no-cache'
-    resp.headers['Expires'] = '-1'
-    return resp
-    
 @app.route('/')
 def home():
     patients = Patient.query.all()
