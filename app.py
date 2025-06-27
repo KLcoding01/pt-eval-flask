@@ -1,6 +1,9 @@
 import os
 import io
-from flask import Flask, request, jsonify, request, redirect, url_for, flash, render_template, send_file, session, redirect, url_for, make_response
+from flask import (
+    Flask, request, jsonify, redirect, url_for, flash,
+    render_template, send_file, session, make_response
+)
 from dotenv import load_dotenv
 from openai import OpenAI
 from docx import Document
@@ -11,29 +14,32 @@ from io import BytesIO
 from functools import wraps
 from models import db, Patient, Attachment
 
+load_dotenv()
 
+# Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-4o-mini"
 
 app = Flask(__name__)
-app.secret_key = "REPLACE_THIS_WITH_A_RANDOM_SECRET_KEY"
+app.secret_key = os.getenv("SECRET_KEY", "replace_with_a_secure_key")
+
+# Database config
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'your-secret-key'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
 db.init_app(app)
 
 with app.app_context():
     db.create_all()
-    
-# --- DEMO USERS ---
+
+# --- Demo users ---
 USERS = {
     "kelvin": "Thanh123!",
     "test1": "test1",
 }
 
-# --- LOGIN REQUIRED DECORATOR ---
+# --- Login required decorator ---
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -42,7 +48,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# --- LOGIN ROUTE ---
+# --- Authentication routes ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == "POST":
@@ -55,28 +61,19 @@ def login():
             return render_template('login.html', error="Invalid username or password")
     return render_template('login.html', error=None)
 
-# --- MAIN PAGE (PROTECTED, NO-CACHE) ---
-@app.route('/')
-@login_required
-def index():
-    resp = make_response(render_template('index.html', templates=list(PT_TEMPLATES.keys())))
-    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-    resp.headers['Pragma'] = 'no-cache'
-    resp.headers['Expires'] = '-1'
-    return resp
-
-@app.route('/GPTW')
-@login_required
-def gptw():
-    return render_template('index.html')
-    
-# --- LOGOUT ROUTE ---
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
 
-# ====== PT SECTION ======
+# --- Main page ---
+@app.route('/')
+@login_required
+def index():
+    return render_template('index.html', templates=list(PT_TEMPLATES.keys()))
+
+# ====== PT Section ======
+
 PT_TEMPLATES = {
     "LBP Eval": {
         "meddiag": "",
@@ -199,6 +196,7 @@ def pt_parse_template(template):
     return fields
 
 @app.route("/pt_load_template", methods=["POST"])
+@login_required
 def pt_load_template():
     data = request.get_json()
     template_name = data.get("template", "")
@@ -206,8 +204,9 @@ def pt_load_template():
         return jsonify(list(PT_TEMPLATES.keys()))
     else:
         return jsonify(PT_TEMPLATES.get(template_name, {}))
-        
+
 @app.route("/pt_generate_diffdx", methods=["POST"])
+@login_required
 def pt_generate_diffdx():
     f = request.json.get("fields", {})
     pain = "; ".join(f"{lbl}: {f.get(key,'')}"
@@ -235,6 +234,7 @@ def pt_generate_diffdx():
     return result
 
 @app.route("/pt_generate_summary", methods=["POST"])
+@login_required
 def pt_generate_summary():
     f = request.json.get("fields", {})
     name = f.get("name", "Pt Name")
@@ -268,6 +268,7 @@ def pt_generate_summary():
     return gpt_call(prompt, max_tokens=350)
 
 @app.route("/pt_generate_goals", methods=["POST"])
+@login_required
 def pt_generate_goals():
     f = request.json.get("fields", {})
     prompt = (
@@ -296,6 +297,7 @@ def pt_generate_goals():
     return gpt_call(prompt, max_tokens=350)
 
 @app.route('/pt_generate_daily_summary', methods=['POST'])
+@login_required
 def pt_generate_daily_summary():
     data = request.json
     prompt = (
@@ -308,9 +310,9 @@ def pt_generate_daily_summary():
         f"Tx Tolerance: {data.get('tolerance','')}\n"
         f"Current Progress: {data.get('progress','')}\n"
         f"Next Visit Plan: {data.get('plan','')}\n"
-        "Do not use the phrases 'patient reported' or 'the patient'."
-        "Do not spell out, use abbreviation only, avoid using both next to each other"
-        "After summarizes skip a row write a 1-2 sentences for next visit plan of care utilizing something along Focusing on PT POC to improve strength, endurance, mechancis, activity tolerance with manual therapy, ther-ex, ther-act, IASTM. Improve activity tolerance to return to safe ADLs and community participation and ambulation."
+        "Do not use the phrases 'patient reported' or 'the patient'. "
+        "Do not spell out, use abbreviation only, avoid using both next to each other. "
+        "After summarizes skip a row write a 1-2 sentences for next visit plan of care utilizing something along Focusing on PT POC to improve strength, endurance, mechanics, activity tolerance with manual therapy, ther-ex, ther-act, IASTM. Improve activity tolerance to return to safe ADLs and community participation and ambulation."
     )
     completion = client.chat.completions.create(
         model=MODEL,
@@ -321,6 +323,7 @@ def pt_generate_daily_summary():
     return summary
 
 @app.route('/pt_export_word', methods=['POST'])
+@login_required
 def pt_export_word():
     data = request.json
     doc = pt_export_to_word(data)
@@ -396,6 +399,7 @@ def pt_export_to_word(data):
     return doc
 
 @app.route("/pt_export_pdf", methods=["POST"])
+@login_required
 def pt_export_pdf():
     data = request.get_json()
     buffer = io.BytesIO()
@@ -412,7 +416,9 @@ def pt_export_pdf():
         for line in (value or "").split('\n'):
             c.drawString(48, y, line)
             y -= 14
-            if y < 60: c.showPage(); y = height - 40
+            if y < 60:
+                c.showPage()
+                y = height - 40
         y -= 8
         c.setLineWidth(0.5)
         c.line(40, y, width - 40, y)
@@ -474,10 +480,8 @@ def pt_export_pdf():
         mimetype="application/pdf"
     )
 
-# ====== END PT SECTION ======
+# ====== OT Section ======
 
-
-# ====== OT SECTION ======
 OT_TEMPLATES = {
     "OT Eval Template": """Medical Diagnosis:
 Medical History/HNP:
@@ -589,12 +593,14 @@ def ot_parse_template(template):
     return fields
 
 @app.route("/ot_load_template", methods=["POST"])
+@login_required
 def ot_load_template():
     name = request.json.get("template", "")
     text = OT_TEMPLATES.get(name, "")
     return jsonify(ot_parse_template(text))
 
 @app.route("/ot_generate_diffdx", methods=["POST"])
+@login_required
 def ot_generate_diffdx():
     f = request.json.get("fields", {})
     pain = "; ".join(f"{lbl}: {f.get(key,'')}"
@@ -622,6 +628,7 @@ def ot_generate_diffdx():
     return result
 
 @app.route("/ot_generate_summary", methods=["POST"])
+@login_required
 def ot_generate_summary():
     f = request.json.get("fields", {})
     name = f.get("ot_name", "Pt Name")
@@ -655,6 +662,7 @@ def ot_generate_summary():
     return gpt_call(prompt, max_tokens=350)
 
 @app.route("/ot_generate_goals", methods=["POST"])
+@login_required
 def ot_generate_goals():
     f = request.json.get("fields", {})
     prompt = (
@@ -683,6 +691,7 @@ def ot_generate_goals():
     return gpt_call(prompt, max_tokens=350)
 
 @app.route('/ot_generate_daily_summary', methods=['POST'])
+@login_required
 def ot_generate_daily_summary():
     data = request.json
     prompt = (
@@ -695,8 +704,8 @@ def ot_generate_daily_summary():
         f"Tx Tolerance: {data.get('tolerance','')}\n"
         f"Current Progress: {data.get('progress','')}\n"
         f"Next Visit Plan: {data.get('plan','')}\n"
-        "Do not use the phrases 'patient reported' or 'the patient'."
-        "Do not spell out, use abbreviation only, avoid using both next to each other"
+        "Do not use the phrases 'patient reported' or 'the patient'. "
+        "Do not spell out, use abbreviation only, avoid using both next to each other. "
         "After summarizes skip a row write a 1-2 sentences for next visit plan of care utilizing something along Focusing on OT POC to improve strength, endurance, mechanics, activity tolerance with manual therapy, ther-ex, ther-act, HEP, ADL retraining. Improve function to return to safe ADLs and community participation."
     )
     completion = client.chat.completions.create(
@@ -708,6 +717,7 @@ def ot_generate_daily_summary():
     return summary
 
 @app.route('/ot_export_word', methods=['POST'])
+@login_required
 def ot_export_word():
     data = request.json
     doc = ot_export_to_word(data)
@@ -783,6 +793,7 @@ def ot_export_to_word(data):
     return doc
 
 @app.route("/ot_export_pdf", methods=["POST"])
+@login_required
 def ot_export_pdf():
     data = request.get_json()
     buffer = io.BytesIO()
@@ -799,7 +810,9 @@ def ot_export_pdf():
         for line in (value or "").split('\n'):
             c.drawString(48, y, line)
             y -= 14
-            if y < 60: c.showPage(); y = height - 40
+            if y < 60:
+                c.showPage()
+                y = height - 40
         y -= 8
         c.setLineWidth(0.5)
         c.line(40, y, width - 40, y)
@@ -860,28 +873,17 @@ def ot_export_pdf():
         download_name="OT_Eval.pdf",
         mimetype="application/pdf"
     )
-@app.route('/')
-def home():
-    return render_template('dashboard.html')  # or redirect to /pt-eval if you prefer
 
-@app.route('/pt-eval')
-def pt_eval():
-    return render_template('pt_eval.html')
-
-@app.route('/calendar')
-def calendar():
-    return render_template('calendar.html')
-
-@app.route('/uploads')
-def uploads():
-    return "<h3>Uploads module coming soon</h3>"
+# ====== Patient routes ======
 
 @app.route('/patients')
+@login_required
 def patient_list():
     patients = Patient.query.all()
     return render_template('patient_list.html', patients=patients)
 
 @app.route('/patients/new', methods=['GET', 'POST'])
+@login_required
 def patient_form():
     if request.method == 'POST':
         new_patient = Patient(
@@ -896,29 +898,113 @@ def patient_form():
         )
         db.session.add(new_patient)
         db.session.commit()
+        flash("Patient added successfully.")
         return redirect(url_for('patient_list'))
     return render_template('patient_form.html')
 
 @app.route('/patients/<int:id>')
+@login_required
 def patient_detail(id):
     patient = Patient.query.get_or_404(id)
     return render_template('patient_detail.html', patient=patient)
+
+# ====== Calendar routes ======
+
+appointments = [
+    {
+        "id": 1,
+        "title": "John Doe - PT Session",
+        "start": "2025-07-01T10:00:00",
+        "end": "2025-07-01T11:00:00",
+        "color": "#378006",
+        "notes": "Initial eval"
+    },
+    {
+        "id": 2,
+        "title": "Jane Smith - Follow-up",
+        "start": "2025-07-03T14:00:00",
+        "end": "2025-07-03T15:00:00",
+        "color": "#FF5733",
+        "notes": "Gait training"
+    }
+]
+next_id = 3
+
 @app.route('/calendar')
+@login_required
 def calendar():
-    return "<h2>Calendar Page Coming Soon</h2>"
+    return render_template('calendar.html')
+
+@app.route('/api/appointments')
+@login_required
+def get_appointments():
+    return jsonify(appointments)
+
+@app.route('/api/appointments', methods=['POST'])
+@login_required
+def add_appointment():
+    global next_id
+    data = request.json
+    title = data.get('title', 'No Title')
+    start = data.get('start')
+    end = data.get('end')
+    color = data.get('color', '#378006')
+    notes = data.get('notes', '')
+    if not start:
+        return jsonify({"error": "Missing start date"}), 400
+
+    new_event = {
+        "id": next_id,
+        "title": title,
+        "start": start,
+        "end": end,
+        "color": color,
+        "notes": notes
+    }
+    appointments.append(new_event)
+    next_id += 1
+    return jsonify(new_event), 201
+
+@app.route('/api/appointments/<int:event_id>', methods=['PUT'])
+@login_required
+def update_appointment(event_id):
+    data = request.json
+    for event in appointments:
+        if event['id'] == event_id:
+            event['title'] = data.get('title', event['title'])
+            event['start'] = data.get('start', event['start'])
+            event['end'] = data.get('end', event['end'])
+            event['color'] = data.get('color', event.get('color', '#378006'))
+            event['notes'] = data.get('notes', event.get('notes', ''))
+            return jsonify(event)
+    return jsonify({"error": "Event not found"}), 404
+
+@app.route('/api/appointments/<int:event_id>', methods=['DELETE'])
+@login_required
+def delete_appointment(event_id):
+    global appointments
+    appointments = [e for e in appointments if e['id'] != event_id]
+    return jsonify({"result": "Deleted"})
+
+# ====== Other pages ======
 
 @app.route('/pt-eval')
+@login_required
 def pt_eval():
-    return "<h2>PT Eval Builder Page Coming Soon</h2>"
+    return render_template('pt_eval.html')
 
 @app.route('/uploads')
+@login_required
 def uploads():
-    return "<h2>File Uploads Coming Soon</h2>"
+    return "<h3>Uploads module coming soon</h3>"
 
-    
-# ====== END OT SECTION ======
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('dashboard.html')
 
-# --- OpenAI Utility ---
+# --- OpenAI helper function ---
+
 def gpt_call(prompt, max_tokens=350):
     try:
         resp = client.chat.completions.create(
@@ -934,4 +1020,3 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True)
-

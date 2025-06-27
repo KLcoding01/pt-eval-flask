@@ -1,7 +1,113 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>📅 Calendar</h2>
-<p>This is the placeholder for the appointment calendar.</p>
-<!-- You can add FullCalendar.js or similar here -->
-{% endblock %}
+<h2>📅 Appointment Calendar</h2>
+<div id="calendar"></div>
 
+<!-- FullCalendar CSS -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
+<!-- FullCalendar JS -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      selectable: true,
+      editable: true,
+      eventResizableFromStart: true,
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+      },
+
+      events: '/api/appointments',
+
+      select: function(info) {
+        let title = prompt('Enter patient name or appointment details:');
+        if (!title) {
+          calendar.unselect();
+          return;
+        }
+        let color = prompt('Enter color hex code for appointment (e.g. #378006) or leave blank for default:');
+        if (!color) color = '#378006';
+        let notes = prompt('Add notes (optional):') || '';
+
+        // POST new event to backend
+        fetch('/api/appointments', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            title: title,
+            start: info.startStr,
+            end: info.endStr,
+            color: color,
+            notes: notes
+          })
+        }).then(res => res.json())
+          .then(event => {
+            calendar.addEvent(event);
+          })
+          .catch(err => alert('Failed to save appointment: ' + err));
+        calendar.unselect();
+      },
+
+      eventChange: function(info) {
+        // Called when event dragged or resized
+        let event = info.event;
+        let newTitle = prompt('Edit appointment title:', event.title);
+        if (newTitle === null) {
+          info.revert();
+          return;
+        }
+        event.setProp('title', newTitle);
+
+        let newColor = prompt('Edit color hex (e.g. #378006):', event.backgroundColor);
+        if (newColor) {
+          event.setProp('backgroundColor', newColor);
+          event.setProp('borderColor', newColor);
+        }
+
+        let newNotes = prompt('Edit notes:', event.extendedProps.notes || '');
+        if (newNotes !== null) {
+          event.setExtendedProp('notes', newNotes);
+        }
+
+        // PUT update to backend
+        fetch('/api/appointments/' + event.id, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            title: event.title,
+            start: event.start.toISOString(),
+            end: event.end ? event.end.toISOString() : null,
+            color: newColor || event.backgroundColor,
+            notes: newNotes || event.extendedProps.notes || ''
+          })
+        }).then(res => {
+          if (!res.ok) throw new Error('Update failed');
+        }).catch(() => {
+          alert('Failed to update appointment on server');
+          info.revert();
+        });
+      },
+
+      eventClick: function(info) {
+        let event = info.event;
+        alert(`Appointment Details:\n\nTitle: ${event.title}\nStart: ${event.start.toLocaleString()}\nEnd: ${event.end ? event.end.toLocaleString() : 'N/A'}\nNotes: ${event.extendedProps.notes || 'None'}`);
+      }
+    });
+
+    calendar.render();
+  });
+</script>
+
+<style>
+  #calendar {
+    max-width: 900px;
+    margin: 20px auto;
+  }
+</style>
+{% endblock %}
