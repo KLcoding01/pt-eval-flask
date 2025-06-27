@@ -14,20 +14,10 @@ from io import BytesIO
 from functools import wraps
 from models import db, Patient, Attachment
 
-
 load_dotenv()
 
 app = Flask(__name__)
-
-# Now set secret_key AFTER creating app
-app.secret_key = os.getenv(
-    "SECRET_KEY",
-    "e8d4f5a2b1c3d4e5f6a7b8c9d0e1f23456789abcdef0123456789abcdef012345"
-)
-
-# Initialize OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-MODEL = "gpt-4o-mini"
+app.secret_key = os.getenv("SECRET_KEY", "replace-with-your-secret-key")
 
 # Database config
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
@@ -38,6 +28,10 @@ db.init_app(app)
 
 with app.app_context():
     db.create_all()
+
+# Initialize OpenAI client
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+MODEL = "gpt-4o-mini"
 
 # --- Demo users ---
 USERS = {
@@ -72,11 +66,90 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
 
-# --- Main page ---
+# --- Main index ---
 @app.route('/')
 @login_required
 def index():
-    return render_template('index.html', templates=list(PT_TEMPLATES.keys()))
+    # Your existing index page or redirect to dashboard
+    return redirect(url_for('dashboard'))
+
+# ====== Dashboard & Calendar Integration ======
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('dashboard.html')
+
+@app.route('/calendar')
+@login_required
+def calendar():
+    # Redirect calendar route to dashboard for unified UI
+    return redirect(url_for('dashboard'))
+
+@app.route('/api/appointments')
+@login_required
+def get_appointments():
+    # Sample data, replace with your DB query if needed
+    appointments = [
+        {
+            "id": 1,
+            "title": "John Doe - PT Session",
+            "start": "2025-07-01T10:00:00",
+            "end": "2025-07-01T11:00:00",
+            "color": "#378006",
+            "notes": "Initial eval"
+        },
+        {
+            "id": 2,
+            "title": "Jane Smith - Follow-up",
+            "start": "2025-07-03T14:00:00",
+            "end": "2025-07-03T15:00:00",
+            "color": "#FF5733",
+            "notes": "Gait training"
+        }
+    ]
+    return jsonify(appointments)
+
+# ====== Patient Routes ======
+
+@app.route('/patients')
+@login_required
+def patient_list():
+    patients = Patient.query.all()
+    return render_template('patient_list.html', patients=patients)
+
+@app.route('/patients/new', methods=['GET', 'POST'])
+@login_required
+def patient_form():
+    if request.method == 'POST':
+        new_patient = Patient(
+            first_name=request.form['first_name'],
+            last_name=request.form['last_name'],
+            dob=request.form['dob'],
+            gender=request.form['gender'],
+            address=request.form['address'],
+            phone=request.form['phone'],
+            email=request.form['email'],
+            notes=request.form['notes']
+        )
+        db.session.add(new_patient)
+        db.session.commit()
+        flash("Patient added successfully.")
+        return redirect(url_for('patient_list'))
+    return render_template('patient_form.html')
+
+@app.route('/patients/<int:id>')
+@login_required
+def patient_detail(id):
+    patient = Patient.query.get_or_404(id)
+    return render_template('patient_detail.html', patient=patient)
+
+# ====== Uploads ======
+
+@app.route('/uploads')
+@login_required
+def uploads():
+    return "<h3>Uploads module coming soon</h3>"
 
 # ====== PT Section ======
 
