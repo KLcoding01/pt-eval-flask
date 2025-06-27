@@ -71,11 +71,12 @@ def logout():
     return redirect(url_for('login'))
 
 # --- Main page ---
-@app.route('/')
-@login_required
-def index():
-    return render_template('index.html', templates=list(PT_TEMPLATES.keys()))
 
+@app.route('/', endpoint='home')
+def dashboard():
+    # your dashboard code here
+    return render_template('dashboard.html')
+    
 # ====== PT Section ======
 
 PT_TEMPLATES = {
