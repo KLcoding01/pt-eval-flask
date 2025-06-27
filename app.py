@@ -860,6 +860,22 @@ def ot_export_pdf():
         download_name="OT_Eval.pdf",
         mimetype="application/pdf"
     )
+@app.route('/')
+def home():
+    return render_template('dashboard.html')  # or redirect to /pt-eval if you prefer
+
+@app.route('/pt-eval')
+def pt_eval():
+    return render_template('pt_eval.html')
+
+@app.route('/calendar')
+def calendar():
+    return render_template('calendar.html')
+
+@app.route('/uploads')
+def uploads():
+    return "<h3>Uploads module coming soon</h3>"
+
 @app.route('/patients')
 def patient_list():
     patients = Patient.query.all()
