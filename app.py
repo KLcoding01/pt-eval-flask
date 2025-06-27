@@ -887,6 +887,17 @@ def patient_form():
 def patient_detail(id):
     patient = Patient.query.get_or_404(id)
     return render_template('patient_detail.html', patient=patient)
+@app.route('/calendar')
+def calendar():
+    return "<h2>Calendar Page Coming Soon</h2>"
+
+@app.route('/pt-eval')
+def pt_eval():
+    return "<h2>PT Eval Builder Page Coming Soon</h2>"
+
+@app.route('/uploads')
+def uploads():
+    return "<h2>File Uploads Coming Soon</h2>"
 
     
 # ====== END OT SECTION ======
