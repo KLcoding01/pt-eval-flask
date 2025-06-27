@@ -12,15 +12,6 @@ from functools import wraps
 from models import db, Patient, Attachment
 
 
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db.init_app(app)
-
-with app.app_context():
-    db.create_all()
-
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-4o-mini"
 
