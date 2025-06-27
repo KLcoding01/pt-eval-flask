@@ -15,13 +15,15 @@ from functools import wraps
 from models import db, Patient, Attachment
 
 load_dotenv()
+app.secret_key = os.getenv("SECRET_KEY", "e8d4f5a2b1c3d4e5f6a7b8c9d0e1f23456789abcdef0123456789abcdef012345
 
 # Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-4o-mini"
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "replace_with_a_secure_key")
+
+")
 
 # Database config
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
