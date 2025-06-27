@@ -207,34 +207,7 @@ def pt_load_template():
 
 
 
-@app.route("/pt_generate_goals", methods=["POST"])
-@login_required
-def pt_generate_goals():
-    f = request.json.get("fields", {})
-    prompt = (
-        "You are a clinical assistant helping a PT write documentation. "
-        "Using ONLY the provided eval info (summary, objective findings, strength, ROM, impairments, and functional limitations), "
-        "generate clinically-appropriate short-term and long-term PT goals. "
-        "Decide the most relevant and individualized goals based on the data, but ALWAYS follow the exact goal format below. "
-        "DO NOT add extra formatting, explanations, or ChatGPT commentary—output should be concise and in bullet list format only. "
-        "Adapt content of each goal based on eval details. Do not repeat or copy the examples unless appropriate. "
-        "\n\n"
-        "FORMAT TO FOLLOW:\n"
-        "Short-Term Goals (1–12 visits):\n"
-        "1. [goal statement]\n"
-        "2. [goal statement]\n"
-        "3. [goal statement]\n"
-        "4. [goal statement]\n"
-        "Long-Term Goals (13–25 visits):\n"
-        "1. [goal statement]\n"
-        "2. [goal statement]\n"
-        "3. [goal statement]\n"
-        "4. [goal statement]\n"
-        "\nOnly generate goals in this structure."
-        "\n\nEval info:\n"
-        f"{f}"
-    )
-    return gpt_call(prompt, max_tokens=350)
+
 
 @app.route('/pt_generate_daily_summary', methods=['POST'])
 @login_required
