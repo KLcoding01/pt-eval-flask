@@ -599,76 +599,79 @@ def ot_load_template():
     text = OT_TEMPLATES.get(name, "")
     return jsonify(ot_parse_template(text))
 
-@app.route("/ot_generate_diffdx", methods=["POST"])
+@app.route("/pt_generate_diffdx", methods=["POST"])
 @login_required
-def ot_generate_diffdx():
+def pt_generate_diffdx():
     f = request.json.get("fields", {})
     pain = "; ".join(f"{lbl}: {f.get(key,'')}"
                       for lbl,key in [
-                          ("Area/Location", "ot_pain_location"),
-                          ("Onset", "ot_pain_onset"),
-                          ("Condition", "ot_pain_condition"),
-                          ("Mechanism", "ot_pain_mechanism"),
-                          ("Rating", "ot_pain_rating"),
-                          ("Frequency", "ot_pain_frequency"),
-                          ("Description", "ot_pain_description"),
-                          ("Aggravating", "ot_pain_aggravating"),
-                          ("Relieved", "ot_pain_relieved"),
-                          ("Interferes", "ot_pain_interferes"),
+                          ("Area/Location", "pain_location"),
+                          ("Onset", "pain_onset"),
+                          ("Condition", "pain_condition"),
+                          ("Mechanism", "pain_mechanism"),
+                          ("Rating", "pain_rating"),
+                          ("Frequency", "pain_frequency"),
+                          ("Description", "pain_description"),
+                          ("Aggravating", "pain_aggravating"),
+                          ("Relieved", "pain_relieved"),
+                          ("Interferes", "pain_interferes"),
                       ])
     prompt = (
-        "You are an OT clinical assistant. Provide the single best-fit diagnosis:\n\n"
-        f"Subjective:\n{f.get('ot_subjective','')}\n\n"
+        "You are a PT clinical assistant. Provide the single best-fit diagnosis:\n\n"
+        f"Subjective:\n{f.get('subjective','')}\n\n"
         f"Pain:\n{pain}\n\n"
-        f"Objective:\nPosture: {f.get('ot_posture','')}\n"
-        f"ROM: {f.get('ot_rom','')}\n"
-        f"Strength: {f.get('ot_strength','')}\n"
+        f"Objective:\nPosture: {f.get('posture','')}\n"
+        f"ROM: {f.get('rom','')}\n"
+        f"Strength: {f.get('strength','')}\n"
     )
     result = gpt_call(prompt, max_tokens=200)
-    return result
+    return jsonify({"result": result})
 
-@app.route("/ot_generate_summary", methods=["POST"])
+
+@app.route("/pt_generate_summary", methods=["POST"])
 @login_required
-def ot_generate_summary():
+def pt_generate_summary():
     f = request.json.get("fields", {})
-    name = f.get("ot_name", "Pt Name")
-    age = f.get("ot_age", "X")
-    gender = f.get("ot_gender", "patient").lower()
-    pmh = f.get("ot_history", "no significant history")
-    today = f.get("ot_currentdate", date.today().strftime("%m/%d/%Y"))
-    subj = f.get("ot_subjective", "")
-    moi = f.get("ot_pain_mechanism", "")
-    dx = f.get("ot_diffdx", "")
-    strg = f.get("ot_strength", "")
-    rom = f.get("ot_rom", "")
-    impair = f.get("ot_impairments", "")
-    func = f.get("ot_functional", "")
+    name = f.get("name", "Pt Name")
+    age = f.get("age", "X")
+    gender = f.get("gender", "patient").lower()
+    pmh = f.get("history", "no significant history")
+    today = f.get("currentdate", date.today().strftime("%m/%d/%Y"))
+    subj = f.get("subjective", "")
+    moi = f.get("pain_mechanism", "")
+    dx = f.get("diffdx", "")
+    strg = f.get("strength", "")
+    rom = f.get("rom", "")
+    impair = f.get("impairments", "")
+    func = f.get("functional", "")
 
     prompt = (
-        "Generate a concise, 7-8 sentence Occupational Therapy assessment summary for OT documentation. "
-        "Use clinical, professional language and use abbreviations only (e.g., HEP, ADLs, STM, TherEx, etc.; "
+        "Generate a concise, 7-8 sentence Physical Therapy assessment summary for PT documentation. "
+        "Use clinical, professional language and use abbreviations only (e.g., HEP, ADLs, LBP, STM, TherEx, etc.; "
         "do not spell out the abbreviation and do not write both full term and abbreviation). "
         "Never use the phrase 'The patient'; instead, use 'Pt' at the start of each relevant sentence. "
         f"Start with: \"{name}, a {age} y/o {gender} with relevant history of {pmh}.\" "
         f"Include: "
-        f"How/when/why pt was seen (OT initial eval on {today} for {subj}), "
+        f"How/when/why pt was seen (PT initial eval on {today} for {subj}), "
         f"mechanism of injury if available ({moi}), "
         f"main differential dx ({dx}), "
         f"current impairments (strength: {strg}; ROM: {rom}; balance/mobility: {impair}), "
         f"functional/activity/participation limitations: {func}, "
-        "a professional prognosis and that skilled OT will help pt return to PLOF. "
+        "a professional prognosis and that skilled PT will help pt return to PLOF. "
         "Do not use bulleted or numbered lists—just a single, well-written summary paragraph."
     )
-    return gpt_call(prompt, max_tokens=350)
+    result = gpt_call(prompt, max_tokens=350)
+    return jsonify({"result": result})
 
-@app.route("/ot_generate_goals", methods=["POST"])
+
+@app.route("/pt_generate_goals", methods=["POST"])
 @login_required
-def ot_generate_goals():
+def pt_generate_goals():
     f = request.json.get("fields", {})
     prompt = (
-        "You are a clinical assistant helping an OT write documentation. "
+        "You are a clinical assistant helping a PT write documentation. "
         "Using ONLY the provided eval info (summary, objective findings, strength, ROM, impairments, and functional limitations), "
-        "generate clinically-appropriate short-term and long-term OT goals. "
+        "generate clinically-appropriate short-term and long-term PT goals. "
         "Decide the most relevant and individualized goals based on the data, but ALWAYS follow the exact goal format below. "
         "DO NOT add extra formatting, explanations, or ChatGPT commentary—output should be concise and in bullet list format only. "
         "Adapt content of each goal based on eval details. Do not repeat or copy the examples unless appropriate. "
@@ -688,15 +691,17 @@ def ot_generate_goals():
         "\n\nEval info:\n"
         f"{f}"
     )
-    return gpt_call(prompt, max_tokens=350)
+    result = gpt_call(prompt, max_tokens=350)
+    return jsonify({"result": result})
 
-@app.route('/ot_generate_daily_summary', methods=['POST'])
+
+@app.route('/pt_generate_daily_summary', methods=['POST'])
 @login_required
-def ot_generate_daily_summary():
+def pt_generate_daily_summary():
     data = request.json
     prompt = (
-        "You are an occupational therapist. "
-        "Write a 6-sentence daily OT note summary in paragraph form. "
+        "You are a physical therapist. "
+        "Write a 6-sentence daily PT note summary in paragraph form. "
         "Use professional tone, refer to 'patient' (not 'the patient' or 'patient reported'). "
         "Summarize the following:\n"
         f"Diagnosis: {data.get('diagnosis','')}\n"
@@ -706,16 +711,19 @@ def ot_generate_daily_summary():
         f"Next Visit Plan: {data.get('plan','')}\n"
         "Do not use the phrases 'patient reported' or 'the patient'. "
         "Do not spell out, use abbreviation only, avoid using both next to each other. "
-        "After summarizes skip a row write a 1-2 sentences for next visit plan of care utilizing something along Focusing on OT POC to improve strength, endurance, mechanics, activity tolerance with manual therapy, ther-ex, ther-act, HEP, ADL retraining. Improve function to return to safe ADLs and community participation."
+        "After summarizes skip a row write a 1-2 sentences for next visit plan of care utilizing something along Focusing on PT POC to improve strength, endurance, mechanics, activity tolerance with manual therapy, ther-ex, ther-act, IASTM. Improve activity tolerance to return to safe ADLs and community participation and ambulation."
     )
-    completion = client.chat.completions.create(
-        model=MODEL,
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=250
-    )
-    summary = completion.choices[0].message.content.strip()
-    return summary
-
+    try:
+        completion = client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=250
+        )
+        summary = completion.choices[0].message.content.strip()
+        return jsonify({"result": summary})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+        
 @app.route('/ot_export_word', methods=['POST'])
 @login_required
 def ot_export_word():

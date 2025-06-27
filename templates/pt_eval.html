@@ -233,31 +233,98 @@
           if (fld) fld.value = v;
         });
       });
-  };
-
-  document.getElementById('pt-ai-generate-diffdx').onclick = () => {
-    ptSetStatus('Generating Diff Dx…', 'orange');
-    fetch('/pt_generate_diffdx', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({fields: ptGetFields()})
-    })
-      .then(r => r.text())
-      .then(t => { document.getElementById('pt_diffdx').value = t; ptSetStatus('Done','green'); })
+    };
+    document.getElementById('pt-ai-generate-diffdx').onclick = () => {
+      ptSetStatus('Generating Diff Dx…', 'orange');
+      fetch('/pt_generate_diffdx', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({fields: ptGetFields()})
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.result) {
+          document.getElementById('pt_diffdx').value = data.result;
+          ptSetStatus('Done','green');
+        } else if (data.error) {
+          ptSetStatus('AI error: ' + data.error, 'red');
+        } else {
+          ptSetStatus('Unexpected AI response', 'red');
+        }
+      })
       .catch(() => ptSetStatus('AI error','red'));
-  };
+    };
 
-  document.getElementById('pt-ai-generate-summary').onclick = () => {
-    ptSetStatus('Generating summary…', 'orange');
-    fetch('/pt_generate_summary', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({fields: ptGetFields()})
-    })
-      .then(r => r.text())
-      .then(t => { document.getElementById('pt_summary').value = t; ptSetStatus('Done','green'); })
+    document.getElementById('pt-ai-generate-summary').onclick = () => {
+      ptSetStatus('Generating summary…', 'orange');
+      fetch('/pt_generate_summary', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({fields: ptGetFields()})
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.result) {
+          document.getElementById('pt_summary').value = data.result;
+          ptSetStatus('Done','green');
+        } else if (data.error) {
+          ptSetStatus('AI error: ' + data.error, 'red');
+        } else {
+          ptSetStatus('Unexpected AI response', 'red');
+        }
+      })
       .catch(() => ptSetStatus('AI error','red'));
-  };
+    };
+
+    document.getElementById('pt-ai-generate-goals').onclick = () => {
+      ptSetStatus('Generating goals…', 'orange');
+      fetch('/pt_generate_goals', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({fields: ptGetFields()})
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.result) {
+          document.getElementById('pt_goals').value = data.result;
+          ptSetStatus('Done','green');
+        } else if (data.error) {
+          ptSetStatus('AI error: ' + data.error, 'red');
+        } else {
+          ptSetStatus('Unexpected AI response', 'red');
+        }
+      })
+      .catch(() => ptSetStatus('AI error','red'));
+    };
+
+    document.getElementById('pt-generate-daily-summary').onclick = () => {
+      document.getElementById('pt-daily-summary-status').textContent = 'Generating summary…';
+      fetch('/pt_generate_daily_summary', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          diagnosis: document.getElementById('pt_daily_diagnosis').value,
+          interventions: document.getElementById('pt_daily_interventions').value,
+          tolerance: document.getElementById('pt_daily_tolerance').value,
+          progress: document.getElementById('pt_daily_progress').value,
+          plan: document.getElementById('pt_daily_plan').value
+        })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.result) {
+          document.getElementById('pt_daily_summary').value = data.result;
+          document.getElementById('pt-daily-summary-status').textContent = 'Summary generated!';
+        } else if (data.error) {
+          document.getElementById('pt-daily-summary-status').textContent = 'AI error: ' + data.error;
+        } else {
+          document.getElementById('pt-daily-summary-status').textContent = 'Unexpected AI response';
+        }
+      })
+      .catch(() => {
+        document.getElementById('pt-daily-summary-status').textContent = 'AI error';
+      });
+    };
 
   document.getElementById('pt-ai-generate-goals').onclick = () => {
     ptSetStatus('Generating goals…', 'orange');
