@@ -773,7 +773,7 @@ def ot_export_pdf():
 
 # ====== Patient routes ======
 
-@app.route('/patients')
+@app.route('/patients', endpoint='patients_list')
 @login_required
 def patient_list():
     patients = Patient.query.all()
