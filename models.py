@@ -120,3 +120,21 @@ class Billing(db.Model):
 
     def __repr__(self):
         return f"<Billing visit_id={self.visit_id} amount={self.amount} paid={self.paid}>"
+        
+        
+class Attachment(db.Model):
+    __tablename__ = "attachments"
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(256), nullable=False)
+    filetype = db.Column(db.String(64))
+    upload_date = db.Column(db.DateTime, default=datetime.utcnow)
+    patient_id = db.Column(db.Integer, db.ForeignKey("patients.id"), nullable=True)
+    visit_id = db.Column(db.Integer, db.ForeignKey("visits.id"), nullable=True)
+    description = db.Column(db.String(256))
+    filepath = db.Column(db.String(512), nullable=False)  # path or URL to file
+
+    patient = db.relationship("Patient", backref=db.backref("attachments", lazy="dynamic"))
+    visit = db.relationship("Visit", backref=db.backref("attachments", lazy="dynamic"))
+
+    def __repr__(self):
+        return f"<Attachment {self.filename}>"
