@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Insurance - Clinic Scheduler{% endblock %}
+{% block content %}
+<h1>Insurance Companies</h1>
+<a href="{{ url_for('insurance_add') }}" class="btn btn-success mb-3">Add Insurance</a>
+
+{% if insurances %}
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th>Company Name</th>
+      <th>Plan Name</th>
+      <th>Phone</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ins in insurances %}
+    <tr>
+      <td>{{ ins.company_name }}</td>
+      <td>{{ ins.plan_name }}</td>
+      <td>{{ ins.phone }}</td>
+      <td><a href="#" class="btn btn-sm btn-outline-primary disabled">Edit (TODO)</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No insurance companies found.</p>
+{% endif %}
+{% endblock %}

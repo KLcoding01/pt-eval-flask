@@ -1,123 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PT EMR Dashboard</title>
+{% extends "base.html" %}
+{% block title %}Dashboard - Clinic Scheduler{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
 
-  <!-- Bootstrap 5 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-
-  <!-- FullCalendar CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
-
-  <style>
-    body, html {
-      height: 100%;
-      margin: 0;
-    }
-    #sidebar {
-      height: 100vh;
-      overflow-y: auto;
-      background-color: #f8f9fa;
-      padding: 1rem;
-      border-right: 1px solid #ddd;
-    }
-    #calendar-container {
-      flex-grow: 1;
-      padding: 1rem;
-      overflow-y: auto;
-    }
-    /* Sidebar toggle button for small screens */
-    #sidebarToggle {
-      display: none;
-    }
-    @media (max-width: 768px) {
-      #sidebar {
-        position: fixed;
-        top: 56px; /* height of navbar */
-        left: 0;
-        width: 250px;
-        height: calc(100vh - 56px);
-        background: #f8f9fa;
-        z-index: 1030;
-        transform: translateX(-100%);
-        transition: transform 0.3s ease-in-out;
-      }
-      #sidebar.show {
-        transform: translateX(0);
-      }
-      #sidebarToggle {
-        display: inline-block;
-      }
-      #calendar-container {
-        padding: 1rem;
-        margin-left: 0;
-      }
-    }
-  </style>
-</head>
-<body>
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-    <div class="container-fluid">
-      <button class="btn btn-light d-md-none" id="sidebarToggle">&#9776;</button>
-      <a class="navbar-brand ms-2" href="#">🏥 PT EMR Dashboard</a>
-    </div>
-  </nav>
-
-  <!-- Main content -->
-  <div class="d-flex" style="margin-top: 56px; height: calc(100vh - 56px);">
-    <!-- Sidebar -->
-    <nav id="sidebar" class="bg-light">
-      <h5 class="mb-4">Quick Links</h5>
-      <div class="list-group">
-        <a href="{{ url_for('patient_list') }}" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
-          👨‍⚕️ Patient List
-        </a>
-        <a href="{{ url_for('calendar') }}" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
-          📅 Calendar
-        </a>
-        <a href="{{ url_for('uploads') }}" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
-          📤 Uploads
-        </a>
-      </div>
-    </nav>
-
-    <!-- Calendar Container -->
-    <main id="calendar-container">
-      <div id="calendar"></div>
-    </main>
+<div class="row">
+  <div class="col-md-6">
+    <h3>Recent Visits</h3>
+    {% if visits %}
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Patient</th>
+            <th>Therapist</th>
+            <th>Type</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for visit in visits %}
+          <tr>
+            <td>{{ visit.visit_date.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>{{ visit.patient.first_name }} {{ visit.patient.last_name }}</td>
+            <td>{{ visit.therapist.first_name }} {{ visit.therapist.last_name }}</td>
+            <td>{{ visit.visit_type }}</td>
+            <td>{{ visit.status }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No recent visits.</p>
+    {% endif %}
   </div>
 
-  <!-- Bootstrap 5 JS Bundle -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- FullCalendar JS -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-
-  <script>
-    // Sidebar toggle for small screens
-    document.getElementById('sidebarToggle').addEventListener('click', function () {
-      document.getElementById('sidebar').classList.toggle('show');
-    });
-
-    // Initialize FullCalendar
-    document.addEventListener('DOMContentLoaded', function () {
-      var calendarEl = document.getElementById('calendar');
-
-      var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
-        },
-        events: '/api/appointments'
-      });
-
-      calendar.render();
-    });
-  </script>
-</body>
-</html>
+  <div class="col-md-6">
+    <h3>Billing Summary</h3>
+    <div class="alert alert-success">
+      <h4>Total Billed: ${{ total_billing | round(2) }}</h4>
+    </div>
+  </div>
+</div>
+{% endblock %}

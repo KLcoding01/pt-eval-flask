@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Add Therapist - Clinic Scheduler{% endblock %}
+{% block content %}
+<h1>Add Therapist</h1>
+<form method="POST" action="">
+  <div class="mb-3">
+    <label for="first_name" class="form-label">First Name *</label>
+    <input type="text" id="first_name" name="first_name" class="form-control" required />
+  </div>
+  <div class="mb-3">
+    <label for="last_name" class="form-label">Last Name *</label>
+    <input type="text" id="last_name" name="last_name" class="form-control" required />
+  </div>
+  <div class="mb-3">
+    <label for="credentials" class="form-label">Credentials</label>
+    <input type="text" id="credentials" name="credentials" class="form-control" />
+  </div>
+  <div class="mb-3">
+    <label for="email" class="form-label">Email</label>
+    <input type="email" id="email" name="email" class="form-control" />
+  </div>
+  <div class="mb-3">
+    <label for="phone" class="form-label">Phone</label>
+    <input type="tel" id="phone" name="phone" class="form-control" />
+  </div>
+  <div class="mb-3">
+    <label for="availability" class="form-label">Availability (Text/JSON)</label>
+    <textarea id="availability" name="availability" class="form-control" rows="3"></textarea>
+  </div>
+  <button type="submit" class="btn btn-primary">Add Therapist</button>
+  <a href="{{ url_for('therapists_list') }}" class="btn btn-secondary ms-2">Cancel</a>
+</form>
+{% endblock %}

@@ -1,113 +1,84 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% block title %}Calendar - Clinic Scheduler{% endblock %}
 {% block content %}
-<h2>📅 Appointment Calendar</h2>
+<h1>Calendar</h1>
+
 <div id="calendar"></div>
 
-<!-- FullCalendar CSS -->
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
-<!-- FullCalendar JS -->
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
+<!-- Modal for updating visit status -->
+<div class="modal fade" id="visitStatusModal" tabindex="-1" aria-labelledby="visitStatusLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="statusForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="visitStatusLabel">Update Visit Status</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="visitId" />
+          <p id="visitTitle"></p>
+          <select id="statusSelect" class="form-select" required>
+            <option value="Scheduled">Scheduled</option>
+            <option value="Arrived">Arrived</option>
+            <option value="Cancelled">Cancelled</option>
+            <option value="No Show">No Show</option>
+            <option value="Call Confirmed">Call Confirmed</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Update Status</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
 
+{% endblock %}
+
+{% block scripts %}
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('calendar');
-
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: 'dayGridMonth',
-      selectable: true,
-      editable: true,
-      eventResizableFromStart: true,
-      headerToolbar: {
-        left: 'prev,next today',
-        center: 'title',
-        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
-      },
-
-      events: '/api/appointments',
-
-      select: function(info) {
-        let title = prompt('Enter patient name or appointment details:');
-        if (!title) {
-          calendar.unselect();
-          return;
-        }
-        let color = prompt('Enter color hex code for appointment (e.g. #378006) or leave blank for default:');
-        if (!color) color = '#378006';
-        let notes = prompt('Add notes (optional):') || '';
-
-        // POST new event to backend
-        fetch('/api/appointments', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            title: title,
-            start: info.startStr,
-            end: info.endStr,
-            color: color,
-            notes: notes
-          })
-        }).then(res => res.json())
-          .then(event => {
-            calendar.addEvent(event);
-          })
-          .catch(err => alert('Failed to save appointment: ' + err));
-        calendar.unselect();
-      },
-
-      eventChange: function(info) {
-        // Called when event dragged or resized
-        let event = info.event;
-        let newTitle = prompt('Edit appointment title:', event.title);
-        if (newTitle === null) {
-          info.revert();
-          return;
-        }
-        event.setProp('title', newTitle);
-
-        let newColor = prompt('Edit color hex (e.g. #378006):', event.backgroundColor);
-        if (newColor) {
-          event.setProp('backgroundColor', newColor);
-          event.setProp('borderColor', newColor);
-        }
-
-        let newNotes = prompt('Edit notes:', event.extendedProps.notes || '');
-        if (newNotes !== null) {
-          event.setExtendedProp('notes', newNotes);
-        }
-
-        // PUT update to backend
-        fetch('/api/appointments/' + event.id, {
-          method: 'PUT',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            title: event.title,
-            start: event.start.toISOString(),
-            end: event.end ? event.end.toISOString() : null,
-            color: newColor || event.backgroundColor,
-            notes: newNotes || event.extendedProps.notes || ''
-          })
-        }).then(res => {
-          if (!res.ok) throw new Error('Update failed');
-        }).catch(() => {
-          alert('Failed to update appointment on server');
-          info.revert();
-        });
-      },
-
-      eventClick: function(info) {
-        let event = info.event;
-        alert(`Appointment Details:\n\nTitle: ${event.title}\nStart: ${event.start.toLocaleString()}\nEnd: ${event.end ? event.end.toLocaleString() : 'N/A'}\nNotes: ${event.extendedProps.notes || 'None'}`);
-      }
-    });
-
-    calendar.render();
+document.addEventListener('DOMContentLoaded', function() {
+  const calendarEl = document.getElementById('calendar');
+  let calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    eventColor: '#378006',
+    events: '/api/visits',
+    eventClassNames: function(arg) {
+      return ['fc-event-status-' + arg.event.extendedProps.status.replace(' ', '')];
+    },
+    eventClick: function(info) {
+      const event = info.event;
+      const modal = new bootstrap.Modal(document.getElementById('visitStatusModal'));
+      document.getElementById('visitId').value = event.id;
+      document.getElementById('visitTitle').textContent = event.title + ' on ' + event.start.toLocaleString();
+      document.getElementById('statusSelect').value = event.extendedProps.status;
+      modal.show();
+    }
   });
-</script>
+  calendar.render();
 
-<style>
-  #calendar {
-    max-width: 900px;
-    margin: 20px auto;
-  }
-</style>
+  document.getElementById('statusForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const visitId = document.getElementById('visitId').value;
+    const newStatus = document.getElementById('statusSelect').value;
+
+    fetch(`/visits/${visitId}/status`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({status: newStatus})
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        calendar.refetchEvents();
+        bootstrap.Modal.getInstance(document.getElementById('visitStatusModal')).hide();
+      } else {
+        alert('Error updating status: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(err => alert('Fetch error: ' + err));
+  });
+});
+</script>
 {% endblock %}
