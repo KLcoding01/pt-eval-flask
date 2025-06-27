@@ -206,35 +206,6 @@ def pt_load_template():
         return jsonify(PT_TEMPLATES.get(template_name, {}))
 
 
-
-
-
-@app.route('/pt_generate_daily_summary', methods=['POST'])
-@login_required
-def pt_generate_daily_summary():
-    data = request.json
-    prompt = (
-        "You are a physical therapist. "
-        "Write a 6-sentence daily PT note summary in paragraph form. "
-        "Use professional tone, refer to 'patient' (not 'the patient' or 'patient reported'). "
-        "Summarize the following:\n"
-        f"Diagnosis: {data.get('diagnosis','')}\n"
-        f"Interventions: {data.get('interventions','')}\n"
-        f"Tx Tolerance: {data.get('tolerance','')}\n"
-        f"Current Progress: {data.get('progress','')}\n"
-        f"Next Visit Plan: {data.get('plan','')}\n"
-        "Do not use the phrases 'patient reported' or 'the patient'. "
-        "Do not spell out, use abbreviation only, avoid using both next to each other. "
-        "After summarizes skip a row write a 1-2 sentences for next visit plan of care utilizing something along Focusing on PT POC to improve strength, endurance, mechanics, activity tolerance with manual therapy, ther-ex, ther-act, IASTM. Improve activity tolerance to return to safe ADLs and community participation and ambulation."
-    )
-    completion = client.chat.completions.create(
-        model=MODEL,
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=250
-    )
-    summary = completion.choices[0].message.content.strip()
-    return summary
-
 @app.route('/pt_export_word', methods=['POST'])
 @login_required
 def pt_export_word():
