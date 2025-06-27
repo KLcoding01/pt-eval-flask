@@ -1,6 +1,6 @@
 import os
 import io
-from flask import Flask, request, jsonify, request, redirect, url_for, flash, render_template, send_file, session, redirect, url_for
+from flask import Flask, request, jsonify, request, redirect, url_for, flash, render_template, send_file, session, redirect, url_for, make_response
 from dotenv import load_dotenv
 from openai import OpenAI
 from docx import Document
@@ -852,6 +852,14 @@ def ot_export_pdf():
         download_name="OT_Eval.pdf",
         mimetype="application/pdf"
     )
+@app.route('/')
+@login_required
+def index():
+    resp = make_response(render_template('index.html'))
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '-1'
+    return resp
     
 @app.route('/')
 def home():
