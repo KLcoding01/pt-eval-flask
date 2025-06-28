@@ -101,11 +101,16 @@ def insurance_list():
     insurances = Insurance.query.all()
     return render_template('insurance_list.html', insurances=insurances)
 
-@app.route('/billing')
+@app.route('/', endpoint='dashboard')
 @login_required
-def billing_overview():
-    # you can query billing data here and pass to template
-    return render_template('billing.html')
+def dashboard():
+    # Query total billed amount from all Billing records
+    total_billing = db.session.query(db.func.coalesce(db.func.sum(Billing.amount), 0)).scalar()
+    
+    # Optionally, you can also query recent visits to show in the dashboard template
+    recent_visits = Visit.query.order_by(Visit.visit_date.desc()).limit(10).all()
+    
+    return render_template('dashboard.html', total_billing=total_billing, visits=recent_visits)
     
 # ====== PT Section ======
 
