@@ -76,6 +76,36 @@ def logout():
 def dashboard():
     # your dashboard code here
     return render_template('dashboard.html')
+
+@app.route('/patients')
+@login_required
+def patient_list():
+    patients = Patient.query.all()
+    return render_template('patient_list.html', patients=patients)
+
+@app.route('/therapists')
+@login_required
+def therapists_list():
+    therapists = Therapist.query.all()
+    return render_template('therapists.html', therapists=therapists)
+
+@app.route('/physicians')
+@login_required
+def physicians_list():
+    physicians = Physician.query.all()
+    return render_template('physicians.html', physicians=physicians)
+
+@app.route('/insurance')
+@login_required
+def insurance_list():
+    insurances = Insurance.query.all()
+    return render_template('insurance_list.html', insurances=insurances)
+
+@app.route('/billing')
+@login_required
+def billing_overview():
+    # you can query billing data here and pass to template
+    return render_template('billing.html')
     
 # ====== PT Section ======
 
@@ -775,7 +805,7 @@ def ot_export_pdf():
 
 @app.route('/patients')
 @login_required
-def patient_list():
+def patients_list():
     patients = Patient.query.all()
     return render_template('patient_list.html', patients=patients)
 
