@@ -72,10 +72,12 @@ def logout():
 
 # --- Main page ---
 
-@app.route('/', endpoint='home')
+@app.route('/dashboard')
+@login_required
 def dashboard():
-    # your dashboard code here
-    return render_template('dashboard.html')
+    total_billing = db.session.query(db.func.coalesce(db.func.sum(Billing.amount), 0)).scalar()
+    recent_visits = Visit.query.order_by(Visit.visit_date.desc()).limit(10).all()
+    return render_template('dashboard.html', total_billing=total_billing, visits=recent_visits)
 
 @app.route('/patients')
 @login_required
@@ -100,17 +102,6 @@ def physicians_list():
 def insurance_list():
     insurances = Insurance.query.all()
     return render_template('insurance_list.html', insurances=insurances)
-
-@app.route('/', endpoint='dashboard')
-@login_required
-def dashboard():
-    # Query total billed amount from all Billing records
-    total_billing = db.session.query(db.func.coalesce(db.func.sum(Billing.amount), 0)).scalar()
-    
-    # Optionally, you can also query recent visits to show in the dashboard template
-    recent_visits = Visit.query.order_by(Visit.visit_date.desc()).limit(10).all()
-    
-    return render_template('dashboard.html', total_billing=total_billing, visits=recent_visits)
     
 # ====== PT Section ======
 
@@ -930,11 +921,6 @@ def pt_eval():
 def uploads():
     return "<h3>Uploads module coming soon</h3>"
     
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    return render_template('dashboard.html')
-
 # --- OpenAI helper function ---
 
 def gpt_call(prompt, max_tokens=350):
