@@ -2,7 +2,7 @@ import os
 import io
 from flask import (
     Flask, request, jsonify, redirect, url_for, flash,
-    render_template, send_file, session, make_response
+    render_template, send_file, session
 )
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -12,48 +12,42 @@ from reportlab.pdfgen import canvas
 from datetime import date
 from io import BytesIO
 from functools import wraps
-from models import db, Patient, Attachment
+from models import db, Patient, Attachment, Billing, Visit, Therapist, Physician, Insurance  # <- Make sure all these are defined
 
+# ========== CONFIG & INIT ==========
 
 load_dotenv()
-
 app = Flask(__name__)
-app.secret_key = os.getenv(
-    "SECRET_KEY",
-    "e8d4f5a2b1c3d4e5f6a7b8c9d0e1f23456789abcdef0123456789abcdef012345"
-)
-
-# Initialize OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-MODEL = "gpt-4o-mini"
-
-# Database config
+app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key_change_me")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
-
 db.init_app(app)
+
+# OpenAI API
+OPENAI_KEY = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
+MODEL = "gpt-4o-mini"
 
 with app.app_context():
     db.create_all()
 
-# --- Demo users ---
+# ========== AUTH ==========
+
 USERS = {
     "kelvin": "Thanh123!",
     "test1": "test1",
 }
-    
-# --- Login required decorator ---
+
 def login_required(f):
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def decorated(*args, **kwargs):
         if 'username' not in session:
             flash("Please log in to access this page.", "warning")
             return redirect(url_for('login'))
         return f(*args, **kwargs)
-    return decorated_function
+    return decorated
 
-# --- Authentication routes ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
@@ -63,8 +57,7 @@ def login():
         if username in USERS and USERS[username] == password:
             session['username'] = username
             flash(f"Welcome back, {username}!", "success")
-            return redirect(url_for('dashboard.html
-            '))
+            return redirect(url_for('dashboard'))
         else:
             error = "Invalid username or password."
     return render_template('login.html', error=error)
@@ -76,7 +69,11 @@ def logout():
     flash("You have been logged out.", "info")
     return redirect(url_for('login'))
 
-# --- Main page ---
+@app.route('/')
+def home():
+    return redirect(url_for('dashboard'))
+
+# ========== DASHBOARD & MAIN LISTS ==========
 
 @app.route('/dashboard')
 @login_required
@@ -87,7 +84,7 @@ def dashboard():
 
 @app.route('/patients')
 @login_required
-def patient_list():
+def patients_list():
     patients = Patient.query.all()
     return render_template('patient_list.html', patients=patients)
 
@@ -109,6 +106,103 @@ def insurance_list():
     insurances = Insurance.query.all()
     return render_template('insurance_list.html', insurances=insurances)
 
+# ========== PATIENT FORMS/DETAIL ==========
+
+@app.route('/patients/new', methods=['GET', 'POST'])
+@login_required
+def patient_form():
+    if request.method == 'POST':
+        new_patient = Patient(
+            first_name=request.form['first_name'],
+            last_name=request.form['last_name'],
+            dob=request.form['dob'],
+            gender=request.form['gender'],
+            address=request.form['address'],
+            phone=request.form['phone'],
+            email=request.form['email'],
+            notes=request.form['notes']
+        )
+        db.session.add(new_patient)
+        db.session.commit()
+        flash("Patient added successfully.")
+        return redirect(url_for('patients_list'))
+    return render_template('patient_form.html')
+
+@app.route('/patients/<int:id>')
+@login_required
+def patient_detail(id):
+    patient = Patient.query.get_or_404(id)
+    return render_template('patient_detail.html', patient=patient)
+
+# ========== CALENDAR ==========
+
+appointments = [
+    {
+        "id": 1,
+        "title": "John Doe - PT Session",
+        "start": "2025-07-01T10:00:00",
+        "end": "2025-07-01T11:00:00",
+        "color": "#378006",
+        "notes": "Initial eval"
+    },
+    {
+        "id": 2,
+        "title": "Jane Smith - Follow-up",
+        "start": "2025-07-03T14:00:00",
+        "end": "2025-07-03T15:00:00",
+        "color": "#FF5733",
+        "notes": "Gait training"
+    }
+]
+next_id = 3
+
+@app.route('/calendar')
+@login_required
+def calendar():
+    return render_template('calendar.html')
+
+@app.route('/api/appointments')
+@login_required
+def get_appointments():
+    return jsonify(appointments)
+
+@app.route('/api/appointments', methods=['POST'])
+@login_required
+def add_appointment():
+    global next_id
+    data = request.json
+    new_event = {
+        "id": next_id,
+        "title": data.get('title', 'No Title'),
+        "start": data.get('start'),
+        "end": data.get('end'),
+        "color": data.get('color', '#378006'),
+        "notes": data.get('notes', '')
+    }
+    appointments.append(new_event)
+    next_id += 1
+    return jsonify(new_event), 201
+
+@app.route('/api/appointments/<int:event_id>', methods=['PUT'])
+@login_required
+def update_appointment(event_id):
+    data = request.json
+    for event in appointments:
+        if event['id'] == event_id:
+            event['title'] = data.get('title', event['title'])
+            event['start'] = data.get('start', event['start'])
+            event['end'] = data.get('end', event['end'])
+            event['color'] = data.get('color', event.get('color', '#378006'))
+            event['notes'] = data.get('notes', event.get('notes', ''))
+            return jsonify(event)
+    return jsonify({"error": "Event not found"}), 404
+
+@app.route('/api/appointments/<int:event_id>', methods=['DELETE'])
+@login_required
+def delete_appointment(event_id):
+    global appointments
+    appointments = [e for e in appointments if e['id'] != event_id]
+    return jsonify({"result": "Deleted"})
 
     
 # ====== PT Section ======
@@ -839,22 +933,7 @@ def patient_detail(id):
     patient = Patient.query.get_or_404(id)
     return render_template('patient_detail.html', patient=patient)
 
-# ====== Calendar routes ======
-
-appointments = [
-    {
-        "id": 1,
-        "title": "John Doe - PT Session",
-        "start": "2025-07-01T10:00:00",
-        "end": "2025-07-01T11:00:00",
-        "color": "#378006",
-        "notes": "Initial eval"
-    },
-    {
-        "id": 2,
-        "title": "Jane Smith - Follow-up",
-        "start": "2025-07-03T14:00:00",
-        "end": "2025-07-03T15:00:00",
+a00",
         "color": "#FF5733",
         "notes": "Gait training"
     }
@@ -917,7 +996,7 @@ def delete_appointment(event_id):
     appointments = [e for e in appointments if e['id'] != event_id]
     return jsonify({"result": "Deleted"})
 
-# ====== Other pages ======
+# ========== OTHER PAGES ==========
 
 @app.route('/pt-eval')
 @login_required
@@ -928,8 +1007,8 @@ def pt_eval():
 @login_required
 def uploads():
     return "<h3>Uploads module coming soon</h3>"
-    
-# --- OpenAI helper function ---
+
+# ========== GPT HELPER ==========
 
 def gpt_call(prompt, max_tokens=350):
     try:
@@ -941,6 +1020,8 @@ def gpt_call(prompt, max_tokens=350):
         return resp.choices[0].message.content.strip()
     except Exception as e:
         return f"OpenAI error: {e}"
+
+# ========== MAIN ==========
 
 if __name__ == '__main__':
     with app.app_context():
