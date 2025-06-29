@@ -48,6 +48,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'username' not in session:
+            flash("Please log in to access this page.", "warning")
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
@@ -55,19 +56,23 @@ def login_required(f):
 # --- Authentication routes ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == "POST":
+    error = None
+    if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         if username in USERS and USERS[username] == password:
             session['username'] = username
-            return redirect(url_for('index'))
+            flash(f"Welcome back, {username}!", "success")
+            return redirect(url_for('dashboard'))
         else:
-            return render_template('login.html', error="Invalid username or password")
-    return render_template('login.html', error=None)
+            error = "Invalid username or password."
+    return render_template('login.html', error=error)
 
 @app.route('/logout')
+@login_required
 def logout():
     session.pop('username', None)
+    flash("You have been logged out.", "info")
     return redirect(url_for('login'))
 
 # --- Main page ---
@@ -102,6 +107,8 @@ def physicians_list():
 def insurance_list():
     insurances = Insurance.query.all()
     return render_template('insurance_list.html', insurances=insurances)
+
+
     
 # ====== PT Section ======
 
