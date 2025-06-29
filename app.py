@@ -42,7 +42,7 @@ USERS = {
     "kelvin": "Thanh123!",
     "test1": "test1",
 }
-
+    
 # --- Login required decorator ---
 def login_required(f):
     @wraps(f)
@@ -63,7 +63,8 @@ def login():
         if username in USERS and USERS[username] == password:
             session['username'] = username
             flash(f"Welcome back, {username}!", "success")
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('dashboard.html
+            '))
         else:
             error = "Invalid username or password."
     return render_template('login.html', error=error)
