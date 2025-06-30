@@ -14,6 +14,8 @@ from io import BytesIO
 from functools import wraps
 from models import db, Patient, Attachment, Billing, Visit, Therapist, Physician, Insurance  # Ensure your models.py defines these
 from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
+from app import db
 
 # ========== CONFIG & INIT ==========
 
@@ -149,7 +151,56 @@ def new_patient():
 @login_required
 def therapists_list():
     therapists = Therapist.query.all()
-    return render_template('therapists.html', therapists=therapists)
+    return render_template('therapists_list.html', therapists=therapists)
+
+@app.route('/therapists/add', methods=['GET', 'POST'])
+@login_required
+def therapists_add():
+    if request.method == 'POST':
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
+        credentials = request.form.get('credentials')
+        phone = request.form.get('phone')
+        email = request.form.get('email')
+        if not first_name or not last_name:
+            flash("First and last name are required.", "danger")
+            return redirect(url_for('therapists_add'))
+        therapist = Therapist(
+            first_name=first_name,
+            last_name=last_name,
+            credentials=credentials,
+            phone=phone,
+            email=email
+        )
+        db.session.add(therapist)
+        db.session.commit()
+        flash("Therapist added!", "success")
+        return redirect(url_for('therapists_list'))
+    return render_template('therapist_form.html')
+
+@app.route('/therapists/<int:therapist_id>/edit', methods=['GET', 'POST'])
+@login_required
+def therapists_edit(therapist_id):
+    therapist = Therapist.query.get_or_404(therapist_id)
+    if request.method == 'POST':
+        therapist.first_name = request.form.get('first_name')
+        therapist.last_name = request.form.get('last_name')
+        therapist.credentials = request.form.get('credentials')
+        therapist.phone = request.form.get('phone')
+        therapist.email = request.form.get('email')
+        db.session.commit()
+        flash("Therapist updated!", "success")
+        return redirect(url_for('therapists_list'))
+    return render_template('therapist_form.html', therapist=therapist)
+
+@app.route('/therapists/<int:therapist_id>/delete', methods=['POST'])
+@login_required
+def therapists_delete(therapist_id):
+    therapist = Therapist.query.get_or_404(therapist_id)
+    db.session.delete(therapist)
+    db.session.commit()
+    flash("Therapist deleted.", "info")
+    return redirect(url_for('therapists_list'))
 
 @app.route('/physicians')
 @login_required

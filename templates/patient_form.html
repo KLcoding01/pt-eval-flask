@@ -1,72 +1,35 @@
 {% extends "base.html" %}
-{% block title %}Add New Patient{% endblock %}
 {% block content %}
-<div class="container-fluid">
-  <div class="row">
-    <!-- Sidebar if desired (same as patients.html) -->
-    <div class="col-md-3 col-lg-2 mb-4">
-      <div class="list-group shadow rounded-4">
-        <a href="{{ url_for('new_patient') }}" class="list-group-item list-group-item-action active">+ Add New Patient</a>
-        <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action">🏠 Dashboard</a>
-        <a href="{{ url_for('calendar') }}" class="list-group-item list-group-item-action">📅 Calendar</a>
-        <a href="{{ url_for('uploads') }}" class="list-group-item list-group-item-action">📤 Uploads</a>
-      </div>
-    </div>
-    <div class="col-md-9 col-lg-10">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Add New Patient</h2>
-      </div>
-      <div class="card shadow-sm rounded-4 mb-5">
-        <div class="card-body">
-          <form method="POST">
-            <div class="mb-3">
-              <label for="first_name" class="form-label">First Name</label>
-              <input type="text" class="form-control" id="first_name" name="first_name" required>
-            </div>
-            <div class="mb-3">
-              <label for="last_name" class="form-label">Last Name</label>
-              <input type="text" class="form-control" id="last_name" name="last_name" required>
-            </div>
-            <div class="mb-3">
-              <label for="dob" class="form-label">Date of Birth</label>
-              <input type="date" class="form-control" id="dob" name="dob">
-            </div>
-            <div class="mb-3">
-              <label for="phone" class="form-label">Phone</label>
-              <input type="text" class="form-control" id="phone" name="phone">
-            </div>
-            <div class="mb-3">
-              <label for="email" class="form-label">Email</label>
-              <input type="email" class="form-control" id="email" name="email">
-            </div>
-            <div class="mb-3">
-              <label for="address" class="form-label">Address</label>
-              <input type="text" class="form-control" id="address" name="address">
-            </div>
-            <div class="mb-3">
-              <label for="insurance_id" class="form-label">Insurance</label>
-              <select class="form-select" id="insurance_id" name="insurance_id">
-                <option value="">-- None --</option>
-                {% for ins in insurances %}
-                  <option value="{{ ins.id }}">{{ ins.company_name }}{% if ins.plan_name %} - {{ ins.plan_name }}{% endif %}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="physician_id" class="form-label">Physician</label>
-              <select class="form-select" id="physician_id" name="physician_id">
-                <option value="">-- None --</option>
-                {% for phy in physicians %}
-                  <option value="{{ phy.id }}">Dr. {{ phy.first_name }} {{ phy.last_name }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <button type="submit" class="btn btn-primary">Save Patient</button>
-            <a href="{{ url_for('patients_list') }}" class="btn btn-secondary">Cancel</a>
-          </form>
+<div class="container">
+    <h2>{{ therapist and 'Edit Therapist' or 'Add Therapist' }}</h2>
+    <form method="post">
+        <div class="mb-3">
+            <label for="first_name">First Name:</label>
+            <input type="text" name="first_name" id="first_name" class="form-control"
+                value="{{ therapist.first_name if therapist else '' }}" required>
         </div>
-      </div>
-    </div>
-  </div>
+        <div class="mb-3">
+            <label for="last_name">Last Name:</label>
+            <input type="text" name="last_name" id="last_name" class="form-control"
+                value="{{ therapist.last_name if therapist else '' }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="credentials">Credentials:</label>
+            <input type="text" name="credentials" id="credentials" class="form-control"
+                value="{{ therapist.credentials if therapist else '' }}">
+        </div>
+        <div class="mb-3">
+            <label for="phone">Phone:</label>
+            <input type="text" name="phone" id="phone" class="form-control"
+                value="{{ therapist.phone if therapist else '' }}">
+        </div>
+        <div class="mb-3">
+            <label for="email">Email:</label>
+            <input type="email" name="email" id="email" class="form-control"
+                value="{{ therapist.email if therapist else '' }}">
+        </div>
+        <button type="submit" class="btn btn-success">Save</button>
+        <a href="{{ url_for('therapists_list') }}" class="btn btn-secondary">Cancel</a>
+    </form>
 </div>
 {% endblock %}
