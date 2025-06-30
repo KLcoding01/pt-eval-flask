@@ -86,25 +86,12 @@ def dashboard():
     recent_visits = Visit.query.order_by(Visit.visit_date.desc()).limit(10).all()
     return render_template('dashboard.html', total_billing=total_billing, visits=recent_visits)
 
-@app.route('/api/visits')
+@app.route('/patients')
 @login_required
-def get_visits():
-    # Get parameters (start/end) from request.args if you want filtering
-    start = request.args.get('start')
-    end = request.args.get('end')
-    visits = Visit.query.all()  # You can filter by date if needed
+def patients_list():
+    patients = Patient.query.all()
+    return render_template('patients_list.html', patients=patients)
 
-    events = []
-    for v in visits:
-        events.append({
-            "id": v.id,
-            "title": f"{v.patient.first_name} {v.patient.last_name} - {v.visit_type}",
-            "start": v.visit_date.strftime('%Y-%m-%dT%H:%M:%S'),
-            "end": v.visit_date.strftime('%Y-%m-%dT%H:%M:%S'),  # Or add 1 hr, etc.
-            "color": "#3498db"  # Or assign color by status/type
-        })
-    return jsonify(events)
-    
 @app.route('/therapists')
 @login_required
 def therapists_list():
@@ -154,6 +141,22 @@ next_id = 3
 @login_required
 def calendar():
     return render_template('calendar.html')
+    
+@app.route('/api/visits')
+@login_required
+def get_visits():
+    # You can add filtering by request.args.get('start'), etc. if needed
+    visits = Visit.query.all()
+    events = []
+    for v in visits:
+        events.append({
+            "id": v.id,
+            "title": f"{v.patient.first_name} {v.patient.last_name} - {v.visit_type}",
+            "start": v.visit_date.strftime('%Y-%m-%dT%H:%M:%S'),
+            "end": v.visit_date.strftime('%Y-%m-%dT%H:%M:%S'),  # or add 1 hr, etc.
+            "color": "#3498db"
+        })
+    return jsonify(events)
 
 @app.route('/api/appointments')
 @login_required
