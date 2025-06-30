@@ -116,8 +116,7 @@ def new_patient():
         db.session.add(patient)
         db.session.commit()
         flash("New patient added!", "success")
-             return redirect(url_for('patients_list'))
-             
+        return redirect(url_for('patients_list'))
     return render_template('patient_form.html', active_page='new_patient')
 
 @app.route('/therapists')
