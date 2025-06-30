@@ -13,6 +13,7 @@ from datetime import date
 from io import BytesIO
 from functools import wraps
 from models import db, Patient, Attachment, Billing, Visit, Therapist, Physician, Insurance  # Ensure your models.py defines these
+from datetime import datetime
 
 # ========== CONFIG & INIT ==========
 
