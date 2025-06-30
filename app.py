@@ -106,34 +106,6 @@ def insurance_list():
     insurances = Insurance.query.all()
     return render_template('insurance_list.html', insurances=insurances)
 
-# ========== PATIENT FORMS/DETAIL ==========
-
-@app.route('/patients/new', methods=['GET', 'POST'])
-@login_required
-def patient_form():
-    if request.method == 'POST':
-        new_patient = Patient(
-            first_name=request.form['first_name'],
-            last_name=request.form['last_name'],
-            dob=request.form['dob'],
-            gender=request.form['gender'],
-            address=request.form['address'],
-            phone=request.form['phone'],
-            email=request.form['email'],
-            notes=request.form['notes']
-        )
-        db.session.add(new_patient)
-        db.session.commit()
-        flash("Patient added successfully.")
-        return redirect(url_for('patients_list'))
-    return render_template('patient_form.html')
-
-@app.route('/patients/<int:id>')
-@login_required
-def patient_detail(id):
-    patient = Patient.query.get_or_404(id)
-    return render_template('patient_detail.html', patient=patient)
-
 # ========== CALENDAR ==========
 
 appointments = [
