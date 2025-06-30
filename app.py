@@ -899,11 +899,6 @@ def patient_detail(id):
     patient = Patient.query.get_or_404(id)
     return render_template('patient_detail.html', patient=patient)
 
-@app.route('/calendar')
-@login_required
-def calendar():
-    return render_template('calendar.html')
-
 @app.route('/api/appointments')
 @login_required
 def get_appointments():
