@@ -12,7 +12,7 @@ from reportlab.pdfgen import canvas
 from datetime import date
 from io import BytesIO
 from functools import wraps
-from models import db, Patient, Attachment, Billing, Visit, Therapist, Physician, Insurance  # <- Make sure all these are defined
+from models import db, Patient, Attachment, Billing, Visit, Therapist, Physician, Insurance  # Ensure your models.py defines these
 
 # ========== CONFIG & INIT ==========
 
@@ -71,7 +71,11 @@ def logout():
 
 @app.route('/')
 def home():
-    return redirect(url_for('dashboard'))
+    # Optional: Smarter redirect
+    if 'username' in session:
+        return redirect(url_for('dashboard'))
+    else:
+        return redirect(url_for('login'))
 
 # ========== DASHBOARD & MAIN LISTS ==========
 
@@ -180,7 +184,6 @@ def delete_appointment(event_id):
     global appointments
     appointments = [e for e in appointments if e['id'] != event_id]
     return jsonify({"result": "Deleted"})
-
     
 # ====== PT Section ======
 
