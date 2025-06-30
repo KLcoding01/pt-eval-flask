@@ -924,7 +924,7 @@ def patient_form():
         db.session.add(new_patient)
         db.session.commit()
         flash("Patient added successfully.")
-        return redirect(url_for('patient_list'))
+        return redirect(url_for('patients_list'))
     return render_template('patient_form.html')
 
 @app.route('/patients/<int:id>')
@@ -932,13 +932,6 @@ def patient_form():
 def patient_detail(id):
     patient = Patient.query.get_or_404(id)
     return render_template('patient_detail.html', patient=patient)
-
-a00",
-        "color": "#FF5733",
-        "notes": "Gait training"
-    }
-]
-next_id = 3
 
 @app.route('/calendar')
 @login_required
@@ -1007,7 +1000,7 @@ def pt_eval():
 @login_required
 def uploads():
     return "<h3>Uploads module coming soon</h3>"
-
+    
 # ========== GPT HELPER ==========
 
 def gpt_call(prompt, max_tokens=350):
