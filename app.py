@@ -91,6 +91,34 @@ def dashboard():
 def patients_list():
     patients = Patient.query.all()
     return render_template('patients_list.html', patients=patients)
+    
+@app.route('/patients/new', methods=['GET', 'POST'])
+@login_required
+def new_patient():
+    if request.method == 'POST':
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
+        dob = request.form.get('dob')
+        phone = request.form.get('phone')
+        address = request.form.get('address')
+
+        if not first_name or not last_name:
+            flash("First name and last name are required.", "danger")
+            return redirect(url_for('new_patient'))
+
+        patient = Patient(
+            first_name=first_name,
+            last_name=last_name,
+            dob=dob,
+            phone=phone,
+            address=address
+        )
+        db.session.add(patient)
+        db.session.commit()
+        flash("New patient added!", "success")
+        return redirect(url_for('patients_list'))
+
+    return render_template('patient_form.html')
 
 @app.route('/therapists')
 @login_required
@@ -157,6 +185,8 @@ def get_visits():
             "color": "#3498db"
         })
     return jsonify(events)
+    
+
 
 @app.route('/api/appointments')
 @login_required

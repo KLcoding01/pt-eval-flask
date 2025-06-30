@@ -2,55 +2,65 @@
 {% block title %}Patients - Clinic Scheduler{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-lg-10">
-    <div class="card shadow-sm rounded-4 mb-5">
-      <div class="card-header bg-primary text-white rounded-top-4">
-        <h2 class="mb-0" style="font-size:1.6rem;letter-spacing:.03em;">
-          🧍 Patient Roster
-        </h2>
+<div class="container-fluid">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3 col-lg-2 mb-4">
+      <div class="list-group shadow rounded-4">
+        <a href="{{ url_for('new_patient') }}" class="list-group-item list-group-item-action {% if active_page == 'new_patient' %}active{% endif %}">+ Add New Patient</a>
+        <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action {% if active_page == 'dashboard' %}active{% endif %}">🏠 Dashboard</a>
+        <a href="{{ url_for('calendar') }}" class="list-group-item list-group-item-action {% if active_page == 'calendar' %}active{% endif %}">📅 Calendar</a>
+        <a href="{{ url_for('uploads') }}" class="list-group-item list-group-item-action {% if active_page == 'uploads' %}active{% endif %}">📤 Uploads</a>
       </div>
-      <div class="card-body">
-        <div class="d-flex gap-3 flex-wrap mb-4">
-          <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">🏠 Dashboard</a>
-          <a href="{{ url_for('calendar') }}" class="btn btn-outline-secondary">📅 Calendar</a>
-          <a href="{{ url_for('uploads') }}" class="btn btn-outline-secondary">📤 Uploads</a>
-          <a href="{{ url_for('logout') }}" class="btn btn-danger ms-auto">Logout</a>
-        </div>
+    </div>
 
-        {% if patients %}
-        <div class="table-responsive">
-          <table class="table table-striped align-middle">
-            <thead>
-              <tr>
-                <th scope="col">Name</th>
-                <th scope="col">DOB</th>
-                <th scope="col">Phone</th>
-                <th scope="col">Email</th>
-                <th scope="col">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for p in patients %}
-              <tr>
-                <td>{{ p.first_name }} {{ p.last_name }}</td>
-                <td>{{ p.dob }}</td>
-                <td>{{ p.phone or '' }}</td>
-                <td>{{ p.email or '' }}</td>
-                <td>
-                  <!-- Placeholder for future actions -->
-                  <a href="#" class="btn btn-sm btn-outline-secondary disabled" tabindex="-1" aria-disabled="true">View</a>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+    <!-- Main content -->
+    <div class="col-md-9 col-lg-10">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Patients</h2>
+        <a href="{{ url_for('new_patient') }}" class="btn btn-primary">+ New Patient</a>
+      </div>
+
+      <div class="card shadow-sm rounded-4 mb-5">
+        <div class="card-header bg-primary text-white rounded-top-4">
+          <h2 class="mb-0" style="font-size:1.6rem;letter-spacing:.03em;">
+            🧍 Patient Roster
+          </h2>
         </div>
-        {% else %}
-        <div class="alert alert-warning mb-0">
-          No patients found. You can add new patients from the patient management section.
+        <div class="card-body">
+          {% if patients %}
+          <div class="table-responsive">
+            <table class="table table-striped align-middle">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>DOB</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for p in patients %}
+                <tr>
+                  <td>{{ p.first_name }} {{ p.last_name }}</td>
+                  <td>{{ p.dob }}</td>
+                  <td>{{ p.phone or '' }}</td>
+                  <td>{{ p.email or '' }}</td>
+                  <td>
+                    <a href="#" class="btn btn-sm btn-outline-secondary disabled" tabindex="-1" aria-disabled="true">View</a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="alert alert-warning mb-0">
+            No patients found. You can add new patients from the patient management section.
+          </div>
+          {% endif %}
         </div>
-        {% endif %}
       </div>
     </div>
   </div>
