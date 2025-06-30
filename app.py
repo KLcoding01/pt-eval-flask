@@ -106,6 +106,11 @@ def insurance_list():
     insurances = Insurance.query.all()
     return render_template('insurance_list.html', insurances=insurances)
 
+@app.route('/billing')
+@login_required
+def billing_overview():
+    return render_template('billing.html')
+
 # ========== CALENDAR ==========
 
 appointments = [
