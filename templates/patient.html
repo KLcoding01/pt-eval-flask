@@ -2,15 +2,21 @@
 {% block title %}Patients - Clinic Scheduler{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid px-0">
   <div class="row">
     <!-- Sidebar -->
     <div class="col-md-3 col-lg-2 mb-4">
       <div class="list-group shadow rounded-4">
-        <a href="{{ url_for('new_patient') }}" class="list-group-item list-group-item-action {% if active_page == 'new_patient' %}active{% endif %}">+ Add New Patient</a>
-        <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action {% if active_page == 'dashboard' %}active{% endif %}">🏠 Dashboard</a>
-        <a href="{{ url_for('calendar') }}" class="list-group-item list-group-item-action {% if active_page == 'calendar' %}active{% endif %}">📅 Calendar</a>
-        <a href="{{ url_for('uploads') }}" class="list-group-item list-group-item-action {% if active_page == 'uploads' %}active{% endif %}">📤 Uploads</a>
+        <a href="{{ url_for('patients_list') }}" class="list-group-item list-group-item-action active">👥 Patients</a>
+        <a href="{{ url_for('new_patient') }}" class="list-group-item list-group-item-action">+ Add New Patient</a>
+        <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action">🏠 Dashboard</a>
+        <a href="{{ url_for('calendar') }}" class="list-group-item list-group-item-action">📅 Calendar</a>
+        <a href="{{ url_for('uploads') }}" class="list-group-item list-group-item-action">📤 Uploads</a>
+        <a href="{{ url_for('therapists_list') }}" class="list-group-item list-group-item-action">🧑‍⚕️ Therapists</a>
+        <a href="{{ url_for('physicians_list') }}" class="list-group-item list-group-item-action">👨‍⚕️ Physicians</a>
+        <a href="{{ url_for('insurance_list') }}" class="list-group-item list-group-item-action">🏦 Insurance</a>
+        <a href="{{ url_for('billing_overview') }}" class="list-group-item list-group-item-action">💳 Billing</a>
+        <a href="{{ url_for('logout') }}" class="list-group-item list-group-item-action text-danger">Logout</a>
       </div>
     </div>
 
@@ -20,7 +26,6 @@
         <h2 class="mb-0">Patients</h2>
         <a href="{{ url_for('new_patient') }}" class="btn btn-primary">+ New Patient</a>
       </div>
-
       <div class="card shadow-sm rounded-4 mb-5">
         <div class="card-header bg-primary text-white rounded-top-4">
           <h2 class="mb-0" style="font-size:1.6rem;letter-spacing:.03em;">
@@ -37,6 +42,8 @@
                   <th>DOB</th>
                   <th>Phone</th>
                   <th>Email</th>
+                  <th>Insurance</th>
+                  <th>Physician</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -44,11 +51,17 @@
                 {% for p in patients %}
                 <tr>
                   <td>{{ p.first_name }} {{ p.last_name }}</td>
-                  <td>{{ p.dob }}</td>
+                  <td>{{ p.dob.strftime('%Y-%m-%d') if p.dob else '' }}</td>
                   <td>{{ p.phone or '' }}</td>
                   <td>{{ p.email or '' }}</td>
+                  <td>{{ p.insurance.company_name if p.insurance else '' }}</td>
                   <td>
-                    <a href="#" class="btn btn-sm btn-outline-secondary disabled" tabindex="-1" aria-disabled="true">View</a>
+                    {% if p.physician %}
+                      Dr. {{ p.physician.first_name }} {{ p.physician.last_name }}
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="#" class="btn btn-sm btn-outline-secondary disabled">View</a>
                   </td>
                 </tr>
                 {% endfor %}
