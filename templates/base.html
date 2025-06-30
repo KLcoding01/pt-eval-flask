@@ -39,11 +39,19 @@
           <li class="nav-item"><a class="nav-link" href="{{ url_for('physicians_list') }}">Physicians</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ url_for('insurance_list') }}">Insurance</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ url_for('billing_overview') }}">Billing</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+        </li>
       </ul>
+      <ul class="navbar-nav ms-auto mb-2 mb-md-0">
+          {% if session.username %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
     </div>
-  </div>
 </nav>
-
 <div class="container">
   {% with messages = get_flashed_messages() %}
     {% if messages %}
