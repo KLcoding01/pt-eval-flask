@@ -90,7 +90,7 @@ def dashboard():
 @login_required
 def patients_list():
     patients = Patient.query.all()
-    return render_template('patients_list.html', patients=patients)
+    return render_template('patients.html', patients=patients, active_page='patients')
     
 @app.route('/patients/new', methods=['GET', 'POST'])
 @login_required
@@ -116,9 +116,9 @@ def new_patient():
         db.session.add(patient)
         db.session.commit()
         flash("New patient added!", "success")
-        return redirect(url_for('patients_list'))
-
-    return render_template('patient_form.html')
+             return redirect(url_for('patients_list'))
+             
+    return render_template('patient_form.html', active_page='new_patient')
 
 @app.route('/therapists')
 @login_required
