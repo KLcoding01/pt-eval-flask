@@ -98,12 +98,20 @@ def new_patient():
     if request.method == 'POST':
         first_name = request.form.get('first_name')
         last_name = request.form.get('last_name')
-        dob = request.form.get('dob')
+        dob_str = request.form.get('dob')
+        dob = datetime.strptime(dob_str, "%Y-%m-%d").date() if dob_str else None
         phone = request.form.get('phone')
+        email = request.form.get('email')
         address = request.form.get('address')
+        insurance_id = request.form.get('insurance_id')
+        physician_id = request.form.get('physician_id')
+
+        # Convert to int if not blank, else None
+        insurance_id = int(insurance_id) if insurance_id else None
+        physician_id = int(physician_id) if physician_id else None
 
         if not first_name or not last_name:
-            flash("First name and last name are required.", "danger")
+            flash("First and last name required.", "danger")
             return redirect(url_for('new_patient'))
 
         patient = Patient(
@@ -111,13 +119,30 @@ def new_patient():
             last_name=last_name,
             dob=dob,
             phone=phone,
-            address=address
+            email=email,
+            address=address,
+            insurance_id=insurance_id,
+            physician_id=physician_id
         )
-        db.session.add(patient)
-        db.session.commit()
-        flash("New patient added!", "success")
-        return redirect(url_for('patients_list'))
-    return render_template('patient_form.html', active_page='new_patient')
+        try:
+            db.session.add(patient)
+            db.session.commit()
+            flash("New patient added!", "success")
+            return redirect(url_for('patients_list'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error adding patient: {e}", "danger")
+            return redirect(url_for('new_patient'))
+
+    # For GET: load dropdown data
+    insurances = Insurance.query.all()
+    physicians = Physician.query.all()
+    return render_template(
+        'patient_form.html',
+        insurances=insurances,
+        physicians=physicians,
+        active_page='new_patient'
+    )
 
 @app.route('/therapists')
 @login_required
