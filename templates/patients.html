@@ -83,19 +83,6 @@
             No patients found. You can add new patients from the patient management section.
           </div>
           {% endif %}
-
-          {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-              <div class="mt-4">
-                {% for category, message in messages %}
-                  <div class="alert alert-{{ 'warning' if category == 'danger' else category }} rounded-3 mb-2">
-                    {{ message }}
-                  </div>
-                {% endfor %}
-              </div>
-            {% endif %}
-          {% endwith %}
-
         </div>
       </div>
     </div>
