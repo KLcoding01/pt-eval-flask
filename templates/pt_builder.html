@@ -24,6 +24,7 @@
         <button id="pt-load-template-btn" class="btn btn-outline-primary btn-sm">Load</button>
         <button id="pt-save-word-btn" class="btn btn-info btn-sm">Export Word</button>
         <button id="pt-save-pdf-btn" class="btn btn-danger btn-sm">Export PDF</button>
+        <button id="pt-save-to-patient-btn" class="btn btn-success btn-sm">Save to Patient</button>
         <span id="pt-status-msg" class="ms-3"></span>
       </div>
       <ul class="nav nav-tabs mb-2" id="pt-inner-tab" role="tablist">
@@ -168,6 +169,26 @@
       </div>
       <div class="modal-footer">
         <button type="button" id="pt-save-signature" class="btn btn-success" data-bs-dismiss="modal">Save Signature</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Save to Patient Modal -->
+<div class="modal fade" id="ptSelectPatientModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Select Patient to Save Eval</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <select id="pt-patient-select" class="form-select">
+          <!-- Filled by JS -->
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="pt-save-patient-confirm" class="btn btn-primary" data-bs-dismiss="modal">Save</button>
       </div>
     </div>
   </div>
@@ -399,6 +420,35 @@
       .catch(() => {
         document.getElementById('pt-daily-summary-status').textContent = 'AI error';
       });
+  };
+
+  // ==== Save to Patient: Show Modal and Populate List ====
+  document.getElementById('pt-save-to-patient-btn').onclick = () => {
+    // Fetch patient list
+    fetch('/api/patient_list')
+      .then(r => r.json())
+      .then(list => {
+        document.getElementById('pt-patient-select').innerHTML =
+          list.map(p => `<option value="${p.id}">${p.last_name}, ${p.first_name} (DOB: ${p.dob})</option>`).join('');
+        // Show modal
+        new bootstrap.Modal(document.getElementById('ptSelectPatientModal')).show();
+      });
+  };
+
+  document.getElementById('pt-save-patient-confirm').onclick = () => {
+    const patientId = document.getElementById('pt-patient-select').value;
+    const fields = ptGetFields();
+    fields['patient_id'] = patientId;
+    fetch('/pt_save_to_patient', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(fields)
+    })
+    .then(r => r.json())
+    .then(res => {
+      ptSetStatus(res.message || 'Eval saved to patient!', 'green');
+    })
+    .catch(() => ptSetStatus('Error saving to patient', 'red'));
   };
 
   // ===== OT Functions (only if OT elements exist) =====
