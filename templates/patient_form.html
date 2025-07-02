@@ -1,73 +1,90 @@
 {% extends "base.html" %}
+{% block title %}{{ 'Edit' if patient else 'Add' }} Patient - Clinic Scheduler{% endblock %}
+
 {% block content %}
 <div class="container mt-5">
-  <h2>{{ 'Edit Patient' if edit else 'Add New Patient' }}</h2>
-  <form method="post">
-    <div class="mb-3">
-      <label>First Name</label>
-      <input type="text" name="first_name" class="form-control" value="{{ patient.first_name if patient else '' }}">
-    </div>
-    <div class="mb-3">
-      <label>Last Name</label>
-      <input type="text" name="last_name" class="form-control" value="{{ patient.last_name if patient else '' }}">
-    </div>
-    <div class="mb-3">
-      <label>Date of Birth</label>
-      <input type="date" name="dob" class="form-control" value="{{ patient.dob.strftime('%Y-%m-%d') if patient and patient.dob else '' }}">
-    </div>
-    <div class="mb-3">
-      <label>Phone</label>
-      <input type="text" name="phone" class="form-control" value="{{ patient.phone if patient else '' }}">
-    </div>
-    <div class="mb-3">
-      <label>Email</label>
-      <input type="email" name="email" class="form-control" value="{{ patient.email if patient else '' }}">
-    </div>
-    <div class="mb-3">
-      <label>Address</label>
-      <input type="text" name="address" class="form-control" value="{{ patient.address if patient else '' }}">
-    </div>
-    <div class="mb-3">
-      <label>Insurance</label>
-      <select name="insurance_id" class="form-control">
-        <option value="">-- Select --</option>
-        {% for ins in insurances %}
-        <option value="{{ ins.id }}" {% if patient and patient.insurance_id == ins.id %}selected{% endif %}>
-          {{ ins.company_name }}
-        </option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="mb-3">
-      <label>Physician</label>
-      <select name="physician_id" class="form-control">
-        <option value="">-- Select --</option>
-        {% for doc in physicians %}
-        <option value="{{ doc.id }}" {% if patient and patient.physician_id == doc.id %}selected{% endif %}>
-          Dr. {{ doc.first_name }} {{ doc.last_name }}
-        </option>
-        {% endfor %}
-      </select>
-    </div>
-    <button type="submit" class="btn btn-success">{{ 'Update' if edit else 'Add Patient' }}</button>
-    <a href="{{ url_for('patients_list') }}" class="btn btn-secondary ms-2">Cancel</a>
-  </form>
-
-  {% if edit and patient and patient.id %}
-  <div class="card mt-5 border-danger">
-    <div class="card-header bg-danger text-white">
-      ⚠️ Delete Patient
-    </div>
-    <div class="card-body">
-      <p>This will permanently delete the patient and associated records.</p>
-      <form method="POST" action="{{ url_for('delete_patient', patient_id=patient.id) }}">
-        <button type="submit" class="btn btn-danger"
-                onclick="return confirm('Are you sure you want to delete this patient? This cannot be undone.')">
-          Delete Patient
-        </button>
-      </form>
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+      <div class="card shadow-lg rounded-4">
+        <div class="card-header bg-primary text-white rounded-top-4">
+          <h3 class="mb-0">{{ 'Edit' if patient else 'Add New' }} Patient</h3>
+        </div>
+        <div class="card-body">
+          <form method="post" autocomplete="off">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="first_name" name="first_name"
+                  value="{{ patient.first_name if patient else '' }}" required>
+              </div>
+              <div class="col-sm-6">
+                <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="last_name" name="last_name"
+                  value="{{ patient.last_name if patient else '' }}" required>
+              </div>
+              <div class="col-sm-6">
+                <label for="dob" class="form-label">Date of Birth</label>
+                <input type="date" class="form-control" id="dob" name="dob"
+                  value="{% if patient and patient.dob %}{{ patient.dob if patient.dob.__class__.__name__ != 'date' else patient.dob.strftime('%Y-%m-%d') }}{% endif %}">
+              </div>
+              <div class="col-sm-6">
+                <label for="phone" class="form-label">Phone</label>
+                <input type="text" class="form-control" id="phone" name="phone"
+                  value="{{ patient.phone if patient else '' }}">
+              </div>
+              <div class="col-12">
+                <label for="address" class="form-label">Address</label>
+                <input type="text" class="form-control" id="address" name="address"
+                  value="{{ patient.address if patient else '' }}">
+              </div>
+              <!-- Optional fields -->
+              <div class="col-sm-6">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email"
+                  value="{{ patient.email if patient and patient.email else '' }}">
+              </div>
+              <div class="col-sm-6">
+                <label for="insurance_id" class="form-label">Insurance</label>
+                <select class="form-select" id="insurance_id" name="insurance_id">
+                  <option value="">-- Select --</option>
+                  {% for ins in insurances %}
+                    <option value="{{ ins.id }}" {% if patient and patient.insurance_id == ins.id %}selected{% endif %}>
+                      {{ ins.company_name }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <label for="physician_id" class="form-label">Physician</label>
+                <select class="form-select" id="physician_id" name="physician_id">
+                  <option value="">-- Select --</option>
+                  {% for doc in physicians %}
+                    <option value="{{ doc.id }}" {% if patient and patient.physician_id == doc.id %}selected{% endif %}>
+                      Dr. {{ doc.first_name }} {{ doc.last_name }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="d-flex justify-content-end mt-4">
+              <a href="{{ url_for('patients_list') }}" class="btn btn-secondary me-2">Cancel</a>
+              <button type="submit" class="btn btn-primary px-4">{{ 'Update' if patient else 'Save' }}</button>
+            </div>
+          </form>
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              <div class="mt-4">
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ 'warning' if category == 'danger' else category }} rounded-3 mb-2">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endwith %}
+        </div>
+      </div>
     </div>
   </div>
-  {% endif %}
 </div>
 {% endblock %}

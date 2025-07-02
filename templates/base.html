@@ -16,7 +16,7 @@
       font-family: Arial, sans-serif;
       min-height: 100vh;
       margin: 0;
-      padding-top: 56px; /* space for navbar */
+      padding-top: 56px;
     }
     .navbar {
       background: #2176ff;
@@ -60,7 +60,6 @@
     .navbar-right a:hover {
       color: #ffe066 !important;
     }
-    /* Sidebar Styles */
     .sidebar {
       background: #fff;
       border-right: 1px solid #f1f1f1;
@@ -82,11 +81,9 @@
       color: #2176ff;
       font-weight: bold;
     }
-    /* Main content area */
     .main-content {
       padding: 32px 32px 32px 32px;
     }
-    /* Flash messages */
     #flashes {
       max-width: 600px;
       margin: 16px auto;
@@ -127,7 +124,6 @@
     </div>
   </nav>
 
-  <!-- Optional: Flash Messages -->
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       <div id="flashes">
@@ -142,8 +138,7 @@
 
   <div class="container-fluid">
     <div class="row">
-      <!-- Optional Sidebar (Uncomment to enable left nav, or add logic to enable per-page) -->
-      {#
+      <!-- ENABLED SIDEBAR (left nav) -->
       <nav class="col-md-3 col-lg-2 d-none d-md-block sidebar">
         <div class="list-group list-group-flush">
           <a href="{{ url_for('dashboard') }}" class="list-group-item {% if active_page == 'dashboard' %}active{% endif %}">🏠 Dashboard</a>
@@ -155,9 +150,8 @@
           <a href="{{ url_for('pt_builder') }}" class="list-group-item {% if active_page == 'pt_builder' %}active{% endif %}">📝 PT Builder</a>
         </div>
       </nav>
-      #}
       <!-- Main Content -->
-      <main class="col main-content">
+      <main class="col-md-9 col-lg-10 main-content">
         {% block content %}{% endblock %}
       </main>
     </div>

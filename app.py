@@ -211,56 +211,56 @@ def dashboard():
     return render_template('dashboard.html')
 
 # ========== PATIENT CRUD ==========
+
+# 1. List all patients
 @app.route('/patients')
-@login_required
 def patients_list():
     patients = Patient.query.all()
-    return render_template('patients.html', patients=patients, active_page='patients')
+    return render_template('patients.html', patients=patients)
 
+# 2. Add new patient
 @app.route('/patients/new', methods=['GET', 'POST'])
-@login_required
 def new_patient():
     if request.method == 'POST':
         first_name = request.form.get('first_name')
         last_name = request.form.get('last_name')
-        dob_str = request.form.get('dob')
-        dob = datetime.strptime(dob_str, "%Y-%m-%d").date() if dob_str else None
+        dob = request.form.get('dob')
         phone = request.form.get('phone')
-        email = request.form.get('email')
         address = request.form.get('address')
-        insurance_id = request.form.get('insurance_id')
-        physician_id = request.form.get('physician_id')
-        insurance_id = int(insurance_id) if insurance_id else None
-        physician_id = int(physician_id) if physician_id else None
+
         if not first_name or not last_name:
-            flash("First and last name required.", "danger")
+            flash("First name and last name are required.", "danger")
             return redirect(url_for('new_patient'))
+
         patient = Patient(
             first_name=first_name,
             last_name=last_name,
             dob=dob,
             phone=phone,
-            email=email,
-            address=address,
-            insurance_id=insurance_id,
-            physician_id=physician_id
+            address=address
         )
-        try:
-            db.session.add(patient)
-            db.session.commit()
-            flash("New patient added!", "success")
-            return redirect(url_for('patients_list'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f"Error adding patient: {e}", "danger")
-            return redirect(url_for('new_patient'))
+        db.session.add(patient)
+        db.session.commit()
+        flash("New patient added!", "success")
+        return redirect(url_for('patients_list'))
+    return render_template('patient_form.html', patient=None)
 
-    insurances = Insurance.query.all()
-    physicians = Physician.query.all()
-    return render_template('patient_form.html', insurances=insurances, physicians=physicians, active_page='new_patient')
+# 3. Edit patient
+@app.route('/patients/<int:patient_id>/edit', methods=['GET', 'POST'])
+def edit_patient(patient_id):
+    patient = Patient.query.get_or_404(patient_id)
+    if request.method == 'POST':
+        patient.first_name = request.form.get('first_name')
+        patient.last_name = request.form.get('last_name')
+        patient.dob = request.form.get('dob')
+        patient.phone = request.form.get('phone')
+        patient.address = request.form.get('address')
 
-# ... Add your other patient/therapist/physician/insurance CRUD routes as before ...
-
+        db.session.commit()
+        flash("Patient updated!", "success")
+        return redirect(url_for('patients_list'))
+    return render_template('patient_form.html', patient=patient)
+    
 # ========== VISIT CRUD WITH GOOGLE CALENDAR SYNC ==========
 @app.route('/visits')
 @login_required
