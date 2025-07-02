@@ -333,6 +333,12 @@ def delete_visit(visit_id):
     return redirect(url_for('visits_list'))
     
 # ========== PHYSICIAN, INSURANCE, BILLING ==========
+@app.route('/therapists')
+@login_required
+def therapists_list():
+    therapists = Therapist.query.all()
+    return render_template('therapists.html', therapists=therapists)
+    
 @app.route('/physicians')
 @login_required
 def physicians_list():
