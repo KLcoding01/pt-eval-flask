@@ -49,6 +49,16 @@
       margin: 0 auto;
       padding: 32px 16px;
     }
+    /* Optional: Style for flash messages */
+    .flashes { max-width: 600px; margin: 20px auto; }
+    .flash-success { background: #27ae60; color: #fff; }
+    .flash-info    { background: #2980b9; color: #fff; }
+    .flash-danger  { background: #c0392b; color: #fff; }
+    .flash-warning { background: #f39c12; color: #fff; }
+    .flash-default { background: #222; color: #fff; }
+    .flash-msg {
+      margin-bottom: 8px; padding: 12px; border-radius: 6px; font-size: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -62,22 +72,26 @@
       <a href="{{ url_for('insurance_list') }}">Insurance</a>
       <a href="{{ url_for('billing_overview') }}">Billing</a>
       <a href="{{ url_for('pt_builder') }}">PT Builder</a>
-      <!-- Remove 'Calendar' link, since calendar is now on dashboard -->
     </div>
     <div class="navbar-right">
       <a href="{{ url_for('logout') }}" style="margin-left:32px;font-weight:600;">Logout</a>
     </div>
   </nav>
-
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-      <div id="flashes" style="max-width:600px;margin:20px auto;">
+      <div class="flashes">
         {% for category, message in messages %}
-          <div style="margin-bottom:8px;padding:12px;border-radius:6px;color:#fff;
-            background:
-              {% if category == 'success' %}#27ae60
-              {% elif category == 'info' %}#2980b9
-              {% elif category == 'danger' %}#c0392b
-              {% elif category == 'warning' %}#f39c12
-              {% else %}#222
-              {% endif %};
+          <div class="flash-msg
+            {% if category == 'success' %}flash-success{% elif category == 'info' %}flash-info
+            {% elif category == 'danger' %}flash-danger{% elif category == 'warning' %}flash-warning
+            {% else %}flash-default{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  {# You can wrap this in .container if you want to force inner page width #}
+  {% block content %}{% endblock %}
+</body>
+</html>
