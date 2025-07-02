@@ -333,6 +333,19 @@ def delete_visit(visit_id):
     return redirect(url_for('visits_list'))
     
 # ========== PHYSICIAN, INSURANCE, BILLING ==========
+
+@app.route('/therapists/add', methods=['GET', 'POST'])
+@login_required
+def therapists_add():
+    # Add your therapist creation logic here
+    return render_template('therapist_form.html')
+
+@app.route('/physicians/add', methods=['GET', 'POST'])
+@login_required
+def physicians_add():
+    # Add your physician creation logic here
+    return render_template('physician_form.html')
+    
 @app.route('/therapists')
 @login_required
 def therapists_list():
