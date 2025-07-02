@@ -393,23 +393,6 @@ def api_schedule_delete(visit_id):
     db.session.commit()
     return jsonify({'success': True})
     
-@app.route('/api/events')
-def api_events():
-    # You must implement fetching events from Google Calendar here.
-    # For demo, we'll just return some sample events:
-    events = [
-        {
-            "title": "Sample Event",
-            "start": "2025-07-04T10:00:00",
-            "end": "2025-07-04T12:00:00"
-        },
-        {
-            "title": "Another Event",
-            "start": "2025-07-08"
-        }
-    ]
-    return jsonify(events)
-    
 @app.route('/api/providers')
 def api_providers():
     therapists = Therapist.query.all()
