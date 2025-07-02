@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-md-10 mx-auto">
+      <h2>PT Builder: Generate Evaluations & Daily Notes</h2>
+      <ul class="nav nav-tabs mt-4" id="ptTab" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="eval-tab" data-bs-toggle="tab" data-bs-target="#eval" type="button" role="tab">Eval</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="daily-tab" data-bs-toggle="tab" data-bs-target="#daily" type="button" role="tab">Daily Note</button>
+        </li>
+      </ul>
+      <div class="tab-content" id="ptTabContent">
+        <!-- PT EVAL TAB -->
+        <div class="tab-pane fade show active" id="eval" role="tabpanel" aria-labelledby="eval-tab">
+          <div class="form-group mt-4">
+            <label for="pt-template">Choose a Template:</label>
+            <select id="pt-template" class="form-control">
+              <option value="">--Select--</option>
+            </select>
+          </div>
+          <form id="pt-form" class="mt-3">
+            <div class="card mb-3">
+              <div class="card-header">Subjective</div>
+              <div class="card-body">
+                <textarea class="form-control" name="subjective" rows="3"></textarea>
+              </div>
+            </div>
+            <div class="card mb-3">
+              <div class="card-header">Pain</div>
+              <div class="card-body">
+                <textarea class="form-control" name="pain" rows="3"></textarea>
+              </div>
+            </div>
+            <div class="card mb-3">
+              <div class="card-header">Objective</div>
+              <div class="card-body">
+                <textarea class="form-control" name="objective" rows="3"></textarea>
+              </div>
+            </div>
+            <div class="card mb-3">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Differential Diagnosis</span>
+                <button type="button" class="btn btn-outline-primary btn-sm" id="generate-diffdx">AI Generate</button>
+              </div>
+              <div class="card-body">
+                <textarea class="form-control" name="diffdx" rows="2"></textarea>
+              </div>
+            </div>
+            <div class="card mb-3">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Assessment Summary</span>
+                <button type="button" class="btn btn-outline-primary btn-sm" id="generate-summary">AI Generate</button>
+              </div>
+              <div class="card-body">
+                <textarea class="form-control" name="summary" rows="3"></textarea>
+              </div>
+            </div>
+            <div class="card mb-3">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Goals</span>
+                <button type="button" class="btn btn-outline-primary btn-sm" id="generate-goals">AI Generate</button>
+              </div>
+              <div class="card-body">
+                <textarea class="form-control" name="goals" rows="3"></textarea>
+              </div>
+            </div>
+            <div class="card mb-3">
+              <div class="card-header">Frequency/Duration</div>
+              <div class="card-body">
+                <textarea class="form-control" name="frequency" rows="2"></textarea>
+              </div>
+            </div>
+            <div class="card mb-3">
+              <div class="card-header">Interventions</div>
+              <div class="card-body">
+                <textarea class="form-control" name="intervention" rows="2"></textarea>
+              </div>
+            </div>
+            <div class="card mb-3">
+              <div class="card-header">Treatment Procedures</div>
+              <div class="card-body">
+                <textarea class="form-control" name="procedures" rows="2"></textarea>
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary me-2" id="export-word">Export to Word</button>
+            <button type="button" class="btn btn-secondary" id="export-pdf">Export to PDF</button>
+          </form>
+          <div id="eval-ai-results" class="mt-4"></div>
+        </div>
+        <!-- DAILY NOTE TAB -->
+        <div class="tab-pane fade" id="daily" role="tabpanel" aria-labelledby="daily-tab">
+          <form id="daily-form" class="mt-4">
+            <div class="card mb-3">
+              <div class="card-header">Diagnosis</div>
+              <div class="card-body">
+                <textarea class="form-control" name="diagnosis" rows="2"></textarea>
+              </div>
+            </div>
+            <div class="card mb-3">
+              <div class="card-header">Interventions</div>
+              <div class="card-body">
+                <textarea class="form-control" name="interventions" rows="2"></textarea>
+              </div>
+            </div>
+            <div class="card mb-3">
+              <div class="card-header">Tx Tolerance</div>
+              <div class="card-body">
+                <textarea class="form-control" name="tolerance" rows="2"></textarea>
+              </div>
+            </div>
+            <div class="card mb-3">
+              <div class="card-header">Progress</div>
+              <div class="card-body">
+                <textarea class="form-control" name="progress" rows="2"></textarea>
+              </div>
+            </div>
+            <div class="card mb-3">
+              <div class="card-header">Plan</div>
+              <div class="card-body">
+                <textarea class="form-control" name="plan" rows="2"></textarea>
+              </div>
+            </div>
+            <button type="button" class="btn btn-info me-2" id="generate-daily">AI Generate Daily Note</button>
+          </form>
+          <div id="daily-ai-results" class="mt-4"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let templateFields = [];
+
+fetch('/pt_load_template', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({})})
+  .then(r => r.json())
+  .then(data => {
+    for (const name of data) {
+      const opt = document.createElement('option');
+      opt.value = name; opt.textContent = name;
+      document.getElementById('pt-template').appendChild(opt);
+    }
+  });
+
+// On template select, load fields and split to section textareas
+document.getElementById('pt-template').addEventListener('change', function() {
+  const template = this.value;
+  if (!template) return;
+  fetch('/pt_load_template', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({template})
+  })
+  .then(r => r.json())
+  .then(fields => {
+    // Map to grouped sections
+    document.querySelector('textarea[name="subjective"]').value = fields.subjective || '';
+    document.querySelector('textarea[name="pain"]').value =
+      [
+        "Location: " + (fields.pain_location||''),
+        "Onset: " + (fields.pain_onset||''),
+        "Condition: " + (fields.pain_condition||''),
+        "Mechanism: " + (fields.pain_mechanism||''),
+        "Rating: " + (fields.pain_rating||''),
+        "Frequency: " + (fields.pain_frequency||''),
+        "Description: " + (fields.pain_description||''),
+        "Aggravating: " + (fields.pain_aggravating||''),
+        "Relieved: " + (fields.pain_relieved||''),
+        "Interferes: " + (fields.pain_interferes||'')
+      ].join('\n');
+    document.querySelector('textarea[name="objective"]').value =
+      [
+        "Posture: " + (fields.posture||''),
+        "ROM: " + (fields.rom||''),
+        "Strength: " + (fields.strength||''),
+        "Palpation: " + (fields.palpation||''),
+        "Functional: " + (fields.functional||''),
+        "Special Tests: " + (fields.special||''),
+        "Impairments: " + (fields.impairments||'')
+      ].join('\n');
+    document.querySelector('textarea[name="goals"]').value = fields.goals || '';
+    document.querySelector('textarea[name="frequency"]').value = fields.frequency || '';
+    document.querySelector('textarea[name="intervention"]').value = fields.intervention || '';
+    document.querySelector('textarea[name="procedures"]').value = fields.procedures || '';
+    document.querySelector('textarea[name="diffdx"]').value = '';
+    document.querySelector('textarea[name="summary"]').value = '';
+  });
+});
+
+function getEvalFormData() {
+  // You can parse pain/objective back to their structured keys if you want
+  const data = {};
+  document.querySelectorAll('#pt-form textarea').forEach(f => {
+    data[f.name] = f.value;
+  });
+  return data;
+}
+function getDailyFormData() {
+  const data = {};
+  document.querySelectorAll('#daily-form textarea').forEach(f => {
+    data[f.name] = f.value;
+  });
+  return data;
+}
+
+// Generate DiffDx
+document.getElementById('generate-diffdx').onclick = () => {
+  fetch('/pt_generate_diffdx', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({fields: getEvalFormData()})
+  })
+  .then(r => r.json())
+  .then(res => {
+    document.querySelector('textarea[name="diffdx"]').value = res.result;
+    document.getElementById('eval-ai-results').innerHTML =
+      `<div class="alert alert-secondary"><strong>Differential Dx:</strong><br>${res.result}</div>`;
+  });
+};
+// Generate Assessment Summary
+document.getElementById('generate-summary').onclick = () => {
+  fetch('/pt_generate_summary', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({fields: getEvalFormData()})
+  })
+  .then(r => r.json())
+  .then(res => {
+    document.querySelector('textarea[name="summary"]').value = res.result;
+    document.getElementById('eval-ai-results').innerHTML =
+      `<div class="alert alert-primary"><strong>Assessment Summary:</strong><br>${res.result}</div>`;
+  });
+};
+// Generate Goals
+document.getElementById('generate-goals').onclick = () => {
+  fetch('/pt_generate_goals', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({fields: getEvalFormData()})
+  })
+  .then(r => r.json())
+  .then(res => {
+    document.querySelector('textarea[name="goals"]').value = res.result;
+    document.getElementById('eval-ai-results').innerHTML =
+      `<div class="alert alert-success"><strong>Goals:</strong><br><pre>${res.result}</pre></div>`;
+  });
+};
+// Export to Word
+document.getElementById('export-word').onclick = () => {
+  fetch('/pt_export_word', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(getEvalFormData())
+  })
+  .then(r => r.blob())
+  .then(blob => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'PT_Eval.docx';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+  });
+};
+// Export to PDF
+document.getElementById('export-pdf').onclick = () => {
+  fetch('/pt_export_pdf', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(getEvalFormData())
+  })
+  .then(r => r.blob())
+  .then(blob => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'PT_Eval.pdf';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+  });
+};
+// Generate Daily Note
+document.getElementById('generate-daily').onclick = () => {
+  fetch('/pt_generate_daily_summary', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(getDailyFormData())
+  })
+  .then(r => r.json())
+  .then(res => {
+    document.getElementById('daily-ai-results').innerHTML =
+      `<div class="alert alert-info"><strong>Daily Note:</strong><br>${res.result}</div>`;
+  });
+};
+</script>
+{% endblock %}

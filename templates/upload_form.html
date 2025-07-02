@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Upload File{% endblock %}
+{% block content %}
+<h2>Upload New File</h2>
+<form method="POST" enctype="multipart/form-data">
+  <div class="mb-3">
+    <label class="form-label">Select File</label>
+    <input type="file" name="file" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label>Attach to Patient</label>
+    <select name="patient_id" class="form-select">
+      <option value="">-- None --</option>
+      {% for p in patients %}
+      <option value="{{ p.id }}">{{ p.first_name }} {{ p.last_name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label>Attach to Visit</label>
+    <select name="visit_id" class="form-select">
+      <option value="">-- None --</option>
+      {% for v in visits %}
+      <option value="{{ v.id }}">{{ v.visit_date.strftime('%Y-%m-%d') }} - {{ v.visit_type }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="btn btn-success">Upload</button>
+  <a href="{{ url_for('uploads_list') }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

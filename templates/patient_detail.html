@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{{ patient.first_name }} {{ patient.last_name }}</h2>
+<ul class="list-group mb-3">
+  <li class="list-group-item"><strong>DOB:</strong> {{ patient.dob }}</li>
+  <li class="list-group-item"><strong>Gender:</strong> {{ patient.gender }}</li>
+  <li class="list-group-item"><strong>Address:</strong> {{ patient.address }}</li>
+  <li class="list-group-item"><strong>Phone:</strong> {{ patient.phone }}</li>
+  <li class="list-group-item"><strong>Email:</strong> {{ patient.email }}</li>
+  <li class="list-group-item"><strong>Notes:</strong> {{ patient.notes }}</li>
+</ul>
+<a href="{{ url_for('patient_list') }}" class="btn btn-secondary">Back</a>
+{% endblock %}
+

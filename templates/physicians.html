@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Physicians - Clinic Scheduler{% endblock %}
+{% block content %}
+<h1>Physicians</h1>
+<a href="{{ url_for('physicians_add') }}" class="btn btn-success mb-3">Add Physician</a>
+
+{% if physicians %}
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Specialty</th>
+      <th>Email</th>
+      <th>Phone</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in physicians %}
+    <tr>
+      <td>Dr. {{ p.first_name }} {{ p.last_name }}</td>
+      <td>{{ p.specialty }}</td>
+      <td>{{ p.email }}</td>
+      <td>{{ p.phone }}</td>
+      <td><a href="#" class="btn btn-sm btn-outline-primary disabled">Edit (TODO)</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No physicians found.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Clinic Scheduler{% endblock %}
+
+{% block head %}
+  <!-- FullCalendar Core & Scheduler CSS/JS -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/resource-timeline/main.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/resource-timeline/main.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+  <h1 class="mb-4">Dashboard</h1>
+
+  <!-- SCHEDULE CALENDAR -->
+  <div class="card shadow-sm rounded-4 mb-4">
+    <div class="card-header bg-success text-white rounded-top-4">
+      <h2 class="mb-0" style="font-size:1.3rem;">🗓️ Clinic Schedule</h2>
+    </div>
+    <div class="card-body">
+      <div id="clinic-resource-calendar" style="min-height: 600px;"></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-4">
+      <h3>Recent Visits</h3>
+      {% if visits %}
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Patient</th>
+              <th>Therapist</th>
+              <th>Type</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for visit in visits %}
+            <tr>
+              <td>{{ visit.visit_date.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td>{{ visit.patient.first_name }} {{ visit.patient.last_name }}</td>
+              <td>{{ visit.therapist.first_name }} {{ visit.therapist.last_name }}</td>
+              <td>{{ visit.visit_type }}</td>
+              <td>{{ visit.status }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No recent visits.</p>
+      {% endif %}
+    </div>
+
+    <div class="col-md-6 mb-4">
+      <h3>Billing Summary</h3>
+      <div class="alert alert-success">
+        <h4>Total Billed: ${{ total_billing | round(2) }}</h4>
+      </div>
+    </div>
+  </div>
+
+  <!-- PT Builder Card -->
+  <div class="card mt-4 shadow-sm rounded-4">
+    <div class="card-header bg-primary text-white rounded-top-4">
+      <h5 class="mb-0">📝 PT Builder</h5>
+    </div>
+    <div class="card-body">
+      <p>
+        Generate PT Evaluations &amp; Daily Notes with AI. <br>
+        Use the builder for comprehensive evaluations, SOAP notes, and exporting to Word/PDF.
+      </p>
+      <a href="{{ url_for('pt_builder') }}" class="btn btn-primary">
+        <i class="bi bi-magic"></i> Open PT Builder
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- SCHEDULE CALENDAR JAVASCRIPT -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var calendarEl = document.getElementById('clinic-resource-calendar');
+  if (!calendarEl) {
+    console.error("#clinic-resource-calendar not found!");
+    return;
+  }
+
+  var calendar = new FullCalendar.Calendar(calendarEl, {
+    schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
+    initialView: 'resourceTimeGridDay',
+    slotMinTime: '07:00:00',
+    slotMaxTime: '19:00:00',
+    height: 650,
+    resourceAreaHeaderContent: 'Provider',
+    resources: '/api/providers',
+    events: '/api/schedule',
+    editable: true,
+    selectable: true,
+    nowIndicator: true,
+    allDaySlot: false,
+    headerToolbar: {
+      left: 'today prev,next',
+      center: 'title',
+      right: 'resourceTimeGridDay,resourceTimeGridWeek'
+    },
+    select: function(info) {
+      // Only allow adding custom (ScheduleEvent), NOT visits!
+      const title = prompt("Enter custom event title (not a patient visit):");
+      if (!title) return calendar.unselect();
+
+      const color = prompt("Color (e.g., #f00)?", "#1e90ff") || "#1e90ff";
+      const newEvent = {
+        title,
+        start: info.startStr,
+        end: info.endStr,
+        resourceId: info.resource.id,
+        color
+      };
+
+      fetch('/api/schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newEvent)
+      })
+      .then(r => r.json())
+      .then(data => {
+        newEvent.id = "event-" + data.id;
+        calendar.addEvent(newEvent);
+      });
+      calendar.unselect();
+    },
+    eventChange: function(info) {
+      // Only allow updating custom events (not visits)
+      if (info.event.id.startsWith('visit-')) {
+        alert("You cannot modify patient visits from the calendar. Use Visits tab.");
+        info.revert();
+        return;
+      }
+      const e = info.event;
+      fetch(`/api/schedule/${e.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: e.title,
+          start: e.start.toISOString(),
+          end: e.end.toISOString(),
+          resourceId: e.getResource().id,
+          color: e.backgroundColor
+        })
+      });
+    },
+    eventClick: function(info) {
+      // Only allow deleting custom events (not visits)
+      if (info.event.id.startsWith('visit-')) {
+        alert("You cannot delete patient visits from the calendar. Use Visits tab.");
+        return;
+      }
+      if (confirm("Delete this event?")) {
+        fetch(`/api/schedule/${info.event.id}`, {
+          method: 'DELETE'
+        }).then(() => {
+          info.event.remove();
+        });
+      }
+    }
+  });
+
+  setTimeout(() => {
+    calendar.render();
+    window.dispatchEvent(new Event('resize'));
+  }, 0);
+});
+</script>
+{% endblock %}

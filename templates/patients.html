@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Patients - Clinic Scheduler{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3 col-lg-2 mb-4">
+      <div class="list-group shadow rounded-4">
+        <a href="{{ url_for('patients_list') }}" class="list-group-item list-group-item-action active">👥 Patients</a>
+        <a href="{{ url_for('new_patient') }}" class="list-group-item list-group-item-action">+ Add New Patient</a>
+        <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action">🏠 Dashboard</a>
+        <a href="{{ url_for('calendar') }}" class="list-group-item list-group-item-action">📅 Calendar</a>
+        <a href="{{ url_for('uploads_list') }}" class="list-group-item list-group-item-action">📤 Uploads</a>
+        <a href="{{ url_for('therapists_list') }}" class="list-group-item list-group-item-action">🧑‍⚕️ Therapists</a>
+        <a href="{{ url_for('physicians_list') }}" class="list-group-item list-group-item-action">👨‍⚕️ Physicians</a>
+        <a href="{{ url_for('insurance_list') }}" class="list-group-item list-group-item-action">🏦 Insurance</a>
+        <a href="{{ url_for('billing_overview') }}" class="list-group-item list-group-item-action">💳 Billing</a>
+        <a href="{{ url_for('logout') }}" class="list-group-item list-group-item-action text-danger">Logout</a>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="col-md-9 col-lg-10">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Patients</h2>
+        <a href="{{ url_for('new_patient') }}" class="btn btn-primary">+ New Patient</a>
+      </div>
+      <div class="card shadow-sm rounded-4 mb-5">
+        <div class="card-header bg-primary text-white rounded-top-4">
+          <h2 class="mb-0" style="font-size:1.6rem;letter-spacing:.03em;">
+            🧍 Patient Roster
+          </h2>
+        </div>
+        <div class="card-body">
+          {% if patients %}
+          <div class="table-responsive">
+            <table class="table table-striped align-middle">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>DOB</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Insurance</th>
+                  <th>Physician</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for p in patients %}
+                <tr>
+                  <td>
+                    <a href="{{ url_for('pt_builder_patient', patient_id=p.id) }}">{{ p.first_name }} {{ p.last_name }}</a>
+                  </td>
+                  <td>{{ p.dob.strftime('%Y-%m-%d') if p.dob else '' }}</td>
+                  <td>{{ p.phone or '' }}</td>
+                  <td>{{ p.email or '' }}</td>
+                  <td>{{ p.insurance.company_name if p.insurance else '' }}</td>
+                  <td>
+                    {% if p.physician %}
+                      Dr. {{ p.physician.first_name }} {{ p.physician.last_name }}
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{{ url_for('pt_builder_patient', patient_id=p.id) }}" class="btn btn-sm btn-outline-primary">PT Builder</a>
+                    <a href="{{ url_for('edit_patient', patient_id=p.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="alert alert-warning mb-0">
+            No patients found. You can add new patients from the patient management section.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

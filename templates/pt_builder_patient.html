@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <h2>PT Builder for {{ patient.first_name }} {{ patient.last_name }}</h2>
+  <div>Age: {{ age }}</div>
+  <!-- Insert your PT builder form here -->
+  <p>This is the PT builder for {{ patient.first_name }}. Customize this page as needed.</p>
+</div>
+{% endblock %}

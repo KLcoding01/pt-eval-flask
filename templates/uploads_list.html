@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Uploaded Files{% endblock %}
+{% block content %}
+<h2>Uploaded Files</h2>
+<a href="{{ url_for('upload_file') }}" class="btn btn-primary mb-3">+ Upload File</a>
+<table class="table table-bordered">
+  <thead>
+    <tr><th>File</th><th>Patient</th><th>Visit</th><th>Uploaded</th><th>Actions</th></tr>
+  </thead>
+  <tbody>
+    {% for a in attachments %}
+    <tr>
+      <td>{{ a.filename }}</td>
+      <td>
+        {% if a.patient %}
+          {{ a.patient.first_name }} {{ a.patient.last_name }}
+        {% else %}
+          —
+        {% endif %}
+      </td>
+      <td>
+        {% if a.visit %}
+          {{ a.visit.visit_type }}
+        {% else %}
+          —
+        {% endif %}
+      </td>
+      <td>{{ a.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</td>
+      <td>
+        <a href="{{ url_for('download_file', upload_id=a.id) }}" class="btn btn-sm btn-success">Download</a>
+        <form method="POST" action="{{ url_for('delete_file', upload_id=a.id) }}" style="display:inline;">
+          <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this file?')">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

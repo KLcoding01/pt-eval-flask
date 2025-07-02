@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Add Insurance - Clinic Scheduler{% endblock %}
+{% block content %}
+<h1>Add Insurance</h1>
+<form method="POST" action="">
+  <div class="mb-3">
+    <label for="company_name" class="form-label">Company Name *</label>
+    <input type="text" id="company_name" name="company_name" class="form-control" required />
+  </div>
+  <div class="mb-3">
+    <label for="plan_name" class="form-label">Plan Name</label>
+    <input type="text" id="plan_name" name="plan_name" class="form-control" />
+  </div>
+  <div class="mb-3">
+    <label for="phone" class="form-label">Phone</label>
+    <input type="tel" id="phone" name="phone" class="form-control" />
+  </div>
+  <button type="submit" class="btn btn-primary">Add Insurance</button>
+  <a href="{{ url_for('insurance_list') }}" class="btn btn-secondary ms-2">Cancel</a>
+</form>
+{% endblock %}

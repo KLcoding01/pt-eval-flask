@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Therapists | Clinic Scheduler{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Therapist Roster</h2>
+    <a href="{{ url_for('therapists_add') }}" class="btn btn-primary mb-3">Add Therapist</a>
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle">
+          <thead class="table-light">
+              <tr>
+                  <th>Name</th>
+                  <th>Credentials</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Actions</th>
+              </tr>
+          </thead>
+          <tbody>
+          {% for t in therapists %}
+              <tr>
+                  <td>{{ t.first_name }} {{ t.last_name }}</td>
+                  <td>{{ t.credentials }}</td>
+                  <td>{{ t.phone }}</td>
+                  <td>{{ t.email }}</td>
+                  <td>
+                      <a href="{{ url_for('therapists_edit', therapist_id=t.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                      <form action="{{ url_for('therapists_delete', therapist_id=t.id) }}" method="post" style="display:inline;">
+                          <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this therapist?')">Delete</button>
+                      </form>
+                  </td>
+              </tr>
+          {% else %}
+              <tr>
+                  <td colspan="5" class="text-center text-muted">No therapists found.</td>
+              </tr>
+          {% endfor %}
+          </tbody>
+      </table>
+    </div>
+</div>
+{% endblock %}
+

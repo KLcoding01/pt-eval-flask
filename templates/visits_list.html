@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Visits{% endblock %}
+{% block content %}
+<h2>Visit Schedule</h2>
+<a href="{{ url_for('new_visit') }}" class="btn btn-primary mb-3">+ New Visit</a>
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>Date</th><th>Patient</th><th>Therapist</th><th>Type</th><th>Status</th><th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for v in visits %}
+    <tr>
+      <td>{{ v.visit_date.strftime('%Y-%m-%d %I:%M %p') }}</td>
+      <td>{{ v.patient.first_name }} {{ v.patient.last_name }}</td>
+      <td>{{ v.therapist.first_name }} {{ v.therapist.last_name }}</td>
+      <td>{{ v.visit_type }}</td>
+      <td>{{ v.status }}</td>
+      <td>
+        <a href="{{ url_for('edit_visit', visit_id=v.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+        <form method="POST" action="{{ url_for('delete_visit', visit_id=v.id) }}" style="display:inline;">
+          <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this visit?')">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <h2>{{ 'Edit Therapist' if therapist else 'Add Therapist' }}</h2>
+  <form method="post">
+    <div class="mb-3">
+      <label>First Name</label>
+      <input type="text" name="first_name" class="form-control" value="{{ therapist.first_name if therapist else '' }}">
+    </div>
+    <div class="mb-3">
+      <label>Last Name</label>
+      <input type="text" name="last_name" class="form-control" value="{{ therapist.last_name if therapist else '' }}">
+    </div>
+    <div class="mb-3">
+      <label>Credentials</label>
+      <input type="text" name="credentials" class="form-control" value="{{ therapist.credentials if therapist else '' }}">
+    </div>
+    <div class="mb-3">
+      <label>Phone</label>
+      <input type="text" name="phone" class="form-control" value="{{ therapist.phone if therapist else '' }}">
+    </div>
+    <div class="mb-3">
+      <label>Email</label>
+      <input type="email" name="email" class="form-control" value="{{ therapist.email if therapist else '' }}">
+    </div>
+    <button type="submit" class="btn btn-success">{{ 'Update' if therapist else 'Add Therapist' }}</button>
+    <a href="{{ url_for('therapists_list') }}" class="btn btn-secondary ms-2">Cancel</a>
+  </form>
+</div>
+{% endblock %}
