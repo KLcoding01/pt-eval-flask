@@ -37,6 +37,45 @@ OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 MODEL = "gpt-4o-mini"
 
+# ========== AUTH ==========
+USERS = {"kelvin": "Thanh123!", "test1": "test1"}
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'username' not in session:
+            flash("Please log in to access this page.", "warning")
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        if username in USERS and USERS[username] == password:
+            session['username'] = username
+            flash(f"Welcome back, {username}!", "success")
+            return redirect(url_for('dashboard'))
+        else:
+            error = "Invalid username or password."
+    return render_template('login.html', error=error)
+
+@app.route('/logout')
+@login_required
+def logout():
+    session.pop('username', None)
+    flash("You have been logged out.", "info")
+    return redirect(url_for('login'))
+
+@app.route('/')
+def home():
+    if 'username' in session:
+        return redirect(url_for('dashboard'))
+    else:
+        return redirect(url_for('login'))
+
 # ========== GOOGLE CALENDAR CONFIG ==========
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
@@ -106,44 +145,7 @@ def api_events():
             "end": item['end'].get('dateTime', item['end'].get('date')),
         })
     return jsonify(events)
-# ========== AUTH ==========
-USERS = {"kelvin": "Thanh123!", "test1": "test1"}
-def login_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if 'username' not in session:
-            flash("Please log in to access this page.", "warning")
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    error = None
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        if username in USERS and USERS[username] == password:
-            session['username'] = username
-            flash(f"Welcome back, {username}!", "success")
-            return redirect(url_for('dashboard'))
-        else:
-            error = "Invalid username or password."
-    return render_template('login.html', error=error)
-
-@app.route('/logout')
-@login_required
-def logout():
-    session.pop('username', None)
-    flash("You have been logged out.", "info")
-    return redirect(url_for('login'))
-
-@app.route('/')
-def home():
-    if 'username' in session:
-        return redirect(url_for('dashboard'))
-    else:
-        return redirect(url_for('login'))
 
 # ========== DASHBOARD & MAIN LISTS ==========
 @app.route('/dashboard')
@@ -407,6 +409,7 @@ def api_events():
         }
     ]
     return jsonify(events)
+    
 @app.route('/api/providers')
 def api_providers():
     therapists = Therapist.query.all()
