@@ -39,7 +39,6 @@ MODEL = "gpt-4o-mini"
 
 # ========== GOOGLE CALENDAR CONFIG ==========
 SCOPES = ['https://www.googleapis.com/auth/calendar']
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"  # Remove this line in production!
 
 # ========== GOOGLE CALENDAR OAUTH ==========
 @app.route('/authorize')
@@ -85,7 +84,28 @@ def get_google_calendar_service():
     creds = Credentials(**creds_data)
     service = build('calendar', 'v3', credentials=creds)
     return service
-
+    
+@app.route('/api/events')
+@login_required
+def api_events():
+    service = get_google_calendar_service()
+    if not service:
+        return jsonify([])  # or return error
+    events_result = service.events().list(
+        calendarId='primary',
+        timeMin=datetime.utcnow().isoformat() + 'Z',
+        maxResults=50, singleEvents=True,
+        orderBy='startTime'
+    ).execute()
+    events = []
+    for item in events_result.get('items', []):
+        events.append({
+            "id": item['id'],
+            "title": item['summary'],
+            "start": item['start'].get('dateTime', item['start'].get('date')),
+            "end": item['end'].get('dateTime', item['end'].get('date')),
+        })
+    return jsonify(events)
 # ========== AUTH ==========
 USERS = {"kelvin": "Thanh123!", "test1": "test1"}
 def login_required(f):
