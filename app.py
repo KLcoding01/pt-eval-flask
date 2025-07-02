@@ -151,9 +151,7 @@ def api_events():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    total_billing = db.session.query(db.func.coalesce(db.func.sum(Billing.amount), 0)).scalar()
-    recent_visits = Visit.query.order_by(Visit.visit_date.desc()).limit(10).all()
-    return render_template('dashboard.html', total_billing=total_billing, visits=recent_visits)
+    return render_template('dashboard.html')
 
 @app.route('/patients')
 @login_required
