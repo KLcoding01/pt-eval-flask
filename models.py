@@ -90,11 +90,13 @@ class Visit(db.Model):
     therapist_id = db.Column(db.Integer, db.ForeignKey("therapists.id"), nullable=False)
     visit_date = db.Column(db.DateTime, default=datetime.utcnow)
     end_time = db.Column(db.DateTime)
+    duration = db.Column(db.Integer, default=60)  # in minutes, optional but useful
     visit_type = db.Column(db.String(64))
     status = db.Column(db.String(32), default="Scheduled")
     cpt_code_id = db.Column(db.Integer, db.ForeignKey("cpt_codes.id"), nullable=True)
     icd10_code_id = db.Column(db.Integer, db.ForeignKey("icd10_codes.id"), nullable=True)
     notes = db.Column(db.Text)
+    google_event_id = db.Column(db.String(128), nullable=True)  # <--- ADD THIS
 
     # Relationships
     billing = db.relationship("Billing", uselist=False, back_populates="visit", cascade="all, delete-orphan")
@@ -106,7 +108,7 @@ class Visit(db.Model):
 
     def __repr__(self):
         return f"<Visit {self.visit_type} for {self.patient.first_name} {self.patient.last_name}>"
-
+        
 class Billing(db.Model):
     __tablename__ = "billings"
     id = db.Column(db.Integer, primary_key=True)

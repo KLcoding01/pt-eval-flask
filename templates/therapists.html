@@ -1,36 +1,43 @@
 {% extends "base.html" %}
 {% block title %}Therapists - Clinic Scheduler{% endblock %}
 {% block content %}
-<h1>Therapists</h1>
-<a href="{{ url_for('therapists_add') }}" class="btn btn-success mb-3">Add Therapist</a>
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Therapists</h2>
+    <a href="{{ url_for('therapists_add') }}" class="btn btn-success"><i class="bi bi-person-plus"></i> Add Therapist</a>
+  </div>
 
-{% if therapists %}
-<table class="table table-hover">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Credentials</th>
-      <th>Email</th>
-      <th>Phone</th>
-      <th>Availability</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
+  {% if therapists %}
+  <div class="row g-4">
     {% for t in therapists %}
-    <tr>
-      <td>{{ t.first_name }} {{ t.last_name }}</td>
-      <td>{{ t.credentials }}</td>
-      <td>{{ t.email }}</td>
-      <td>{{ t.phone }}</td>
-      <td>{{ t.availability }}</td>
-      <td><a href="#" class="btn btn-sm btn-outline-primary disabled">Edit (TODO)</a></td>
-    </tr>
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm rounded-4 h-100 therapist-card">
+        <div class="card-body d-flex">
+          <div class="avatar bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:60px; height:60px; font-size:2rem;">
+            {{ t.first_name[0] }}{{ t.last_name[0] }}
+          </div>
+          <div class="flex-grow-1">
+            <h5 class="card-title mb-1">{{ t.first_name }} {{ t.last_name }}</h5>
+            <p class="mb-1"><i class="bi bi-award me-1"></i> <strong>{{ t.credentials or "N/A" }}</strong></p>
+            <div class="mb-1 text-muted small">
+              <i class="bi bi-envelope me-1"></i> {{ t.email or "-" }}<br>
+              <i class="bi bi-telephone me-1"></i> {{ t.phone or "-" }}
+            </div>
+            <div class="mb-1">
+              <i class="bi bi-clock-history me-1"></i>
+              <span class="badge bg-light text-dark">{{ t.availability or "—" }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer bg-white border-0 d-flex justify-content-end">
+          <a href="#" class="btn btn-outline-primary btn-sm disabled"><i class="bi bi-pencil"></i> Edit (TODO)</a>
+        </div>
+      </div>
+    </div>
     {% endfor %}
-  </tbody>
-</table>
-{% else %}
-<p>No therapists found.</p>
-{% endif %}
+  </div>
+  {% else %}
+    <div class="alert alert-info text-center mt-4">No therapists found.</div>
+  {% endif %}
+</div>
 {% endblock %}
-

@@ -1,14 +1,38 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>{{ patient.first_name }} {{ patient.last_name }}</h2>
-<ul class="list-group mb-3">
-  <li class="list-group-item"><strong>DOB:</strong> {{ patient.dob }}</li>
-  <li class="list-group-item"><strong>Gender:</strong> {{ patient.gender }}</li>
-  <li class="list-group-item"><strong>Address:</strong> {{ patient.address }}</li>
-  <li class="list-group-item"><strong>Phone:</strong> {{ patient.phone }}</li>
-  <li class="list-group-item"><strong>Email:</strong> {{ patient.email }}</li>
-  <li class="list-group-item"><strong>Notes:</strong> {{ patient.notes }}</li>
-</ul>
-<a href="{{ url_for('patient_list') }}" class="btn btn-secondary">Back</a>
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="card shadow-lg rounded-4">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center mb-4">
+            <div class="avatar bg-primary text-white rounded-circle me-3" style="width:64px; height:64px; display:flex; align-items:center; justify-content:center; font-size:2rem;">
+              <span>{{ patient.first_name[0] }}{{ patient.last_name[0] }}</span>
+            </div>
+            <div>
+              <h3 class="mb-0">{{ patient.first_name }} {{ patient.last_name }}</h3>
+              <small class="text-muted">Patient ID: {{ patient.id }}</small>
+            </div>
+          </div>
+          <div class="row gy-3">
+            <div class="col-md-6">
+              <div class="mb-2"><i class="bi bi-calendar-date me-2"></i><strong>DOB:</strong> {{ patient.dob or "-" }}</div>
+              <div class="mb-2"><i class="bi bi-gender-ambiguous me-2"></i><strong>Gender:</strong> {{ patient.gender or "-" }}</div>
+              <div class="mb-2"><i class="bi bi-geo-alt me-2"></i><strong>Address:</strong> {{ patient.address or "-" }}</div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-2"><i class="bi bi-telephone me-2"></i><strong>Phone:</strong> {{ patient.phone or "-" }}</div>
+              <div class="mb-2"><i class="bi bi-envelope me-2"></i><strong>Email:</strong> {{ patient.email or "-" }}</div>
+              <div class="mb-2"><i class="bi bi-chat-left-text me-2"></i><strong>Notes:</strong> {{ patient.notes or "-" }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
+          <a href="{{ url_for('patients_list') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to List</a>
+          <a href="{{ url_for('edit_patient', patient_id=patient.id) }}" class="btn btn-primary"><i class="bi bi-pencil"></i> Edit</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
-
