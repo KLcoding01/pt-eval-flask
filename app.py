@@ -214,19 +214,29 @@ def dashboard():
 
 # 1. List all patients
 @app.route('/patients')
+@login_required
 def patients_list():
     patients = Patient.query.all()
     return render_template('patients.html', patients=patients)
 
 # 2. Add new patient
 @app.route('/patients/new', methods=['GET', 'POST'])
+@login_required
 def new_patient():
+    insurances = Insurance.query.all()
+    physicians = Physician.query.all()
     if request.method == 'POST':
         first_name = request.form.get('first_name')
         last_name = request.form.get('last_name')
-        dob = request.form.get('dob')
+        dob = request.form.get('dob') or None
         phone = request.form.get('phone')
+        email = request.form.get('email')
         address = request.form.get('address')
+        insurance_id = request.form.get('insurance_id') or None
+        physician_id = request.form.get('physician_id') or None
+
+        # Convert dob to date if provided
+        dob_date = datetime.strptime(dob, "%Y-%m-%d").date() if dob else None
 
         if not first_name or not last_name:
             flash("First name and last name are required.", "danger")
@@ -235,31 +245,43 @@ def new_patient():
         patient = Patient(
             first_name=first_name,
             last_name=last_name,
-            dob=dob,
+            dob=dob_date,
             phone=phone,
-            address=address
+            email=email,
+            address=address,
+            insurance_id=insurance_id if insurance_id else None,
+            physician_id=physician_id if physician_id else None
         )
         db.session.add(patient)
         db.session.commit()
         flash("New patient added!", "success")
         return redirect(url_for('patients_list'))
-    return render_template('patient_form.html', patient=None)
-
+    return render_template('patient_form.html', patient=None, insurances=insurances, physicians=physicians)
+    
 # 3. Edit patient
 @app.route('/patients/<int:patient_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_patient(patient_id):
     patient = Patient.query.get_or_404(patient_id)
+    insurances = Insurance.query.all()
+    physicians = Physician.query.all()
     if request.method == 'POST':
         patient.first_name = request.form.get('first_name')
         patient.last_name = request.form.get('last_name')
-        patient.dob = request.form.get('dob')
+        dob = request.form.get('dob') or None
+        patient.dob = datetime.strptime(dob, "%Y-%m-%d").date() if dob else None
         patient.phone = request.form.get('phone')
+        patient.email = request.form.get('email')
         patient.address = request.form.get('address')
+        insurance_id = request.form.get('insurance_id') or None
+        physician_id = request.form.get('physician_id') or None
+        patient.insurance_id = insurance_id if insurance_id else None
+        patient.physician_id = physician_id if physician_id else None
 
         db.session.commit()
         flash("Patient updated!", "success")
         return redirect(url_for('patients_list'))
-    return render_template('patient_form.html', patient=patient)
+    return render_template('patient_form.html', patient=patient, insurances=insurances, physicians=physicians)
     
 # ========== VISIT CRUD WITH GOOGLE CALENDAR SYNC ==========
 @app.route('/visits')
