@@ -1,5 +1,6 @@
 # ========== IMPORTS ==========
 import os
+import io
 from flask import (
     Flask, request, jsonify, redirect, url_for, flash,
     render_template, send_file, session
@@ -12,6 +13,11 @@ from reportlab.pdfgen import canvas
 from datetime import date, datetime, timedelta
 from io import BytesIO
 from functools import wraps
+
+# GOOGLE CALENDAR IMPORTS
+from google_auth_oauthlib.flow import Flow
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
 
 # ========== DB MODELS ==========
 from models import db, Patient, Attachment, Billing, Visit, Therapist, Physician, Insurance, ScheduleEvent
@@ -32,6 +38,54 @@ OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 MODEL = "gpt-4o-mini"
 
+# ========== GOOGLE CALENDAR CONFIG ==========
+SCOPES = ['https://www.googleapis.com/auth/calendar']
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"  # Remove this line in production!
+
+# ========== GOOGLE CALENDAR OAUTH ==========
+@app.route('/authorize')
+def authorize():
+    flow = Flow.from_client_secrets_file(
+        'credentials.json',
+        scopes=SCOPES,
+        redirect_uri=url_for('oauth2callback', _external=True)
+    )
+    authorization_url, state = flow.authorization_url(
+        access_type='offline',
+        include_granted_scopes='true'
+    )
+    session['state'] = state
+    return redirect(authorization_url)
+
+@app.route('/oauth2callback')
+def oauth2callback():
+    state = session['state']
+    flow = Flow.from_client_secrets_file(
+        'credentials.json',
+        scopes=SCOPES,
+        state=state,
+        redirect_uri=url_for('oauth2callback', _external=True)
+    )
+    flow.fetch_token(authorization_response=request.url)
+    credentials = flow.credentials
+    session['credentials'] = {
+        'token': credentials.token,
+        'refresh_token': credentials.refresh_token,
+        'token_uri': credentials.token_uri,
+        'client_id': credentials.client_id,
+        'client_secret': credentials.client_secret,
+        'scopes': credentials.scopes
+    }
+    flash("Google Calendar connected!", "success")
+    return redirect(url_for('calendar'))
+
+def get_google_calendar_service():
+    creds_data = session.get('credentials')
+    if not creds_data:
+        return None
+    creds = Credentials(**creds_data)
+    service = build('calendar', 'v3', credentials=creds)
+    return service
 
 # ========== AUTH ==========
 USERS = {"kelvin": "Thanh123!", "test1": "test1"}
