@@ -1,5 +1,6 @@
 # ========== IMPORTS ==========
 import os
+import io
 from flask import (
     Flask, request, jsonify, redirect, url_for, flash,
     render_template, send_file, session
@@ -31,7 +32,7 @@ app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db.init_app(app)
 with app.app_context():
     db.create_all()
-    
+
 # ========== OPENAI ==========
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
@@ -66,6 +67,7 @@ def login():
 @login_required
 def logout():
     session.pop('username', None)
+    session.pop('credentials', None)
     flash("You have been logged out.", "info")
     return redirect(url_for('login'))
 
@@ -77,10 +79,11 @@ def home():
         return redirect(url_for('login'))
 
 # ========== GOOGLE CALENDAR CONFIG ==========
-SCOPES = ['https://www.googleapis.com/auth/calendar']
+SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
 # ========== GOOGLE CALENDAR OAUTH ==========
 @app.route('/authorize')
+@login_required
 def authorize():
     flow = Flow.from_client_secrets_file(
         'credentials.json',
@@ -95,8 +98,9 @@ def authorize():
     return redirect(authorization_url)
 
 @app.route('/oauth2callback')
+@login_required
 def oauth2callback():
-    state = session['state']
+    state = session.get('state')
     flow = Flow.from_client_secrets_file(
         'credentials.json',
         scopes=SCOPES,
@@ -114,40 +118,68 @@ def oauth2callback():
         'scopes': credentials.scopes
     }
     flash("Google Calendar connected!", "success")
-    return redirect(url_for('calendar'))
+    return redirect(url_for('dashboard'))
 
 def get_google_calendar_service():
     creds_data = session.get('credentials')
     if not creds_data:
         return None
     creds = Credentials(**creds_data)
+    # Refresh token if expired
+    if creds.expired and creds.refresh_token:
+        creds.refresh(Request())
+        session['credentials'] = {
+            'token': creds.token,
+            'refresh_token': creds.refresh_token,
+            'token_uri': creds.token_uri,
+            'client_id': creds.client_id,
+            'client_secret': creds.client_secret,
+            'scopes': creds.scopes
+        }
     service = build('calendar', 'v3', credentials=creds)
     return service
-    
+
+# API route for FullCalendar event fetching
 @app.route('/api/events')
 @login_required
 def api_events():
     service = get_google_calendar_service()
     if not service:
-        return jsonify([])  # or return error
-    events_result = service.events().list(
-        calendarId='primary',
-        timeMin=datetime.utcnow().isoformat() + 'Z',
-        maxResults=50, singleEvents=True,
-        orderBy='startTime'
-    ).execute()
-    events = []
-    for item in events_result.get('items', []):
-        events.append({
-            "id": item['id'],
-            "title": item['summary'],
-            "start": item['start'].get('dateTime', item['start'].get('date')),
-            "end": item['end'].get('dateTime', item['end'].get('date')),
-        })
-    return jsonify(events)
+        # Not authorized or no credentials, return sample events
+        sample_events = [
+            {"title": "Sample Event", "start": "2025-07-05T10:00:00", "end": "2025-07-05T12:00:00"},
+            {"title": "Another Event", "start": "2025-07-06"}
+        ]
+        return jsonify(sample_events)
 
+    try:
+        now = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
+        events_result = service.events().list(
+            calendarId='primary',
+            timeMin=now,
+            maxResults=50,
+            singleEvents=True,
+            orderBy='startTime'
+        ).execute()
+        events = events_result.get('items', [])
 
-# ========== DASHBOARD & MAIN LISTS ==========
+        calendar_events = []
+        for event in events:
+            start = event['start'].get('dateTime', event['start'].get('date'))
+            end = event['end'].get('dateTime', event['end'].get('date'))
+            calendar_events.append({
+                'title': event.get('summary', 'No Title'),
+                'start': start,
+                'end': end,
+            })
+        return jsonify(calendar_events)
+    except Exception as e:
+        # On error, fallback to sample
+        return jsonify([
+            {"title": "Error loading events", "start": datetime.utcnow().isoformat()}
+        ])
+
+# ========== DASHBOARD ==========
 @app.route('/dashboard')
 @login_required
 def dashboard():
