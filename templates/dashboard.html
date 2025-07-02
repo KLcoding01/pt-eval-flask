@@ -74,5 +74,10 @@
       <div id="flashes" style="max-width:600px;margin:20px auto;">
         {% for category, message in messages %}
           <div style="margin-bottom:8px;padding:12px;border-radius:6px;color:#fff;
-            background:{% if category=='success' %}#27ae60{% elif category=='info' %}#2980b9
-            {% elif category
+            background:
+              {% if category == 'success' %}#27ae60
+              {% elif category == 'info' %}#2980b9
+              {% elif category == 'danger' %}#c0392b
+              {% elif category == 'warning' %}#f39c12
+              {% else %}#222
+              {% endif %};
