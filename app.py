@@ -220,17 +220,32 @@ def api_patient_list():
     
 @app.route('/pt_save_to_patient', methods=['POST'])
 def pt_save_to_patient():
+    import json
     data = request.get_json()
-    patient_id = data.get('patient_id')
-    date = data.get('currentdate')  # or whatever date field you use
-    if not patient_id:
-        return jsonify({"error": "No patient selected!"}), 400
 
-    # Make sure you have a Visit or Evaluation model to save the data
+    # Get info from form fields
+    patient_id = int(data.get('patient_id'))
+    therapist_id = int(data.get('therapist_id', 1))   # Use actual therapist ID, or get from session/user
+    visit_date = data.get('currentdate')
+    if visit_date:
+        try:
+            visit_date = datetime.strptime(visit_date, '%m-%d-%Y')  # Or '%m/%d/%Y' based on your format
+        except ValueError:
+            visit_date = datetime.utcnow()
+    else:
+        visit_date = datetime.utcnow()
+
+    # Save full PT eval form as JSON in notes, or store individual fields if desired
+    notes = json.dumps(data)
+
+    # Now create the Visit object
     visit = Visit(
         patient_id=patient_id,
-        date=date,
-        data=json.dumps(data)  # or save fields you need
+        therapist_id=therapist_id,
+        visit_date=visit_date,
+        notes=notes,
+        visit_type='PT Evaluation',
+        status='Completed'
     )
     db.session.add(visit)
     db.session.commit()
@@ -539,7 +554,7 @@ PT_TEMPLATES = {
         "functional": "Supine Sit Up Test: Unable\n30 seconds Chair Sit to Stand: 6x w/ increase LBP\nSingle Leg Balance Test: B LE: <1 sec with loss of balance.\nSingle Heel Raises Test: Unremarkable\nWalking on Toes:\nWalking on Heels:\nFunctional Squat:",
         "special": "(-) Slump Test\n(-) Unilateral SLR Test\n(-) Double SLR\n(-) Spring/Central PA\n(-) Piriformis test\n(-) SI Cluster Test",
         "impairments": "Prolonged sitting: 5 min\nStanding: 5 min\nWalking: 5 min\nBending, sweeping, cleaning, lifting: 5 min.",
-        "goals": "Short-Term Goals (1–12 visits):\n1. Pt will report a reduction in low back pain to ≤1/10 to allow safe and comfortable participation in functional activities.\n2. Pt will demonstrate a ≥10% improvement in trunk AROM to enhance mobility and reduce risk of reinjury during daily tasks.\n3. Pt will improve gross LE strength by at least 0.5 muscle grade to enhance safety during ADLs and minimize pain/injury risk.\n4. Pt will self-report ≥50% improvement in functional limitations related to ADLs.\nLong-Term Goals (13–25 visits):\n1. Pt will demonstrate B LE strength of ≥4/5 to independently and safely perform all ADLs.\n2. Pt will complete ≥14 repetitions on the 30-second chair sit-to-stand test to reduce fall risk.\n3. Pt will tolerate ≥30 minutes of activity to safely resume household tasks without limitation.\n4. Pt will demonstrate independence with HEP, using proper body mechanics and strength to support safe return to ADLs without difficulty.",
+        "goals": "Short-Term Goals (1–12 visits):\n1. Pt will report a reduction in low back pain to ≤1/10 to allow sffffffffffffffffffffffffffffffffffffffffffffffffffffffffde and comfortable participation in functional activities.\n2. Pt will demonstrate a ≥10% improvement in trunk AROM to enhance mobility and reduce risk of reinjury during daily tasks.\n3. Pt will improve gross LE strength by at least 0.5 muscle grade to enhance safety during ADLs and minimize pain/injury risk.\n4. Pt will self-report ≥50% improvement in functional limitations related to ADLs.\nLong-Term Goals (13–25 visits):\n1. Pt will demonstrate B LE strength of ≥4/5 to independently and safely perform all ADLs.\n2. Pt will complete ≥14 repetitions on the 30-second chair sit-to-stand test to reduce fall risk.\n3. Pt will tolerate ≥30 minutes of activity to safely resume household tasks without limitation.\n4. Pt will demonstrate independence with HEP, using proper body mechanics and strength to support safe return to ADLs without difficulty.",
         "frequency": "1wk1, 2wk12",
         "intervention": "Manual Therapy (STM/IASTM/Joint Mob), Therapeutic Exercise, Therapeutic Activities, Neuromuscular Re-education, Gait Training, Balance Training, Pain Management Training, Modalities ice/heat 10-15min, E-Stim, Ultrasound, fall/injury prevention training, safety education/training, HEP education/training.",
         "procedures": "97161 Low Complexity\n97162 Moderate Complexity\n97163 High Complexity\n97140 Manual Therapy\n97110 Therapeutic Exercise\n97530 Therapeutic Activity\n97112 Neuromuscular Re-ed\n97116 Gait Training"
@@ -991,28 +1006,32 @@ def pt_generate_summary():
 @login_required
 def pt_generate_goals():
     f = request.json.get("fields", {})
-    prompt = (
-        "You are a clinical assistant helping a PT write documentation.\n"
-        "Using ONLY the provided eval info (summary, objective findings, strength, ROM, impairments, and functional limitations),\n"
-        "generate clinically-appropriate medicare compliant short-term and long-term PT goals.\n"
-        "Decide the most relevant and individualized goals based on the data, but ALWAYS follow the exact goal format below.\n"
-        "DO NOT add extra formatting, explanations, or ChatGPT commentary—output should be concise and in bullet list format only.\n"
-        "Adapt content of each goal based on eval details. Do not repeat or copy the examples unless appropriate.\n"
-        "FORMAT TO FOLLOW:\n"
-        "Short-Term Goals (1–12 visits):\n"
-        "1. [goal statement]\n"
-        "2. [goal statement]\n"
-        "3. [goal statement]\n"
-        "4. [goal statement]\n"
-        "Long-Term Goals (13–25 visits):\n"
-        "1. [goal statement]\n"
-        "2. [goal statement]\n"
-        "3. [goal statement]\n"
-        "4. [goal statement]\n"
-        "Only generate goals in this structure.\n"
-        "\nEval info:\n"
-        f"{f}"
-    )
+    prompt = f"""
+        You are a clinical assistant helping a PT write documentation.
+        Using ONLY the provided eval info (summary, objective findings, strength, ROM, impairments, and functional limitations),
+        generate clinically-appropriate medicare compliant short-term and long-term PT goals.
+        Decide the most relevant and individualized goals based on the data, but ALWAYS follow the exact goal format below.
+        DO NOT add extra formatting, explanations, or ChatGPT commentary—output should be concise and in bullet list format only.
+        Adapt content of each goal based on eval details. Do not repeat or copy the examples unless appropriate.
+
+        FORMAT TO FOLLOW:
+        Short-Term Goals (1–12 visits):
+        1. [goal statement]
+        2. [goal statement]
+        3. [goal statement]
+        4. [goal statement]
+        
+        Long-Term Goals (13–25 visits):
+        1. [goal statement]
+        2. [goal statement]
+        3. [goal statement]
+        4. [goal statement]
+
+        Only generate goals in this structure.
+
+        Eval info:
+        {f}
+        """
     result = gpt_call(prompt, max_tokens=350)
     return jsonify({"result": result})
 
