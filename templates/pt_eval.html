@@ -1,176 +1,24 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container-fluid px-0">
-  <h1 class="mb-2">Welcome, {{ session['username'] }}!</h1>
-
-  <ul class="nav nav-tabs mb-3" id="mainTab" role="tablist">
-    <li class="nav-item">
-      <a class="nav-link active" id="pt-tab-link" data-bs-toggle="tab" href="#pt-tab-panel" role="tab">PT Eval Builder</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" id="ot-tab-link" data-bs-toggle="tab" href="#ot-tab-panel" role="tab">OT Eval Builder</a>
-    </li>
+<div class="container-fluid">
+  <ul class="nav nav-tabs" id="pt-inner-tab" role="tablist">
+    <li class="nav-item"><a class="nav-link active" id="tab1-link" data-bs-toggle="tab" href="#tab1" role="tab">Patient Info</a></li>
+    <li class="nav-item"><a class="nav-link" id="tab2-link" data-bs-toggle="tab" href="#tab2" role="tab">History</a></li>
+    <li class="nav-item"><a class="nav-link" id="tab3-link" data-bs-toggle="tab" href="#tab3" role="tab">Pain</a></li>
   </ul>
-
-  <div class="tab-content" id="mainTabContent">
-    <!-- PT EVAL BUILDER TAB -->
-    <div class="tab-pane fade show active" id="pt-tab-panel" role="tabpanel">
-      <h2>PT Eval Builder</h2>
-      <div class="d-flex align-items-center mb-3">
-        <label class="fw-bold me-2">Template:</label>
-        <select id="pt-template-select" class="form-select w-auto me-2"></select>
-        <button id="pt-load-template-btn" class="btn btn-outline-primary btn-sm me-1">Load</button>
-        <button id="pt-save-word-btn" class="btn btn-info btn-sm me-1">Export Word</button>
-        <button id="pt-save-pdf-btn" class="btn btn-danger btn-sm me-1">Export PDF</button>
-        <span id="pt-status-msg" class="ms-3"></span>
-      </div>
-      <!-- INNER TABS -->
-      <ul class="nav nav-tabs mb-2" id="pt-inner-tab" role="tablist">
-        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#pt-patientinfo" role="tab">Patient Info</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-history" role="tab">History</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-pain" role="tab">Pain</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-objective" role="tab">Objective</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-diffdx" role="tab">Diff Dx</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-summary" role="tab">Assessment Summary</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-plan" role="tab">Plan</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-dailynote" role="tab">Daily Note</a></li>
-      </ul>
-      <form id="pt-evalform">
-        <div class="tab-content">
-          <!-- Patient Info -->
-          <div class="tab-pane fade show active" id="pt-patientinfo" role="tabpanel">
-            <div class="row mb-2">
-              <div class="col"><input name="name" id="pt_name" class="form-control" placeholder="Patient Name"></div>
-              <div class="col">
-                <select name="gender" id="pt_gender" class="form-select">
-                  <option>Female</option>
-                  <option>Male</option>
-                </select>
-              </div>
-              <div class="col"><input name="dob" id="pt_dob" class="form-control" placeholder="DOB (MM/DD/YYYY)"></div>
-              <div class="col"><input name="age" id="pt_age" class="form-control" placeholder="Age"></div>
-            </div>
-            <div class="row">
-              <div class="col"><input name="currentdate" id="pt_currentdate" class="form-control" placeholder="Current Date"></div>
-            </div>
-          </div>
-          <!-- History -->
-          <div class="tab-pane fade" id="pt-history" role="tabpanel">
-            <textarea name="meddiag" id="pt_meddiag" class="form-control mb-2" placeholder="Medical Diagnosis"></textarea>
-            <textarea name="history" id="pt_history" class="form-control mb-2" placeholder="Medical History/HNP"></textarea>
-            <textarea name="subjective" id="pt_subjective" class="form-control mb-2" placeholder="Subjective (HPI)"></textarea>
-            <textarea name="meds" id="pt_meds" class="form-control mb-2" placeholder="Current Medication(s)"></textarea>
-            <textarea name="tests" id="pt_tests" class="form-control mb-2" placeholder="Diagnostic Test(s)"></textarea>
-            <textarea name="dme" id="pt_dme" class="form-control mb-2" placeholder="DME/Assistive Device"></textarea>
-            <textarea name="plof" id="pt_plof" class="form-control mb-2" placeholder="PLOF"></textarea>
-          </div>
-          <!-- Pain -->
-          <div class="tab-pane fade" id="pt-pain" role="tabpanel">
-            <input name="pain_location" id="pt_pain_location" class="form-control mb-2" placeholder="Area/Location of Injury">
-            <input name="pain_onset" id="pt_pain_onset" class="form-control mb-2" placeholder="Onset/Exacerbation Date">
-            <input name="pain_condition" id="pt_pain_condition" class="form-control mb-2" placeholder="Condition of Injury">
-            <input name="pain_mechanism" id="pt_pain_mechanism" class="form-control mb-2" placeholder="Mechanism of Injury">
-            <input name="pain_rating" id="pt_pain_rating" class="form-control mb-2" placeholder="Pain Rating (P/B/W)">
-            <input name="pain_frequency" id="pt_pain_frequency" class="form-control mb-2" placeholder="Pain Frequency">
-            <input name="pain_description" id="pt_pain_description" class="form-control mb-2" placeholder="Description">
-            <input name="pain_aggravating" id="pt_pain_aggravating" class="form-control mb-2" placeholder="Aggravating Factor">
-            <input name="pain_relieved" id="pt_pain_relieved" class="form-control mb-2" placeholder="Relieved By">
-            <input name="pain_interferes" id="pt_pain_interferes" class="form-control mb-2" placeholder="Interferes With">
-          </div>
-          <!-- Objective -->
-          <div class="tab-pane fade" id="pt-objective" role="tabpanel">
-            <textarea name="posture" id="pt_posture" class="form-control mb-2" rows="7" placeholder="Posture"></textarea>
-            <textarea name="rom" id="pt_rom" class="form-control mb-2" rows="7" placeholder="ROM"></textarea>
-            <textarea name="strength" id="pt_strength" class="form-control mb-2" rows="7" placeholder="Muscle Strength Test"></textarea>
-            <textarea name="palpation" id="pt_palpation" class="form-control mb-2" rows="7" placeholder="Palpation"></textarea>
-            <textarea name="functional" id="pt_functional" class="form-control mb-2" rows="7" placeholder="Functional Test(s)"></textarea>
-            <textarea name="special" id="pt_special" class="form-control mb-2" rows="7" placeholder="Special Test(s)"></textarea>
-            <textarea name="impairments" id="pt_impairments" class="form-control mb-2" rows="7" placeholder="Current Functional Mobility Impairment(s)"></textarea>
-          </div>
-          <!-- Diff Dx -->
-          <div class="tab-pane fade" id="pt-diffdx" role="tabpanel">
-            <button type="button" id="pt-ai-generate-diffdx" class="btn btn-outline-success btn-sm mb-2">AI Generate</button>
-            <textarea name="diffdx" id="pt_diffdx" class="form-control" rows="8"></textarea>
-          </div>
-          <!-- Assessment Summary -->
-          <div class="tab-pane fade" id="pt-summary" role="tabpanel">
-            <button type="button" id="pt-ai-generate-summary" class="btn btn-outline-success btn-sm mb-2">AI Generate</button>
-            <textarea name="summary" id="pt_summary" class="form-control" rows="10"></textarea>
-          </div>
-          <!-- Plan -->
-          <div class="tab-pane fade" id="pt-plan" role="tabpanel">
-            <button type="button" id="pt-ai-generate-goals" class="btn btn-outline-success btn-sm mb-2">AI Generate Goals</button>
-            <textarea name="goals" id="pt_goals" class="form-control mb-2" rows="10"></textarea>
-            <input name="frequency" id="pt_frequency" class="form-control mb-2" placeholder="Frequency/Duration">
-            <textarea name="intervention" id="pt_intervention" class="form-control mb-2" placeholder="Intervention"></textarea>
-            <textarea name="procedures" id="pt_procedures" class="form-control mb-2" placeholder="Treatment Procedures"></textarea>
-          </div>
-          <!-- Daily Note -->
-          <div class="tab-pane fade" id="pt-dailynote" role="tabpanel">
-            <div class="mb-2">
-              <label class="fw-bold">Diagnosis:</label>
-              <input type="text" id="pt_daily_diagnosis" class="form-control" placeholder="Enter Diagnosis">
-            </div>
-            <div class="mb-2">
-              <label class="fw-bold">Interventions:</label>
-              <textarea id="pt_daily_interventions" class="form-control" rows="2" placeholder="Enter Interventions"></textarea>
-            </div>
-            <div class="mb-2">
-              <label class="fw-bold">Tx Tolerance:</label>
-              <textarea id="pt_daily_tolerance" class="form-control" rows="2" placeholder="Enter Tx Tolerance"></textarea>
-            </div>
-            <div class="mb-2">
-              <label class="fw-bold">Current Progress:</label>
-              <textarea id="pt_daily_progress" class="form-control" rows="2" placeholder="Enter Current Progress"></textarea>
-            </div>
-            <div class="mb-2">
-              <label class="fw-bold">Next Visit Plan:</label>
-              <textarea id="pt_daily_plan" class="form-control" rows="2" placeholder="Enter Next Visit Plan"></textarea>
-            </div>
-            <div class="mb-2">
-              <label class="fw-bold">Summary:</label>
-              <textarea id="pt_daily_summary" class="form-control" rows="4" placeholder="Daily summary will appear here"></textarea>
-            </div>
-            <button type="button" id="pt-generate-daily-summary" class="btn btn-outline-success btn-sm">Generate Daily Summary</button>
-            <span id="pt-daily-summary-status" class="ms-2"></span>
-          </div>
-        </div>
-        <!-- Signature Section -->
-        <div class="mb-3 mt-3">
-          <label class="fw-bold mb-2">Patient Signature:</label>
-          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ptSignatureModal">Tap to Sign</button>
-          <img id="pt-signature-preview" class="mt-2" style="display:none; max-width:250px; border:1px solid #ddd; border-radius:5px;">
-          <input type="hidden" name="pt_signature" id="pt_signature">
-        </div>
-      </form>
+  <div class="tab-content mt-2">
+    <div class="tab-pane fade show active" id="tab1" role="tabpanel">
+      <input class="form-control mb-2" placeholder="Patient Name">
+      <input class="form-control mb-2" placeholder="Current Date">
     </div>
-    <!-- OT TAB -->
-    <div class="tab-pane fade" id="ot-tab-panel" role="tabpanel">
-      <h2>OT Eval Builder</h2>
-      <p>OT Eval form coming soon…</p>
+    <div class="tab-pane fade" id="tab2" role="tabpanel">
+      <textarea class="form-control mb-2" placeholder="Medical History"></textarea>
+      <textarea class="form-control mb-2" placeholder="Subjective"></textarea>
+    </div>
+    <div class="tab-pane fade" id="tab3" role="tabpanel">
+      <input class="form-control mb-2" placeholder="Pain Location">
+      <input class="form-control mb-2" placeholder="Pain Rating">
     </div>
   </div>
 </div>
-<!-- PT Signature Modal (same as before) -->
-<div class="modal fade" id="ptSignatureModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Draw Your PT Signature</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body text-center">
-        <canvas id="pt-signature-pad" style="width:100%; height:120px; border:1px solid #ccc; border-radius:10px;"></canvas>
-        <button type="button" id="pt-clear-signature" class="btn btn-secondary btn-sm mt-2">Clear</button>
-      </div>
-      <div class="modal-footer">
-        <button type="button" id="pt-save-signature" class="btn btn-success" data-bs-dismiss="modal">Save Signature</button>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- SignaturePad JS (use CDN, as before) -->
-<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
-<!-- All your PT Builder JS logic here as previously given -->
-<!-- No additional tab JS required—Bootstrap handles tab switching. -->
 {% endblock %}
