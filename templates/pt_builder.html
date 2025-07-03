@@ -136,16 +136,13 @@
           </div>
         </div>
 
-        <!-- PT E-Signature Section -->
-        <div class="mb-3 mt-3">
-          <label class="fw-bold mb-2">Patient Signature:</label>
-          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ptSignatureModal">Tap to Sign</button>
-          <img id="pt-signature-preview" class="mt-2" style="display:none; max-width:250px; border:1px solid #ddd; border-radius:5px;">
-          <input type="hidden" name="pt_signature" id="pt_signature">
+        <!-- PT Save Eval -->
+        <div class="mb-3">
+          <button type="button" id="pt-save-btn" class="btn btn-success">Save Evaluation to Patient</button>
+          <span id="pt-save-status" class="ms-3"></span>
         </div>
       </form>
     </div>
-
     <!-- OT EVAL BUILDER TAB -->
     <div class="tab-pane fade" id="ot-tab-panel" role="tabpanel">
       <h2>OT Eval Builder</h2>
@@ -172,7 +169,65 @@
     </div>
   </div>
 </div>
+<!-- Patient Select Modal -->
+<div class="modal fade" id="ptSelectPatientModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Select Patient to Save Eval</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <select id="pt-patient-select" class="form-select">
+          <!-- Dynamically filled with patient names from backend -->
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="pt-save-patient-confirm" class="btn btn-primary" data-bs-dismiss="modal">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
 
+<!-- Save Button (somewhere on your form) -->
+<button id="pt-save-btn" class="btn btn-success btn-sm">Save to Patient</button>
+<div id="pt-save-status" style="margin-top:10px;"></div>
+
+<!-- Your script goes at the bottom! -->
+<script>
+  // ==== Save to Patient: Show Modal and Populate List ====
+  document.getElementById('pt-save-btn').onclick = () => {
+    // Fetch patient list
+    fetch('/api/patient_list')
+      .then(r => r.json())
+      .then(list => {
+        document.getElementById('pt-patient-select').innerHTML =
+          list.map(p => `<option value="${p.id}">${p.last_name}, ${p.first_name} (DOB: ${p.dob})</option>`).join('');
+        // Show modal
+        new bootstrap.Modal(document.getElementById('ptSelectPatientModal')).show();
+      });
+  };
+
+  document.getElementById('pt-save-patient-confirm').onclick = () => {
+    const patientId = document.getElementById('pt-patient-select').value;
+    const fields = ptGetFields();
+    fields['patient_id'] = patientId;
+    fetch('/pt_save_to_patient', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(fields)
+    })
+    .then(r => r.json())
+    .then(res => {
+      ptSetStatus(res.message || "Saved!", 'green');
+      document.getElementById('pt-save-status').textContent = "Saved!";
+    })
+    .catch(() => {
+      ptSetStatus('Error saving!', 'red');
+      document.getElementById('pt-save-status').textContent = "Error saving!";
+    });
+  };
+</script>
 <script>
   // ===== SignaturePad Setup (PT) =====
   let ptSignaturePad;

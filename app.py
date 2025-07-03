@@ -203,7 +203,48 @@ def api_events():
         return jsonify(events)
     except Exception as e:
         return jsonify([{"title": "Error loading events", "start": datetime.utcnow().isoformat()}])
+        
+@app.route('/api/patient_list')
+def api_patient_list():
+    patients = Patient.query.order_by(Patient.last_name).all()
+    return jsonify([
+        {
+            "id": p.id,
+            "first_name": p.first_name,
+            "last_name": p.last_name,
+            "dob": p.dob.strftime('%Y-%m-%d') if p.dob else ""
+        }
+        for p in patients
+    ])
+    
+@app.route('/pt_save_to_patient', methods=['POST'])
+def pt_save_to_patient():
+    data = request.get_json()
+    patient_id = data.get('patient_id')
+    date = data.get('currentdate')  # or other date field
+    form_data = data  # or strip out fields you want
 
+    if not patient_id:
+        return jsonify({"error": "No patient selected!"}), 400
+
+    # Example: create a Visit record
+    visit = Visit(
+        patient_id=patient_id,
+        date=date,
+        data=form_data  # store as JSON, or map to fields as needed
+    )
+    db.session.add(visit)
+    db.session.commit()
+    return jsonify({"message": "PT evaluation saved to patient!"})
+    
+@app.route('/edit_visit_date/<int:visit_id>', methods=['POST'])
+def edit_visit_date(visit_id):
+    new_date = request.form.get('date')
+    visit = Visit.query.get_or_404(visit_id)
+    visit.date = new_date
+    db.session.commit()
+    return redirect(url_for('patient_profile', patient_id=visit.patient_id))
+    
 # ========== DASHBOARD ==========
 @app.route('/dashboard')
 @login_required
@@ -282,7 +323,7 @@ def edit_patient(patient_id):
         flash("Patient updated!", "success")
         return redirect(url_for('patients_list'))
     return render_template('patient_form.html', patient=patient, insurances=insurances, physicians=physicians)
-    
+
 # ========== VISIT CRUD WITH GOOGLE CALENDAR SYNC ==========
 @app.route('/visits')
 @login_required
