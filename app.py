@@ -218,37 +218,44 @@ def api_patient_list():
     ])
     
 @app.route('/pt_save_to_patient', methods=['POST'])
+@login_required
 def pt_save_to_patient():
-    import json
     data = request.get_json()
+    patient_id = data.get('patient_id')
 
-    # Get info from form fields
-    patient_id = int(data.get('patient_id'))
-    therapist_id = int(data.get('therapist_id', 1))   # Use actual therapist ID, or get from session/user
-    visit_date = data.get('currentdate')
-    if visit_date:
-        try:
-            visit_date = datetime.strptime(visit_date, '%m-%d-%Y')  # Or '%m/%d/%Y' based on your format
-        except ValueError:
-            visit_date = datetime.utcnow()
-    else:
-        visit_date = datetime.utcnow()
-
-    # Save full PT eval form as JSON in notes, or store individual fields if desired
-    notes = json.dumps(data)
-
-    # Now create the Visit object
+    # Map form fields to Visit model fields!
     visit = Visit(
         patient_id=patient_id,
-        therapist_id=therapist_id,
-        visit_date=visit_date,
-        notes=notes,
+        therapist_id=current_user.id,  # or from data['therapist_id'] if you let user select
         visit_type='PT Evaluation',
-        status='Completed'
+        status='Completed',
+        visit_date=datetime.now(),
+        medical_diagnosis=data.get('meddiag'),
+        medical_history=data.get('history'),
+        subjective=data.get('subjective'),
+        pain=data.get('pain_description'),  # map as appropriate
+        objective=data.get('objective'),
+        assessment_summary=data.get('summary'),
+        goals=data.get('goals'),
+        frequency=data.get('frequency'),
+        intervention=data.get('intervention'),
+        treatment_procedures=data.get('procedures'),
+        # etc...
     )
     db.session.add(visit)
     db.session.commit()
-    return jsonify({"message": "PT evaluation saved to patient!"}), 200
+
+    # Save the PTNote and link to Visit
+    pt_note = PTNote(
+        patient_id=patient_id,
+        visit_id=visit.id,        # link note to visit!
+        content=data.get('summary'),
+        date_created=datetime.now()
+    )
+    db.session.add(pt_note)
+    db.session.commit()
+
+    return jsonify({"message": "PT Evaluation saved to patient as Visit and Note."})
     
     
 @app.route('/edit_visit_date/<int:visit_id>', methods=['POST'])
