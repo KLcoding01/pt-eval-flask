@@ -275,7 +275,7 @@ def view_visit(visit_id):
 @login_required
 def visit_list():
     visits = Visit.query.order_by(Visit.visit_date.desc()).all()
-    notes = PtNote.query.order_by(PtNote.created_at.desc()).all()  # Show all notes for all patients
+    notes = PTNote.query.order_by(PTNote.created_at.desc()).all()  # Show all notes for all patients
     return render_template("visit_list.html", visits=visits, notes=notes)
 
 @app.route("/visit/<int:visit_id>")
@@ -288,7 +288,7 @@ def view_visit_note(visit_id):
 @login_required
 def patient_notes(patient_id):
     patient = Patient.query.get_or_404(patient_id)
-    notes = PtNote.query.filter_by(patient_id=patient_id).order_by(PtNote.created_at.desc()).all()
+    notes = PTNote.query.filter_by(patient_id=patient_id).order_by(PTNote.created_at.desc()).all()
     visits = Visit.query.filter_by(patient_id=patient_id).order_by(Visit.date.desc()).all()
     return render_template(
         "patient_notes.html",
@@ -557,29 +557,33 @@ def uploads_list():
 @app.route('/uploads/new', methods=['GET', 'POST'])
 @login_required
 def upload_file():
+    patient_id = request.args.get('patient_id')  # Grab from URL if provided
     if request.method == 'POST':
         file = request.files.get('file')
-        patient_id = request.form.get('patient_id')
+        patient_id_form = request.form.get('patient_id') or patient_id
         visit_id = request.form.get('visit_id')
         if not file:
             flash("No file selected.", "danger")
-            return redirect(url_for('upload_file'))
+            return redirect(url_for('upload_file', patient_id=patient_id))
         filename = file.filename
         save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(save_path)
         attachment = Attachment(
             filename=filename,
             filepath=save_path,
-            patient_id=patient_id if patient_id else None,
+            patient_id=patient_id_form if patient_id_form else None,
             visit_id=visit_id if visit_id else None
         )
         db.session.add(attachment)
         db.session.commit()
         flash("File uploaded!", "success")
+        # If you want to return to patient's profile after upload:
+        if patient_id_form:
+            return redirect(url_for('patient_profile', patient_id=patient_id_form))
         return redirect(url_for('uploads_list'))
     patients = Patient.query.all()
     visits = Visit.query.order_by(Visit.visit_date.desc()).all()
-    return render_template('upload_form.html', patients=patients, visits=visits)
+    return render_template('upload_form.html', patients=patients, visits=visits, selected_patient_id=patient_id)
 
 @app.route('/uploads/<int:upload_id>/download')
 @login_required
@@ -599,6 +603,9 @@ def delete_file(upload_id):
         flash("File deleted.", "info")
     except Exception as e:
         flash(f"Error deleting file: {e}", "danger")
+    # Redirect to patient profile if possible, else uploads list
+    if attachment.patient_id:
+        return redirect(url_for('patient_profile', patient_id=attachment.patient_id))
     return redirect(url_for('uploads_list'))
     
 # ====== PT Section ======
