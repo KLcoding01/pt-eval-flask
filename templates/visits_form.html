@@ -1,104 +1,63 @@
 {% extends "base.html" %}
-{% block title %}Visit Form{% endblock %}
-
+{% block title %}New Visit{% endblock %}
 {% block content %}
-<div class="container my-4">
-  <div class="card shadow rounded-4 p-4">
-    <h3 class="mb-3">{{ 'Edit' if visit else 'New' }} PT Evaluation</h3>
-    <form method="POST" action="{{ url_for('save_visit', visit_id=visit.id if visit else None) }}">
-      {{ form.csrf_token }}
-
-      <!-- Patient Select -->
-      <div class="mb-3">
-        <label for="patient_id" class="form-label"><strong>Patient</strong></label>
-        <select class="form-select" id="patient_id" name="patient_id" required>
-          <option value="">Select a patient...</option>
-          {% for patient in patients %}
-          <option value="{{ patient.id }}"
-            {% if visit and visit.patient_id == patient.id %}selected{% endif %}>
-            {{ patient.last_name }}, {{ patient.first_name }} (DOB: {{ patient.dob }})
-          </option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <!-- Therapist Select -->
-      <div class="mb-3">
-        <label for="therapist_id" class="form-label"><strong>Therapist</strong></label>
-        <select class="form-select" id="therapist_id" name="therapist_id" required>
-          <option value="">Select a therapist...</option>
-          {% for therapist in therapists %}
-          <option value="{{ therapist.id }}"
-            {% if visit and visit.therapist_id == therapist.id %}selected{% endif %}>
-            {{ therapist.last_name }}, {{ therapist.first_name }}
-          </option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <!-- Date -->
-      <div class="mb-3">
-        <label for="date" class="form-label"><strong>Date</strong></label>
-        <input type="date" id="date" name="date" class="form-control"
-               value="{{ visit.date if visit else '' }}" required>
-      </div>
-
-      <hr>
-      <div class="mb-3">
-        <label class="form-label"><strong>Medical Diagnosis</strong></label>
-        <textarea class="form-control" name="medical_diagnosis" rows="2" required>{{ visit.medical_diagnosis if visit else '' }}</textarea>
-      </div>
-      <div class="mb-3">
-        <label class="form-label"><strong>Medical History/HNP</strong></label>
-        <textarea class="form-control" name="medical_history" rows="2">{{ visit.medical_history if visit else '' }}</textarea>
-      </div>
-      <div class="mb-3">
-        <label class="form-label"><strong>Subjective</strong></label>
-        <textarea class="form-control" name="subjective" rows="3">{{ visit.subjective if visit else '' }}</textarea>
-      </div>
-      <div class="mb-3">
-        <label class="form-label"><strong>Pain</strong></label>
-        <textarea class="form-control" name="pain" rows="4">{{ visit.pain if visit else '' }}</textarea>
-      </div>
-      <div class="mb-3">
-        <label class="form-label"><strong>Objective</strong></label>
-        <textarea class="form-control" name="objective" rows="5">{{ visit.objective if visit else '' }}</textarea>
-      </div>
-      <div class="mb-3">
-        <label class="form-label"><strong>Assessment Summary</strong></label>
-        <textarea class="form-control" name="assessment_summary" rows="3">{{ visit.assessment_summary if visit else '' }}</textarea>
-      </div>
-      <div class="mb-3">
-        <label class="form-label"><strong>Goals</strong></label>
-        <textarea class="form-control" name="goals" rows="4">{{ visit.goals if visit else '' }}</textarea>
-      </div>
-      <div class="mb-3">
-        <label class="form-label"><strong>Frequency</strong></label>
-        <input class="form-control" name="frequency" value="{{ visit.frequency if visit else '' }}">
-      </div>
-      <div class="mb-3">
-        <label class="form-label"><strong>Intervention</strong></label>
-        <textarea class="form-control" name="intervention" rows="3">{{ visit.intervention if visit else '' }}</textarea>
-      </div>
-      <div class="mb-3">
-        <label class="form-label"><strong>Treatment Procedures</strong></label>
-        <textarea class="form-control" name="treatment_procedures" rows="3">{{ visit.treatment_procedures if visit else '' }}</textarea>
-      </div>
-      <div class="mb-3">
-        <label class="form-label"><strong>Status</strong></label>
-        <select class="form-select" name="status">
-          <option value="Scheduled" {% if visit and visit.status == 'Scheduled' %}selected{% endif %}>Scheduled</option>
-          <option value="In Progress" {% if visit and visit.status == 'In Progress' %}selected{% endif %}>In Progress</option>
-          <option value="Completed" {% if visit and visit.status == 'Completed' %}selected{% endif %}>Completed</option>
-          <option value="Cancelled" {% if visit and visit.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
-        </select>
-      </div>
-      <hr>
-      <div class="mt-4">
-        <button type="submit" class="btn btn-primary">Save Visit</button>
-        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
-      </div>
-    </form>
-  </div>
+<div class="container mt-4">
+  <h2>New Visit</h2>
+  <form method="POST">
+    <div class="mb-3">
+      <label for="patient_id" class="form-label">Patient</label>
+      <select name="patient_id" id="patient_id" class="form-select" required>
+        <option value="">Select</option>
+        {% for patient in patients %}
+          <option value="{{ patient.id }}">{{ patient.first_name }} {{ patient.last_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="therapist_id" class="form-label">Therapist</label>
+      <select name="therapist_id" id="therapist_id" class="form-select" required>
+        <option value="">Select</option>
+        {% for therapist in therapists %}
+          <option value="{{ therapist.id }}">{{ therapist.first_name }} {{ therapist.last_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="visit_date" class="form-label">Visit Date & Time</label>
+      <input type="datetime-local" name="visit_date" id="visit_date" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label for="end_time" class="form-label">End Time</label>
+      <input type="datetime-local" name="end_time" id="end_time" class="form-control">
+    </div>
+    <div class="mb-3">
+      <label for="duration" class="form-label">Duration (minutes)</label>
+      <input type="number" name="duration" id="duration" class="form-control" value="60">
+    </div>
+    <div class="mb-3">
+      <label for="visit_type" class="form-label">Visit Type</label>
+      <select name="visit_type" id="visit_type" class="form-select" required>
+        <option value="">Select</option>
+        <option>Evaluation</option>
+        <option>Visit</option>
+        <option>Progress Note</option>
+        <option>Discharge</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="status" class="form-label">Status</label>
+      <select name="status" id="status" class="form-select">
+        <option value="Scheduled">Scheduled</option>
+        <option value="Completed">Completed</option>
+        <option value="Cancelled">Cancelled</option>
+        <option value="No Show">No Show</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="notes" class="form-label">Notes</label>
+      <textarea name="notes" id="notes" class="form-control"></textarea>
+    </div>
+    <button type="submit" class="btn btn-success">Save Visit</button>
+  </form>
 </div>
 {% endblock %}

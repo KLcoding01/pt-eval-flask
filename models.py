@@ -152,3 +152,21 @@ class ScheduleEvent(db.Model):
 
     def __repr__(self):
         return f"<ScheduleEvent {self.title}>"
+
+class PTNote(db.Model):
+    __tablename__ = "pt_notes"
+    id = db.Column(db.Integer, primary_key=True)
+    patient_id = db.Column(db.Integer, db.ForeignKey("patients.id"), nullable=False)
+    therapist_id = db.Column(db.Integer, db.ForeignKey("therapists.id"), nullable=True)
+    visit_id = db.Column(db.Integer, db.ForeignKey("visits.id"), nullable=True)
+    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+    note_type = db.Column(db.String(64), default="SOAP")  # e.g., "SOAP", "Eval", "Progress", "DC"
+    content = db.Column(db.Text, nullable=False)
+
+    # Relationships (optional but handy)
+    patient = db.relationship('Patient', backref=db.backref('pt_notes', lazy='dynamic'))
+    therapist = db.relationship('Therapist', backref=db.backref('pt_notes', lazy='dynamic'))
+    visit = db.relationship('Visit', backref=db.backref('pt_notes', lazy='dynamic'))
+
+    def __repr__(self):
+        return f"<PTNote {self.id} Patient:{self.patient_id} Type:{self.note_type}>"
