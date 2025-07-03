@@ -96,7 +96,7 @@ class Visit(db.Model):
     cpt_code_id = db.Column(db.Integer, db.ForeignKey("cpt_codes.id"), nullable=True)
     icd10_code_id = db.Column(db.Integer, db.ForeignKey("icd10_codes.id"), nullable=True)
     notes = db.Column(db.Text)
-    google_event_id = db.Column(db.String(128), nullable=True)  # <--- ADD THIS
+    google_event_id = db.Column(db.String(128), nullable=True) 
 
     # Relationships
     billing = db.relationship("Billing", uselist=False, back_populates="visit", cascade="all, delete-orphan")

@@ -2,10 +2,8 @@ import os
 import io
 import re
 import json
-from flask import (
-    Flask, request, jsonify, redirect, url_for, flash,
-    render_template, send_file, session
-)
+from flask import (Flask, request, jsonify, redirect, url_for, flash, render_template, send_file, session)
+from flask_login import login_required
 from dotenv import load_dotenv
 from openai import OpenAI
 from docx import Document
@@ -22,7 +20,7 @@ from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
 
 # DB MODELS
-from models import db, Patient, Attachment, Billing, Visit, Therapist, Physician, Insurance
+from models import db, Patient, Visit, Attachment, Billing, Visit, Therapist, Physician, Insurance
 
 # CONFIG & INIT
 load_dotenv()
@@ -279,6 +277,40 @@ def patient_notes(patient_id):
     patient = Patient.query.get_or_404(patient_id)
     notes = PTNote.query.filter_by(patient_id=patient_id).order_by(PTNote.date_created.desc()).all()
     return render_template('patient_notes.html', patient=patient, notes=notes)
+
+@app.route('/add_visit', methods=['GET', 'POST'])
+@login_required
+def add_visit():
+    # You need to fetch therapists to populate the dropdown
+    therapists = Therapist.query.all()
+    if request.method == 'POST':
+        patient_id = request.form.get('patient_id')
+        therapist_id = request.form.get('therapist_id')
+        visit_date = request.form.get('visit_date')
+        end_time = request.form.get('end_time')
+        duration = request.form.get('duration', 60)
+        visit_type = request.form.get('visit_type')
+        status = request.form.get('status', "Scheduled")
+        notes = request.form.get('notes')
+        # CPT and ICD10 can be added similarly if you want
+
+        # Build visit object
+        visit = Visit(
+            patient_id=patient_id,
+            therapist_id=therapist_id,
+            visit_date=visit_date,
+            end_time=end_time or None,
+            duration=duration,
+            visit_type=visit_type,
+            status=status,
+            notes=notes,
+        )
+        db.session.add(visit)
+        db.session.commit()
+        flash("Visit added!", "success")
+        return redirect(url_for('patients_list'))
+
+    return render_template('add_visit.html', therapists=therapists)
     
 # ========== DASHBOARD ==========
 @app.route('/dashboard')
