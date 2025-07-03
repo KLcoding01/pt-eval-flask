@@ -36,7 +36,13 @@
   </div>
   <div class="mb-3">
     <label for="visit_type" class="form-label">Visit Type</label>
-    <input type="text" class="form-control" name="visit_type" id="visit_type" required>
+    <select class="form-select" name="visit_type" id="visit_type" required>
+      <option value="">Select type</option>
+      <option value="Evaluation">Evaluation</option>
+      <option value="Progress Note">Progress Note</option>
+      <option value="Visit">Visit</option>
+      <option value="Discharge">Discharge</option>
+    </select>
   </div>
   <div class="mb-3">
     <label for="status" class="form-label">Status</label>

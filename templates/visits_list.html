@@ -3,7 +3,7 @@
 
 {% block content %}
 <h2>Visit Schedule</h2>
-<a href="{{ url_for('new_visit') }}" class="btn btn-primary mb-3">+ New Visit</a>
+<a href="{{ url_for('add_visit') }}" class="btn btn-primary mb-3">+ New Visit</a>
 <table class="table table-bordered">
   <thead>
     <tr>
@@ -24,10 +24,7 @@
       <td>{{ v.visit_type }}</td>
       <td>{{ v.status }}</td>
       <td>
-        <a href="{{ url_for('edit_visit', visit_id=v.id) }}" class="btn btn-sm btn-secondary">Edit</a>
-        <form method="POST" action="{{ url_for('delete_visit', visit_id=v.id) }}" style="display:inline;">
-          <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this visit?')">Delete</button>
-        </form>
+        <!-- Add any Edit/Delete/View actions you want here -->
       </td>
     </tr>
     {% endfor %}
@@ -43,10 +40,10 @@
         {% for note in notes %}
           <li class="list-group-item">
             <span class="badge bg-success me-2">Note</span>
-            <strong>{{ note.created_at.strftime('%Y-%m-%d %I:%M %p') }}</strong>
-            {% if note.summary %}| <b>Summary:</b> {{ note.summary }}{% endif %}
+            <strong>{{ note.date_created.strftime('%Y-%m-%d %I:%M %p') }}</strong>
             | <b>Patient:</b> {{ note.patient.first_name }} {{ note.patient.last_name }}
-            <a class="btn btn-sm btn-outline-secondary ms-2" href="{{ url_for('view_pt_note', note_id=note.id) }}">View</a>
+            | <b>Type:</b> {{ note.note_type }}
+            <a class="btn btn-sm btn-outline-secondary ms-2" href="#">View</a>
           </li>
         {% endfor %}
       </ul>
