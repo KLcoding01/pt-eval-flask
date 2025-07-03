@@ -20,7 +20,7 @@ from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
 
 # DB MODELS
-from models import db, Patient, Visit, Attachment, Billing, Visit, Therapist, Physician, Insurance, PTNote
+from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, Visit, Therapist, Physician, Insurance, PTNote
 
 # CONFIG & INIT
 load_dotenv()
