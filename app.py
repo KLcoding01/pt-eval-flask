@@ -1161,13 +1161,6 @@ def ot_export_pdf():
         download_name="OT_Eval.pdf",
         mimetype="application/pdf"
     )
-
-# ========== OTHER PAGES ==========
-
-@app.route('/pt-builder')
-@login_required
-def pt_builder():
-    return render_template('pt_builder.html')
     
 # ========== GPT HELPER ==========
 
