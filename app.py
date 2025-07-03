@@ -288,14 +288,11 @@ def view_visit_note(visit_id):
 @login_required
 def patient_notes(patient_id):
     patient = Patient.query.get_or_404(patient_id)
-    notes = PTNote.query.filter_by(patient_id=patient_id).order_by(PTNote.created_at.desc()).all()
-    visits = Visit.query.filter_by(patient_id=patient_id).order_by(Visit.date.desc()).all()
-    return render_template(
-        "patient_notes.html",
-        patient=patient,
-        notes=notes,
-        visits=visits
-    )
+    # Corrected this line to use date_created instead of created_at
+    notes = PTNote.query.filter_by(patient_id=patient_id).order_by(PTNote.date_created.desc()).all()
+    visits = Visit.query.filter_by(patient_id=patient_id).order_by(Visit.visit_date.desc()).all()
+    return render_template("patient_notes.html", patient=patient, notes=notes, visits=visits)
+
     
 @app.route('/add_visit', methods=['GET', 'POST'])
 @login_required
@@ -489,11 +486,36 @@ def delete_visit(visit_id):
     
 # ========== PHYSICIAN, INSURANCE, BILLING ==========
 
-@app.route('/therapists/add', methods=['GET', 'POST'])
+@app.route('/therapists/new', methods=['GET', 'POST'])
 @login_required
-def therapists_add():
-    # Add your therapist creation logic here
-    return render_template('therapist_form.html')
+def new_therapist():
+    if request.method == 'POST':
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
+        credentials = request.form.get('credentials')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+        availability = request.form.get('availability')
+
+        # Basic validation (add more as needed)
+        if not first_name or not last_name or not email:
+            flash("First name, last name, and email are required.", "danger")
+            return redirect(url_for('new_therapist'))
+
+        therapist = Therapist(
+            first_name=first_name,
+            last_name=last_name,
+            credentials=credentials,
+            email=email,
+            phone=phone,
+            availability=availability
+        )
+        db.session.add(therapist)
+        db.session.commit()
+        flash("Therapist added!", "success")
+        return redirect(url_for('therapists_list'))
+
+    return render_template('therapist_form.html'
 
 @app.route('/physicians/add', methods=['GET', 'POST'])
 @login_required
@@ -1037,7 +1059,7 @@ def pt_generate_diffdx():
                           ("Interferes", "pain_interferes"),
                       ])
     prompt = (
-        "You are a PT clinical assistant. Provide the single best-fit diagnosis and keep in a bullet point without '**' or '###' and/or any other added special characters. Just soley the statatment and keep it clean.:\n\n"
+        "You are a PT clinical assistant. Provide the single best-fit diagnosis Keep it clean.:\n\n"
         f"Subjective:\n{f.get('subjective','')}\n\n"
         f"Pain:\n{pain}\n\n"
         f"Objective:\nPosture: {f.get('posture','')}\n"
