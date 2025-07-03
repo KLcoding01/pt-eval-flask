@@ -263,22 +263,40 @@ def edit_visit_date(visit_id):
 @login_required
 def view_visit(visit_id):
     visit = Visit.query.get_or_404(visit_id)
-    # If notes is JSON, parse it for display
     eval_data = None
     try:
         import json
         eval_data = json.loads(visit.notes) if visit.notes else None
     except Exception:
-        eval_data = visit.notes  # fallback: raw text
+        eval_data = visit.notes
     return render_template('visit_detail.html', visit=visit, eval_data=eval_data)
 
-@app.route('/patient/<int:patient_id>/notes')
+@app.route("/visits")
+@login_required
+def visit_list():
+    visits = Visit.query.order_by(Visit.visit_date.desc()).all()
+    notes = PtNote.query.order_by(PtNote.created_at.desc()).all()  # Show all notes for all patients
+    return render_template("visit_list.html", visits=visits, notes=notes)
+
+@app.route("/visit/<int:visit_id>")
+@login_required
+def view_visit_note(visit_id):
+    visit = Visit.query.get_or_404(visit_id)
+    return render_template("view_visit_note.html", visit=visit)
+
+@app.route("/patient/<int:patient_id>/notes")
 @login_required
 def patient_notes(patient_id):
     patient = Patient.query.get_or_404(patient_id)
-    notes = PTNote.query.filter_by(patient_id=patient_id).order_by(PTNote.date_created.desc()).all()
-    return render_template("patient_notes.html", patient=patient, notes=notes)
-
+    notes = PtNote.query.filter_by(patient_id=patient_id).order_by(PtNote.created_at.desc()).all()
+    visits = Visit.query.filter_by(patient_id=patient_id).order_by(Visit.date.desc()).all()
+    return render_template(
+        "patient_notes.html",
+        patient=patient,
+        notes=notes,
+        visits=visits
+    )
+    
 @app.route('/add_visit', methods=['GET', 'POST'])
 @login_required
 def add_visit():

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Visit Note{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="card shadow rounded-4 mb-4">
+    <div class="card-body">
+      <h2 class="card-title mb-3">PT Visit Note</h2>
+      <table class="table table-bordered">
+        <tbody>
+          <tr>
+            <th>Date</th>
+            <td>{{ visit.visit_date.strftime('%Y-%m-%d %I:%M %p') }}</td>
+          </tr>
+          <tr>
+            <th>Patient</th>
+            <td>{{ visit.patient.first_name }} {{ visit.patient.last_name }}</td>
+          </tr>
+          <tr>
+            <th>Therapist</th>
+            <td>
+              {% if visit.therapist %}
+                {{ visit.therapist.first_name }} {{ visit.therapist.last_name }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <th>Type</th>
+            <td>{{ visit.visit_type }}</td>
+          </tr>
+          <tr>
+            <th>Status</th>
+            <td>{{ visit.status }}</td>
+          </tr>
+          {% if visit.summary %}
+          <tr>
+            <th>Summary</th>
+            <td>{{ visit.summary }}</td>
+          </tr>
+          {% endif %}
+          {% if visit.notes %}
+          <tr>
+            <th>Note Details</th>
+            <td style="white-space:pre-line;">{{ visit.notes }}</td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+      <a href="{{ url_for('visit_list') }}" class="btn btn-secondary mt-2">Back to Visits</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
