@@ -223,33 +223,36 @@ def api_patient_list():
 def pt_save_to_patient():
     data = request.get_json()
     patient_id = data.get('patient_id')
-    
-    # SAFE DEFAULT: Therapist mapping not implemented, so just set to None
+    # For now, use None as therapist_id (SAFE DEFAULT)
     therapist_id = None
+    # If your session has a therapist, you can use it. For now, just None.
 
-    # --- Build and save Visit ---
+    # Save all eval info as a text blob in the Visit notes field (JSON for full info)
+    notes_json = json.dumps(data, indent=2)
+
+    # Create Visit
     visit = Visit(
         patient_id=patient_id,
-        therapist_id=therapist_id,  # <-- this is now None, so no error
+        therapist_id=therapist_id,
         visit_type='PT Evaluation',
         status='Completed',
         visit_date=datetime.now(),
-        medical_diagnosis=data.get('meddiag'),
-        medical_history=data.get('history'),
-        subjective=data.get('subjective'),
-        pain=data.get('pain_description'),
-        objective=data.get('objective'),
-        assessment_summary=data.get('summary'),
-        goals=data.get('goals'),
-        frequency=data.get('frequency'),
-        intervention=data.get('intervention'),
-        treatment_procedures=data.get('procedures'),
-
+        notes=notes_json
     )
     db.session.add(visit)
     db.session.commit()
 
-    return jsonify({"message": "PT Evaluation saved to patient as Visit."})
+    # Save PTNote (for quick display; can be the summary or whole notes)
+    pt_note = PTNote(
+        patient_id=patient_id,
+        visit_id=visit.id,
+        content=data.get('summary') or notes_json,  # Save the AI summary, or fallback to full data
+        date_created=datetime.now()
+    )
+    db.session.add(pt_note)
+    db.session.commit()
+
+    return jsonify({"message": "PT Evaluation saved to patient as Visit and Note."})
     
     
 @app.route('/edit_visit_date/<int:visit_id>', methods=['POST'])

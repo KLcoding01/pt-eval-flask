@@ -8,69 +8,83 @@
     <div>
       <strong>Patient:</strong> {{ visit.patient.last_name }}, {{ visit.patient.first_name }}<br>
       <strong>DOB:</strong> {{ visit.patient.dob or 'N/A' }}<br>
-      <strong>Therapist:</strong> {{ visit.therapist.last_name }}, {{ visit.therapist.first_name }}<br>
+      <strong>Therapist:</strong> {{ visit.therapist.last_name if visit.therapist else '' }}, {{ visit.therapist.first_name if visit.therapist else '' }}<br>
       <strong>Date:</strong> {{ visit.visit_date.strftime('%Y-%m-%d %I:%M %p') if visit.visit_date else 'N/A' }}<br>
       <strong>Status:</strong> {{ visit.status or 'N/A' }}<br>
     </div>
     <hr>
 
+    {% set eval = visit.notes | safe | fromjson if visit.notes else {} %}
+    
     <div>
       <strong>Medical Diagnosis:</strong>
-      <div>{{ visit.medical_diagnosis or 'N/A' }}</div>
+      <div>{{ eval.get('meddiag', 'N/A') }}</div>
     </div>
     <hr>
 
     <div>
       <strong>Medical History/HNP:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.medical_history or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ eval.get('history', 'N/A') }}</div>
     </div>
     <hr>
 
     <div>
       <strong>Subjective:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.subjective or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ eval.get('subjective', 'N/A') }}</div>
     </div>
     <hr>
 
     <div>
       <strong>Pain:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.pain or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">
+        {{ eval.get('pain_description', 'N/A') }}
+      </div>
     </div>
     <hr>
 
     <div>
       <strong>Objective:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.objective or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">
+        {{ eval.get('objective', '') }}
+        {# Optionally render posture, ROM, strength, etc, each on its own row: #}
+        {% if eval.get('posture') %}<b>Posture:</b> {{ eval.get('posture') }}<br>{% endif %}
+        {% if eval.get('rom') %}<b>ROM:</b> {{ eval.get('rom') }}<br>{% endif %}
+        {% if eval.get('strength') %}<b>Strength:</b> {{ eval.get('strength') }}<br>{% endif %}
+        {% if eval.get('palpation') %}<b>Palpation:</b> {{ eval.get('palpation') }}<br>{% endif %}
+        {% if eval.get('functional') %}<b>Functional:</b> {{ eval.get('functional') }}<br>{% endif %}
+        {% if eval.get('special') %}<b>Special:</b> {{ eval.get('special') }}<br>{% endif %}
+        {% if eval.get('impairments') %}<b>Impairments:</b> {{ eval.get('impairments') }}<br>{% endif %}
+      </div>
     </div>
     <hr>
 
     <div>
       <strong>Assessment Summary:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.assessment_summary or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ eval.get('summary', 'N/A') }}</div>
     </div>
     <hr>
 
     <div>
       <strong>Goals:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.goals or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ eval.get('goals', 'N/A') }}</div>
     </div>
     <hr>
 
     <div>
       <strong>Frequency:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.frequency or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ eval.get('frequency', 'N/A') }}</div>
     </div>
     <hr>
 
     <div>
       <strong>Intervention:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.intervention or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ eval.get('intervention', 'N/A') }}</div>
     </div>
     <hr>
 
     <div>
       <strong>Treatment Procedures:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.treatment_procedures or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ eval.get('procedures', 'N/A') }}</div>
     </div>
     <hr>
 
