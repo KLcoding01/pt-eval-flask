@@ -11,7 +11,7 @@
         </div>
         <div class="card-body">
           <form method="post" autocomplete="off">
-              {{ form.hidden_tag() }}
+              {{ csrf_token() }}
             <div class="row g-3">
               <div class="col-sm-6">
                 <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>

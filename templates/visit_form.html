@@ -4,7 +4,7 @@
 {% block content %}
 <h2>Add Visit</h2>
 <form method="POST">
-    {{ form.hidden_tag() }}
+    {{ csrf_token() }}
   <div class="mb-3">
     <label for="patient_id" class="form-label">Patient</label>
     <select class="form-select" name="patient_id" id="patient_id" required>
