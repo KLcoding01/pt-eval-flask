@@ -8,3 +8,4 @@ reportlab
 google-auth-oauthlib
 google-api-python-client
 flask_login
+Flask-WTF
