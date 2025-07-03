@@ -1010,7 +1010,7 @@ def pt_generate_goals():
         "4. [goal statement]\n"
         "\nOnly generate goals in this structure."
         "\n\nEval info:\n"
-        f"{f}"
+        "{f}"
     )
     result = gpt_call(prompt, max_tokens=350)
     return jsonify({"result": result})
