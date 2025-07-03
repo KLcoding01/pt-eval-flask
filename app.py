@@ -223,7 +223,15 @@ def api_patient_list():
 def pt_save_to_patient():
     data = request.get_json()
     patient_id = data.get('patient_id')
-    therapist_id = current_user.id
+
+    # Get the username from session
+    username = session.get('username')
+
+    # Find therapist in DB by username (assuming Therapist model has 'user_name' or 'email' field)
+    therapist = Therapist.query.filter_by(user_name=username).first()
+
+    # If no therapist match, use a default or skip therapist_id
+    therapist_id = therapist.id if therapist else None
 
     visit = Visit(
         patient_id=patient_id,
@@ -244,6 +252,7 @@ def pt_save_to_patient():
     )
     db.session.add(visit)
     db.session.commit()
+
     return jsonify({"message": "PT Evaluation saved to patient as Visit."})
     
     
