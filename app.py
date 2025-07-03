@@ -297,36 +297,60 @@ def patient_notes(patient_id):
 @app.route('/add_visit', methods=['GET', 'POST'])
 @login_required
 def add_visit():
-    # You need to fetch therapists to populate the dropdown
-    therapists = Therapist.query.all()
     if request.method == 'POST':
         patient_id = request.form.get('patient_id')
         therapist_id = request.form.get('therapist_id')
-        visit_date = request.form.get('visit_date')
-        end_time = request.form.get('end_time')
-        duration = request.form.get('duration', 60)
+        visit_date_str = request.form.get('visit_date')
+        end_time_str = request.form.get('end_time')
+        duration = request.form.get('duration')
         visit_type = request.form.get('visit_type')
-        status = request.form.get('status', "Scheduled")
+        status = request.form.get('status')
+        cpt_code_id = request.form.get('cpt_code_id')
+        icd10_code_id = request.form.get('icd10_code_id')
         notes = request.form.get('notes')
-        # CPT and ICD10 can be added similarly if you want
+        google_event_id = request.form.get('google_event_id')
 
-        # Build visit object
+        # ---- FIX 1: Parse datetime ----
+        visit_date = datetime.strptime(visit_date_str, "%Y-%m-%dT%H:%M") if visit_date_str else None
+        end_time = datetime.strptime(end_time_str, "%Y-%m-%dT%H:%M") if end_time_str else None
+
+        # ---- FIX 2: Validate patient_id ----
+        if not patient_id:
+            flash("Patient is required!", "danger")
+            return redirect(request.url)
+        
+        # You may want to validate therapist_id and others too.
+
         visit = Visit(
             patient_id=patient_id,
             therapist_id=therapist_id,
             visit_date=visit_date,
-            end_time=end_time or None,
+            end_time=end_time,
             duration=duration,
             visit_type=visit_type,
             status=status,
+            cpt_code_id=cpt_code_id if cpt_code_id else None,
+            icd10_code_id=icd10_code_id if icd10_code_id else None,
             notes=notes,
+            google_event_id=google_event_id
         )
         db.session.add(visit)
         db.session.commit()
         flash("Visit added!", "success")
-        return redirect(url_for('patients_list'))
+        return redirect(url_for('visit_list'))
 
-    return render_template('add_visit.html', therapists=therapists)
+    # GET: show form
+    patients = Patient.query.all()
+    therapists = Therapist.query.all()
+    cpt_codes = CPTCode.query.all()
+    icd10_codes = ICD10Code.query.all()
+    return render_template(
+        'visit_form.html',
+        patients=patients,
+        therapists=therapists,
+        cpt_codes=cpt_codes,
+        icd10_codes=icd10_codes
+    )
     
 # ========== DASHBOARD ==========
 @app.route('/dashboard')
