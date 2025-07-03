@@ -515,7 +515,7 @@ def new_therapist():
         flash("Therapist added!", "success")
         return redirect(url_for('therapists_list'))
 
-    return render_template('therapist_form.html'
+    return render_template('therapist_form.html')
 
 @app.route('/physicians/add', methods=['GET', 'POST'])
 @login_required
