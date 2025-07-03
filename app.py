@@ -221,32 +221,26 @@ def api_patient_list():
 @app.route('/pt_save_to_patient', methods=['POST'])
 @login_required
 def pt_save_to_patient():
+    import json
     data = request.get_json()
     patient_id = data.get('patient_id')
-    # For now, use None as therapist_id (SAFE DEFAULT)
-    therapist_id = None
-    # If your session has a therapist, you can use it. For now, just None.
 
-    # Save all eval info as a text blob in the Visit notes field (JSON for full info)
-    notes_json = json.dumps(data, indent=2)
-
-    # Create Visit
     visit = Visit(
         patient_id=patient_id,
-        therapist_id=therapist_id,
+        therapist_id=None,  # Or get from session/form if available
         visit_type='PT Evaluation',
         status='Completed',
         visit_date=datetime.now(),
-        notes=notes_json
+        notes=json.dumps(data)  # <-- Only use valid fields
     )
     db.session.add(visit)
     db.session.commit()
 
-    # Save PTNote (for quick display; can be the summary or whole notes)
+    # Optionally also save as PTNote
     pt_note = PTNote(
         patient_id=patient_id,
         visit_id=visit.id,
-        content=data.get('summary') or notes_json,  # Save the AI summary, or fallback to full data
+        content=data.get('summary', ''),
         date_created=datetime.now()
     )
     db.session.add(pt_note)
