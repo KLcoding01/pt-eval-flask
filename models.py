@@ -14,6 +14,7 @@ class Patient(db.Model):
     insurance_id = db.Column(db.Integer, db.ForeignKey("insurances.id"))
     physician_id = db.Column(db.Integer, db.ForeignKey("physicians.id"))
 
+    # Relationships
     visits = db.relationship("Visit", back_populates="patient", cascade="all, delete-orphan")
     insurance = db.relationship("Insurance", back_populates="patients")
     physician = db.relationship("Physician", back_populates="patients")
@@ -86,17 +87,18 @@ class Visit(db.Model):
     __tablename__ = "visits"
     id = db.Column(db.Integer, primary_key=True)
     patient_id = db.Column(db.Integer, db.ForeignKey("patients.id"), nullable=False)
-    therapist_id = db.Column(db.Integer, db.ForeignKey("therapists.id"), nullable=True)
+    therapist_id = db.Column(db.Integer, db.ForeignKey("therapists.id"), nullable=False)
     visit_date = db.Column(db.DateTime, default=datetime.utcnow)
     end_time = db.Column(db.DateTime)
-    duration = db.Column(db.Integer, default=60)
+    duration = db.Column(db.Integer, default=60)  # in minutes, optional but useful
     visit_type = db.Column(db.String(64))
     status = db.Column(db.String(32), default="Scheduled")
     cpt_code_id = db.Column(db.Integer, db.ForeignKey("cpt_codes.id"), nullable=True)
     icd10_code_id = db.Column(db.Integer, db.ForeignKey("icd10_codes.id"), nullable=True)
-    notes = db.Column(db.Text)  # Store all eval JSON here!
-    google_event_id = db.Column(db.String(128), nullable=True)
+    notes = db.Column(db.Text)
+    google_event_id = db.Column(db.String(128), nullable=True) 
 
+    # Relationships
     billing = db.relationship("Billing", uselist=False, back_populates="visit", cascade="all, delete-orphan")
     attachments = db.relationship("Attachment", back_populates="visit", cascade="all, delete-orphan")
     patient = db.relationship("Patient", back_populates="visits")
@@ -106,7 +108,7 @@ class Visit(db.Model):
 
     def __repr__(self):
         return f"<Visit {self.visit_type} for {self.patient.first_name} {self.patient.last_name}>"
-
+        
 class Billing(db.Model):
     __tablename__ = "billings"
     id = db.Column(db.Integer, primary_key=True)
@@ -158,9 +160,10 @@ class PTNote(db.Model):
     therapist_id = db.Column(db.Integer, db.ForeignKey("therapists.id"), nullable=True)
     visit_id = db.Column(db.Integer, db.ForeignKey("visits.id"), nullable=True)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
-    note_type = db.Column(db.String(64), default="SOAP")
+    note_type = db.Column(db.String(64), default="SOAP")  # e.g., "SOAP", "Eval", "Progress", "DC"
     content = db.Column(db.Text, nullable=False)
 
+    # Relationships (optional but handy)
     patient = db.relationship('Patient', backref=db.backref('pt_notes', lazy='dynamic'))
     therapist = db.relationship('Therapist', backref=db.backref('pt_notes', lazy='dynamic'))
     visit = db.relationship('Visit', backref=db.backref('pt_notes', lazy='dynamic'))

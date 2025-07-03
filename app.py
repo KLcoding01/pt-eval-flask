@@ -22,8 +22,6 @@ from google.auth.transport.requests import Request
 
 # DB MODELS
 from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, Visit, Therapist, Physician, Insurance, PTNote
-from flask_wtf.csrf import CSRFProtect
-
 
 # CONFIG & INIT
 load_dotenv()
@@ -33,7 +31,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db.init_app(app)
-csrf = CSRFProtect(app)
 with app.app_context():
     db.create_all()
 
@@ -224,26 +221,36 @@ def api_patient_list():
 @app.route('/pt_save_to_patient', methods=['POST'])
 @login_required
 def pt_save_to_patient():
-    import json
     data = request.get_json()
     patient_id = data.get('patient_id')
 
+    # Map form fields to Visit model fields!
     visit = Visit(
         patient_id=patient_id,
-        therapist_id=None,  # Or get from session/form if available
+        therapist_id=current_user.id,  # or from data['therapist_id'] if you let user select
         visit_type='PT Evaluation',
         status='Completed',
         visit_date=datetime.now(),
-        notes=json.dumps(data)  # <-- Only use valid fields
+        medical_diagnosis=data.get('meddiag'),
+        medical_history=data.get('history'),
+        subjective=data.get('subjective'),
+        pain=data.get('pain_description'),  # map as appropriate
+        objective=data.get('objective'),
+        assessment_summary=data.get('summary'),
+        goals=data.get('goals'),
+        frequency=data.get('frequency'),
+        intervention=data.get('intervention'),
+        treatment_procedures=data.get('procedures'),
+        # etc...
     )
     db.session.add(visit)
     db.session.commit()
 
-    # Optionally also save as PTNote
+    # Save the PTNote and link to Visit
     pt_note = PTNote(
         patient_id=patient_id,
-        visit_id=visit.id,
-        content=data.get('summary', ''),
+        visit_id=visit.id,        # link note to visit!
+        content=data.get('summary'),
         date_created=datetime.now()
     )
     db.session.add(pt_note)
@@ -251,13 +258,7 @@ def pt_save_to_patient():
 
     return jsonify({"message": "PT Evaluation saved to patient as Visit and Note."})
     
-@app.template_filter('fromjson')
-def fromjson_filter(s):
-    try:
-        return json.loads(s)
-    except Exception:
-        return {}
-        
+    
 @app.route('/edit_visit_date/<int:visit_id>', methods=['POST'])
 def edit_visit_date(visit_id):
     new_date = request.form.get('date')
@@ -517,11 +518,12 @@ def edit_visit(visit_id):
 @login_required
 def delete_visit(visit_id):
     visit = Visit.query.get_or_404(visit_id)
-    delete_google_event(visit)  # if using Google Calendar sync
+    delete_google_event(visit)
     db.session.delete(visit)
     db.session.commit()
-    flash("Visit deleted.", "info")
-    return redirect(url_for('patient_detail', patient_id=visit.patient_id))
+    flash("Visit deleted (and removed from Google Calendar).", "info")
+    return redirect(url_for('visits_list'))
+
     
 # ========== PHYSICIAN, INSURANCE, BILLING ==========
 
@@ -1397,4 +1399,3 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True)
-
