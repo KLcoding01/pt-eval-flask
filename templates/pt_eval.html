@@ -1,10 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container-fluid">
-  <h1>Welcome, {{ session['username'] }}!</h1>
-  <hr>
+<div class="container-fluid px-0">
+  <h1 class="mb-2">Welcome, {{ session['username'] }}!</h1>
 
-  <!-- MAIN PT/OT SELECTOR -->
   <ul class="nav nav-tabs mb-3" id="mainTab" role="tablist">
     <li class="nav-item">
       <a class="nav-link active" id="pt-tab-link" data-bs-toggle="tab" href="#pt-tab-panel" role="tab">PT Eval Builder</a>
@@ -21,11 +19,12 @@
       <div class="d-flex align-items-center mb-3">
         <label class="fw-bold me-2">Template:</label>
         <select id="pt-template-select" class="form-select w-auto me-2"></select>
-        <button id="pt-load-template-btn" class="btn btn-outline-primary btn-sm">Load</button>
-        <button id="pt-save-word-btn" class="btn btn-info btn-sm">Export Word</button>
-        <button id="pt-save-pdf-btn" class="btn btn-danger btn-sm">Export PDF</button>
+        <button id="pt-load-template-btn" class="btn btn-outline-primary btn-sm me-1">Load</button>
+        <button id="pt-save-word-btn" class="btn btn-info btn-sm me-1">Export Word</button>
+        <button id="pt-save-pdf-btn" class="btn btn-danger btn-sm me-1">Export PDF</button>
         <span id="pt-status-msg" class="ms-3"></span>
       </div>
+      <!-- INNER TABS -->
       <ul class="nav nav-tabs mb-2" id="pt-inner-tab" role="tablist">
         <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#pt-patientinfo" role="tab">Patient Info</a></li>
         <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-history" role="tab">History</a></li>
@@ -38,6 +37,7 @@
       </ul>
       <form id="pt-evalform">
         <div class="tab-content">
+          <!-- Patient Info -->
           <div class="tab-pane fade show active" id="pt-patientinfo" role="tabpanel">
             <div class="row mb-2">
               <div class="col"><input name="name" id="pt_name" class="form-control" placeholder="Patient Name"></div>
@@ -54,7 +54,7 @@
               <div class="col"><input name="currentdate" id="pt_currentdate" class="form-control" placeholder="Current Date"></div>
             </div>
           </div>
-
+          <!-- History -->
           <div class="tab-pane fade" id="pt-history" role="tabpanel">
             <textarea name="meddiag" id="pt_meddiag" class="form-control mb-2" placeholder="Medical Diagnosis"></textarea>
             <textarea name="history" id="pt_history" class="form-control mb-2" placeholder="Medical History/HNP"></textarea>
@@ -64,7 +64,7 @@
             <textarea name="dme" id="pt_dme" class="form-control mb-2" placeholder="DME/Assistive Device"></textarea>
             <textarea name="plof" id="pt_plof" class="form-control mb-2" placeholder="PLOF"></textarea>
           </div>
-
+          <!-- Pain -->
           <div class="tab-pane fade" id="pt-pain" role="tabpanel">
             <input name="pain_location" id="pt_pain_location" class="form-control mb-2" placeholder="Area/Location of Injury">
             <input name="pain_onset" id="pt_pain_onset" class="form-control mb-2" placeholder="Onset/Exacerbation Date">
@@ -77,7 +77,7 @@
             <input name="pain_relieved" id="pt_pain_relieved" class="form-control mb-2" placeholder="Relieved By">
             <input name="pain_interferes" id="pt_pain_interferes" class="form-control mb-2" placeholder="Interferes With">
           </div>
-
+          <!-- Objective -->
           <div class="tab-pane fade" id="pt-objective" role="tabpanel">
             <textarea name="posture" id="pt_posture" class="form-control mb-2" rows="7" placeholder="Posture"></textarea>
             <textarea name="rom" id="pt_rom" class="form-control mb-2" rows="7" placeholder="ROM"></textarea>
@@ -87,17 +87,17 @@
             <textarea name="special" id="pt_special" class="form-control mb-2" rows="7" placeholder="Special Test(s)"></textarea>
             <textarea name="impairments" id="pt_impairments" class="form-control mb-2" rows="7" placeholder="Current Functional Mobility Impairment(s)"></textarea>
           </div>
-
+          <!-- Diff Dx -->
           <div class="tab-pane fade" id="pt-diffdx" role="tabpanel">
             <button type="button" id="pt-ai-generate-diffdx" class="btn btn-outline-success btn-sm mb-2">AI Generate</button>
             <textarea name="diffdx" id="pt_diffdx" class="form-control" rows="8"></textarea>
           </div>
-
+          <!-- Assessment Summary -->
           <div class="tab-pane fade" id="pt-summary" role="tabpanel">
             <button type="button" id="pt-ai-generate-summary" class="btn btn-outline-success btn-sm mb-2">AI Generate</button>
             <textarea name="summary" id="pt_summary" class="form-control" rows="10"></textarea>
           </div>
-
+          <!-- Plan -->
           <div class="tab-pane fade" id="pt-plan" role="tabpanel">
             <button type="button" id="pt-ai-generate-goals" class="btn btn-outline-success btn-sm mb-2">AI Generate Goals</button>
             <textarea name="goals" id="pt_goals" class="form-control mb-2" rows="10"></textarea>
@@ -105,7 +105,7 @@
             <textarea name="intervention" id="pt_intervention" class="form-control mb-2" placeholder="Intervention"></textarea>
             <textarea name="procedures" id="pt_procedures" class="form-control mb-2" placeholder="Treatment Procedures"></textarea>
           </div>
-
+          <!-- Daily Note -->
           <div class="tab-pane fade" id="pt-dailynote" role="tabpanel">
             <div class="mb-2">
               <label class="fw-bold">Diagnosis:</label>
@@ -135,8 +135,7 @@
             <span id="pt-daily-summary-status" class="ms-2"></span>
           </div>
         </div>
-
-        <!-- PT E-Signature Section -->
+        <!-- Signature Section -->
         <div class="mb-3 mt-3">
           <label class="fw-bold mb-2">Patient Signature:</label>
           <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ptSignatureModal">Tap to Sign</button>
@@ -145,16 +144,14 @@
         </div>
       </form>
     </div>
-
-    <!-- OT EVAL BUILDER TAB -->
+    <!-- OT TAB -->
     <div class="tab-pane fade" id="ot-tab-panel" role="tabpanel">
       <h2>OT Eval Builder</h2>
       <p>OT Eval form coming soon…</p>
     </div>
   </div>
 </div>
-
-<!-- PT Signature Modal -->
+<!-- PT Signature Modal (same as before) -->
 <div class="modal fade" id="ptSignatureModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -172,371 +169,8 @@
     </div>
   </div>
 </div>
-
-<script>
-  // ===== SignaturePad Setup (PT) =====
-  let ptSignaturePad;
-  const ptCanvas = document.getElementById('pt-signature-pad');
-  const ptSignatureModal = document.getElementById('ptSignatureModal');
-
-  ptSignatureModal.addEventListener('shown.bs.modal', () => {
-    const ratio = Math.max(window.devicePixelRatio || 1, 1);
-    ptCanvas.width = ptCanvas.offsetWidth * ratio;
-    ptCanvas.height = ptCanvas.offsetHeight * ratio;
-    ptCanvas.getContext('2d').scale(ratio, ratio);
-    if (!ptSignaturePad) ptSignaturePad = new SignaturePad(ptCanvas);
-    ptSignaturePad.clear();
-  });
-  document.getElementById('pt-clear-signature').onclick = () => ptSignaturePad.clear();
-  document.getElementById('pt-save-signature').onclick = () => {
-    if (!ptSignaturePad.isEmpty()) {
-      const dataURL = ptSignaturePad.toDataURL('image/png');
-      document.getElementById('pt-signature-preview').src = dataURL;
-      document.getElementById('pt-signature-preview').style.display = 'block';
-      document.getElementById('pt_signature').value = dataURL;
-    }
-  };
-
-  // ===== PT Functions =====
-  function ptGetFields() {
-    const data = {};
-    document.querySelectorAll('#pt-evalform [name]').forEach(el => data[el.name] = el.value);
-    return data;
-  }
-  function ptSetStatus(msg, color='green') {
-    const s = document.getElementById('pt-status-msg');
-    s.textContent = msg;
-    s.style.color = color;
-  }
-
-  fetch('/pt_load_template', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({template: ''})
-  })
-    .then(r => r.json())
-    .then(names => {
-      document.getElementById('pt-template-select').innerHTML =
-        names.map(n => `<option>${n}</option>`).join('');
-    });
-
-  document.getElementById('pt-load-template-btn').onclick = () => {
-    fetch('/pt_load_template', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({template: document.getElementById('pt-template-select').value})
-    })
-      .then(r => r.json())
-      .then(data => {
-        Object.entries(data).forEach(([k,v]) => {
-          const fld = document.getElementById('pt_'+k) || document.querySelector(`#pt-evalform [name="${k}"]`);
-          if (fld) fld.value = v;
-        });
-      });
-    };
-    document.getElementById('pt-ai-generate-diffdx').onclick = () => {
-      ptSetStatus('Generating Diff Dx…', 'orange');
-      fetch('/pt_generate_diffdx', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({fields: ptGetFields()})
-      })
-      .then(r => r.json())
-      .then(data => {
-        if (data.result) {
-          document.getElementById('pt_diffdx').value = data.result;
-          ptSetStatus('Done','green');
-        } else if (data.error) {
-          ptSetStatus('AI error: ' + data.error, 'red');
-        } else {
-          ptSetStatus('Unexpected AI response', 'red');
-        }
-      })
-      .catch(() => ptSetStatus('AI error','red'));
-    };
-
-    document.getElementById('pt-ai-generate-summary').onclick = () => {
-      ptSetStatus('Generating summary…', 'orange');
-      fetch('/pt_generate_summary', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({fields: ptGetFields()})
-      })
-      .then(r => r.json())
-      .then(data => {
-        if (data.result) {
-          document.getElementById('pt_summary').value = data.result;
-          ptSetStatus('Done','green');
-        } else if (data.error) {
-          ptSetStatus('AI error: ' + data.error, 'red');
-        } else {
-          ptSetStatus('Unexpected AI response', 'red');
-        }
-      })
-      .catch(() => ptSetStatus('AI error','red'));
-    };
-
-    document.getElementById('pt-ai-generate-goals').onclick = () => {
-      ptSetStatus('Generating goals…', 'orange');
-      fetch('/pt_generate_goals', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({fields: ptGetFields()})
-      })
-      .then(r => r.json())
-      .then(data => {
-        if (data.result) {
-          document.getElementById('pt_goals').value = data.result;
-          ptSetStatus('Done','green');
-        } else if (data.error) {
-          ptSetStatus('AI error: ' + data.error, 'red');
-        } else {
-          ptSetStatus('Unexpected AI response', 'red');
-        }
-      })
-      .catch(() => ptSetStatus('AI error','red'));
-    };
-
-    document.getElementById('pt-generate-daily-summary').onclick = () => {
-      document.getElementById('pt-daily-summary-status').textContent = 'Generating summary…';
-      fetch('/pt_generate_daily_summary', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          diagnosis: document.getElementById('pt_daily_diagnosis').value,
-          interventions: document.getElementById('pt_daily_interventions').value,
-          tolerance: document.getElementById('pt_daily_tolerance').value,
-          progress: document.getElementById('pt_daily_progress').value,
-          plan: document.getElementById('pt_daily_plan').value
-        })
-      })
-      .then(r => r.json())
-      .then(data => {
-        if (data.result) {
-          document.getElementById('pt_daily_summary').value = data.result;
-          document.getElementById('pt-daily-summary-status').textContent = 'Summary generated!';
-        } else if (data.error) {
-          document.getElementById('pt-daily-summary-status').textContent = 'AI error: ' + data.error;
-        } else {
-          document.getElementById('pt-daily-summary-status').textContent = 'Unexpected AI response';
-        }
-      })
-      .catch(() => {
-        document.getElementById('pt-daily-summary-status').textContent = 'AI error';
-      });
-    };
-
-  document.getElementById('pt-ai-generate-goals').onclick = () => {
-    ptSetStatus('Generating goals…', 'orange');
-    fetch('/pt_generate_goals', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({fields: ptGetFields()})
-    })
-      .then(r => r.text())
-      .then(t => { document.getElementById('pt_goals').value = t; ptSetStatus('Done','green'); })
-      .catch(() => ptSetStatus('AI error','red'));
-  };
-
-  document.getElementById('pt-save-word-btn').onclick = () => {
-    ptSetStatus('Exporting Word...', 'orange');
-    fetch('/pt_export_word', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(ptGetFields())
-    })
-      .then(r => r.blob())
-      .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'PT_Eval.docx';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        ptSetStatus('Word downloaded!', 'green');
-      });
-  };
-
-  document.getElementById('pt-save-pdf-btn').onclick = () => {
-    ptSetStatus('Exporting PDF...', 'orange');
-    fetch('/pt_export_pdf', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(ptGetFields())
-    })
-      .then(r => r.blob())
-      .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'PT_Eval.pdf';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        ptSetStatus('PDF downloaded!', 'green');
-      });
-  };
-
-  document.getElementById('pt-generate-daily-summary').onclick = () => {
-    document.getElementById('pt-daily-summary-status').textContent = 'Generating summary…';
-    fetch('/pt_generate_daily_summary', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        diagnosis: document.getElementById('pt_daily_diagnosis').value,
-        interventions: document.getElementById('pt_daily_interventions').value,
-        tolerance: document.getElementById('pt_daily_tolerance').value,
-        progress: document.getElementById('pt_daily_progress').value,
-        plan: document.getElementById('pt_daily_plan').value
-      })
-    })
-      .then(r => r.text())
-      .then(text => {
-        document.getElementById('pt_daily_summary').value = text;
-        document.getElementById('pt-daily-summary-status').textContent = 'Summary generated!';
-      })
-      .catch(() => {
-        document.getElementById('pt-daily-summary-status').textContent = 'AI error';
-      });
-  };
-
-  // ===== OT Functions (only if OT elements exist) =====
-  if (document.getElementById('ot-load-template-btn')) {
-    function otGetFields() {
-      const data = {};
-      document.querySelectorAll('#ot-evalform [name]').forEach(el => data[el.name] = el.value);
-      return data;
-    }
-    function otSetStatus(msg, color='green') {
-      const s = document.getElementById('ot-status-msg');
-      s.textContent = msg;
-      s.style.color = color;
-    }
-
-    fetch('/ot_load_template', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({template: ''})
-    })
-      .then(r => r.json())
-      .then(() => {
-        document.getElementById('ot-template-select').innerHTML = `<option>OT Eval Template</option>`;
-      });
-
-    document.getElementById('ot-load-template-btn').onclick = () => {
-      fetch('/ot_load_template', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({template: document.getElementById('ot-template-select').value})
-      })
-        .then(r => r.json())
-        .then(data => {
-          Object.entries(data).forEach(([k,v]) => {
-            const fld = document.getElementById('ot_'+k) || document.querySelector(`#ot-evalform [name="${k}"]`);
-            if (fld) fld.value = v;
-          });
-        });
-    };
-
-    document.getElementById('ot-ai-generate-diffdx').onclick = () => {
-      otSetStatus('Generating Diff Dx…', 'orange');
-      fetch('/ot_generate_diffdx', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({fields: otGetFields()})
-      })
-        .then(r => r.text())
-        .then(t => { document.getElementById('ot_diffdx').value = t; otSetStatus('Done','green'); })
-        .catch(() => otSetStatus('AI error','red'));
-    };
-
-    document.getElementById('ot-ai-generate-summary').onclick = () => {
-      otSetStatus('Generating summary…', 'orange');
-      fetch('/ot_generate_summary', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({fields: otGetFields()})
-      })
-        .then(r => r.text())
-        .then(t => { document.getElementById('ot_summary').value = t; otSetStatus('Done','green'); })
-        .catch(() => otSetStatus('AI error','red'));
-    };
-
-    document.getElementById('ot-ai-generate-goals').onclick = () => {
-      otSetStatus('Generating goals…', 'orange');
-      fetch('/ot_generate_goals', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({fields: otGetFields()})
-      })
-        .then(r => r.text())
-        .then(t => { document.getElementById('ot_goals').value = t; otSetStatus('Done','green'); })
-        .catch(() => otSetStatus('AI error','red'));
-    };
-
-    document.getElementById('ot-save-word-btn').onclick = () => {
-      otSetStatus('Exporting Word...', 'orange');
-      fetch('/ot_export_word', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(otGetFields())
-      })
-        .then(r => r.blob())
-        .then(blob => {
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'OT_Eval.docx';
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          otSetStatus('Word downloaded!', 'green');
-        });
-    };
-
-    document.getElementById('ot-save-pdf-btn').onclick = () => {
-      otSetStatus('Exporting PDF...', 'orange');
-      fetch('/ot_export_pdf', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(otGetFields())
-      })
-        .then(r => r.blob())
-        .then(blob => {
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'OT_Eval.pdf';
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          otSetStatus('PDF downloaded!', 'green');
-        });
-    };
-
-    document.getElementById('ot-generate-daily-summary').onclick = () => {
-      document.getElementById('ot-daily-summary-status').textContent = 'Generating summary…';
-      fetch('/ot_generate_daily_summary', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          diagnosis: document.getElementById('ot_daily_diagnosis').value,
-          interventions: document.getElementById('ot_daily_interventions').value,
-          tolerance: document.getElementById('ot_daily_tolerance').value,
-          progress: document.getElementById('ot_daily_progress').value,
-          plan: document.getElementById('ot_daily_plan').value
-        })
-      })
-        .then(r => r.text())
-        .then(text => {
-          document.getElementById('ot_daily_summary').value = text;
-          document.getElementById('ot-daily-summary-status').textContent = 'Summary generated!';
-        })
-        .catch(() => {
-          document.getElementById('ot-daily-summary-status').textContent = 'AI error';
-        });
-    };
-  }
-</script>
+<!-- SignaturePad JS (use CDN, as before) -->
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<!-- All your PT Builder JS logic here as previously given -->
+<!-- No additional tab JS required—Bootstrap handles tab switching. -->
 {% endblock %}
