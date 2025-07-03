@@ -471,7 +471,7 @@ def billing_overview():
 @app.route('/pt_builder')
 @login_required
 def pt_builder():
-    return render_template('pt_builder.html'
+    return render_template('pt_builder.html')
     
 @app.route('/patient/<int:patient_id>/pt_builder', methods=['GET'])
 @login_required
