@@ -967,7 +967,7 @@ def pt_generate_summary():
     func = f.get("functional", "")
 
     prompt = (
-        "Generate a concise, 7-8 sentence Physical Therapy assessment summary for PT documentation. "
+        "Generate a concise, 7-8 sentence Physical Therapy assessment summary medicare compliant form for PT documentation. "
         "Use clinical, professional language and use abbreviations only (e.g., HEP, ADLs, LBP, STM, TherEx, etc.; "
         "do not spell out the abbreviation and do not write both full term and abbreviation). "
         "Never use the phrase 'The patient'; instead, use 'Pt' at the start of each relevant sentence. "
@@ -992,12 +992,11 @@ def pt_generate_goals():
     prompt = (
         "You are a clinical assistant helping a PT write documentation. "
         "Using ONLY the provided eval info (summary, objective findings, strength, ROM, impairments, and functional limitations), "
-        "generate clinically-appropriate short-term and long-term PT goals. "
+        "generate clinically-appropriate medicare compliant short-term and long-term PT goals. "
         "Decide the most relevant and individualized goals based on the data, but ALWAYS follow the exact goal format below. "
         "DO NOT add extra formatting, explanations, or ChatGPT commentary—output should be concise and in bullet list format only. "
         "Adapt content of each goal based on eval details. Do not repeat or copy the examples unless appropriate. "
-        "\n\n"
-        "FORMAT TO FOLLOW:\n"
+        "FORMAT TO FOLLOW:
         "Short-Term Goals (1–12 visits):\n"
         "1. [goal statement]\n"
         "2. [goal statement]\n"
