@@ -118,6 +118,7 @@
       <a href="{{ url_for('insurance_list') }}">Insurance</a>
       <a href="{{ url_for('billing_overview') }}">Billing</a>
       <a href="{{ url_for('pt_builder') }}">PT Builder</a>
+      <a href="{{ url_for('visits_list') }}">Patient Visit</a>
     </div>
     <div class="navbar-right">
       <a href="{{ url_for('logout') }}">Logout</a>
@@ -148,6 +149,7 @@
           <a href="{{ url_for('insurance_list') }}" class="list-group-item {% if active_page == 'insurance' %}active{% endif %}">🏦 Insurance</a>
           <a href="{{ url_for('billing_overview') }}" class="list-group-item {% if active_page == 'billing' %}active{% endif %}">💳 Billing</a>
           <a href="{{ url_for('pt_builder') }}" class="list-group-item {% if active_page == 'pt_builder' %}active{% endif %}">📝 PT Builder</a>
+          <a href="{{ url_for('visits_list') }}" class="list-group-item {% if active_page == 'visits_list' %}active{% endif %}">👤 Patient Visit</a>
         </div>
       </nav>
       <!-- Main Content -->

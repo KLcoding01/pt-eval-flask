@@ -373,7 +373,7 @@ def new_visit():
         visit_date = request.form.get('visit_date')
         visit_time = request.form.get('visit_time')
         status = request.form.get('status', 'Scheduled')
-        dt_start = datetime.strptime(f"{visit_date} {visit_time}", "%Y-%m-%d %H:%M")
+        dt_start = datetime.strptime(f"{visit_date} {visit_time}", "%m-%d-%Y %H:%M")
         duration = 60
         visit = Visit(
             patient_id=patient_id,
@@ -407,7 +407,7 @@ def edit_visit(visit_id):
         visit_date = request.form.get('visit_date')
         visit_time = request.form.get('visit_time')
         visit.status = request.form.get('status')
-        visit.visit_date = datetime.strptime(f"{visit_date} {visit_time}", "%Y-%m-%d %H:%M")
+        visit.visit_date = datetime.strptime(f"{visit_date} {visit_time}", "%m-%d-%Y %H:%M")
         visit.duration = 60
         db.session.commit()
         update_google_event(visit)
@@ -468,7 +468,7 @@ def billing_overview():
 def pt_builder():
     return render_template('pt_builder.html')
 
-@app.route('/patient/<int:patient_id>/pt_builder', methods=['GET'])
+@app.route('/patient/<int:patient_id>/patient_detail', methods=['GET'])
 @login_required
 def pt_builder_patient(patient_id):
     patient = Patient.query.get_or_404(patient_id)
@@ -476,14 +476,14 @@ def pt_builder_patient(patient_id):
     if patient.dob:
         try:
             if isinstance(patient.dob, str):
-                birth = datetime.strptime(patient.dob, "%Y-%m-%d")
+                birth = datetime.strptime(patient.dob, "%m-%d-%Y")
             else:
                 birth = patient.dob
             today = datetime.today()
             age = today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
         except Exception:
             age = ""
-    return render_template('pt_builder_patient.html', patient=patient, age=age)
+    return render_template('patient_detail.html', patient=patient, age=age)
 
 # ========== UPLOADS ==========
 @app.route('/uploads', methods=['GET'])
