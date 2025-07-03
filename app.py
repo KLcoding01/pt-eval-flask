@@ -273,10 +273,11 @@ def view_visit(visit_id):
     return render_template('visit_detail.html', visit=visit, eval_data=eval_data)
 
 @app.route('/patient/<int:patient_id>/notes')
+@login_required
 def patient_notes(patient_id):
     patient = Patient.query.get_or_404(patient_id)
     notes = PTNote.query.filter_by(patient_id=patient_id).order_by(PTNote.date_created.desc()).all()
-    return render_template('patient_notes.html', patient=patient, notes=notes)
+    return render_template("patient_notes.html", patient=patient, notes=notes)
 
 @app.route('/add_visit', methods=['GET', 'POST'])
 @login_required
@@ -466,6 +467,7 @@ def delete_visit(visit_id):
     db.session.commit()
     flash("Visit deleted (and removed from Google Calendar).", "info")
     return redirect(url_for('visits_list'))
+
     
 # ========== PHYSICIAN, INSURANCE, BILLING ==========
 

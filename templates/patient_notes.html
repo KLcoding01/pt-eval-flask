@@ -15,7 +15,7 @@
         </div>
       </div>
       <div>
-        <a href="{{ url_for('add_pt_note', patient_id=patient.id) }}" class="btn btn-success">
+        <a href="{{ url_for('patient_notes', patient_id=patient.id) }}" class="btn btn-success">
           <i class="bi bi-plus-circle"></i> Add New Note
         </a>
         <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" class="btn btn-secondary ms-2">
