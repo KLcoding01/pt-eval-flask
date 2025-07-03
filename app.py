@@ -483,7 +483,7 @@ def pt_builder_patient(patient_id):
             age = today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
         except Exception:
             age = ""
-    return render_template('patient_detail.html', patient=patient, age=age)
+    return render_template('pt_builder.html', patient=patient, age=age)
 
 # ========== UPLOADS ==========
 @app.route('/uploads', methods=['GET'])

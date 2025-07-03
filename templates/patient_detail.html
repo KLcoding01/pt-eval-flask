@@ -1,25 +1,136 @@
-<h3>Evaluations & Visits</h3>
-<table class="table">
-  <thead>
-    <tr>
-      <th>Date</th>
-      <th>Type</th>
-      <th>Status</th>
-      <th>Therapist</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for visit in patient.visits %}
-      <tr>
-        <td>{{ visit.visit_date.strftime('%Y-%m-%d') if visit.visit_date else '' }}</td>
-        <td>{{ visit.visit_type or '' }}</td>
-        <td>{{ visit.status or '' }}</td>
-        <td>{{ visit.therapist.first_name }} {{ visit.therapist.last_name }}</td>
-        <td>
-          <a href="{{ url_for('view_visit', visit_id=visit.id) }}" class="btn btn-sm btn-outline-primary">View</a>
-        </td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
+{% extends "base.html" %}
+{% block title %}Patient Details{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="card shadow rounded-4 p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h2 class="fw-bold mb-1">{{ patient.last_name }}, {{ patient.first_name }}</h2>
+        <div class="text-muted mb-2">DOB: {{ patient.dob }} | MRN: {{ patient.id }}</div>
+        <div><i class="bi bi-telephone"></i> {{ patient.phone or "N/A" }} &nbsp; | &nbsp; <i class="bi bi-geo-alt"></i> {{ patient.address or "N/A" }}</div>
+      </div>
+      <div>
+        <a href="{{ url_for('edit_patient', patient_id=patient.id) }}" class="btn btn-outline-primary me-2">
+          <i class="bi bi-pencil"></i> Edit
+        </a>
+        <a href="{{ url_for('add_visit', patient_id=patient.id) }}" class="btn btn-success me-2">
+          <i class="bi bi-calendar-plus"></i> New Visit
+        </a>
+        <a href="{{ url_for('upload_attachment', patient_id=patient.id) }}" class="btn btn-secondary">
+          <i class="bi bi-upload"></i> Upload File
+        </a>
+      </div>
+    </div>
+    <hr>
+    <div class="row">
+      <div class="col-md-4 mb-2">
+        <strong>Insurance:</strong> {{ patient.insurance_name or "N/A" }}
+      </div>
+      <div class="col-md-4 mb-2">
+        <strong>Physician:</strong> {{ patient.physician_name or "N/A" }}
+      </div>
+      <div class="col-md-4 mb-2">
+        <strong>Notes:</strong> {{ patient.notes or "N/A" }}
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow rounded-4 p-4">
+    <ul class="nav nav-tabs mb-4" id="patientTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="visits-tab" data-bs-toggle="tab" data-bs-target="#visits" type="button" role="tab" aria-controls="visits" aria-selected="true">
+          <i class="bi bi-clipboard2-pulse"></i> Visits
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="attachments-tab" data-bs-toggle="tab" data-bs-target="#attachments" type="button" role="tab" aria-controls="attachments" aria-selected="false">
+          <i class="bi bi-paperclip"></i> Attachments
+        </button>
+      </li>
+    </ul>
+    <div class="tab-content" id="patientTabsContent">
+      <!-- Visits Tab -->
+      <div class="tab-pane fade show active" id="visits" role="tabpanel" aria-labelledby="visits-tab">
+        {% if visits %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Therapist</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for visit in visits %}
+              <tr>
+                <td>{{ visit.date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ visit.visit_type or 'Eval' }}</td>
+                <td>
+                  <span class="badge
+                    {% if visit.status == 'Completed' %}bg-success
+                    {% elif visit.status == 'Scheduled' %}bg-primary
+                    {% elif visit.status == 'Cancelled' %}bg-danger
+                    {% else %}bg-secondary{% endif %}">
+                    {{ visit.status }}
+                  </span>
+                </td>
+                <td>{{ visit.therapist.last_name }}, {{ visit.therapist.first_name }}</td>
+                <td>
+                  <a href="{{ url_for('visit_detail', visit_id=visit.id) }}" class="btn btn-outline-info btn-sm">
+                    <i class="bi bi-eye"></i> View
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">No visits on record yet.</div>
+        {% endif %}
+      </div>
+      <!-- Attachments Tab -->
+      <div class="tab-pane fade" id="attachments" role="tabpanel" aria-labelledby="attachments-tab">
+        {% if attachments %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Date Uploaded</th>
+                <th>File</th>
+                <th>Uploaded By</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for att in attachments %}
+              <tr>
+                <td>{{ att.uploaded_at.strftime('%Y-%m-%d') }}</td>
+                <td>
+                  <a href="{{ url_for('download_attachment', attachment_id=att.id) }}" target="_blank">{{ att.filename }}</a>
+                </td>
+                <td>{{ att.uploader_name or "N/A" }}</td>
+                <td>
+                  <form method="POST" action="{{ url_for('delete_attachment', attachment_id=att.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this file?')">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">No attachments for this patient.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

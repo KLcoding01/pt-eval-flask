@@ -1,18 +1,83 @@
-<h3>PT Evaluation / Visit Details</h3>
-<p><b>Date:</b> {{ visit.visit_date.strftime('%Y-%m-%d') if visit.visit_date else '' }}</p>
-<p><b>Therapist:</b> {{ visit.therapist.first_name }} {{ visit.therapist.last_name }}</p>
-<p><b>Type:</b> {{ visit.visit_type }}</p>
-<p><b>Status:</b> {{ visit.status }}</p>
+{% extends "base.html" %}
+{% block title %}Visit Detail{% endblock %}
 
-{% if eval_data and eval_data.__class__ == dict %}
-  <h5>Evaluation Data</h5>
-  <ul>
-    {% for key, value in eval_data.items() %}
-      <li><b>{{ key.replace('_', ' ').title() }}:</b> {{ value }}</li>
-    {% endfor %}
-  </ul>
-{% elif eval_data %}
-  <pre>{{ eval_data }}</pre>
-{% else %}
-  <em>No evaluation details available.</em>
-{% endif %}
+{% block content %}
+<div class="container my-4">
+  <div class="card shadow rounded-4 p-4">
+    <h3 class="mb-3">PT Evaluation Details</h3>
+    <div>
+      <strong>Patient:</strong> {{ visit.patient.last_name }}, {{ visit.patient.first_name }}<br>
+      <strong>DOB:</strong> {{ visit.patient.dob }}<br>
+      <strong>Therapist:</strong> {{ visit.therapist.last_name }}, {{ visit.therapist.first_name }}<br>
+      <strong>Date:</strong> {{ visit.date.strftime('%Y-%m-%d') }}<br>
+      <strong>Status:</strong> {{ visit.status }}<br>
+    </div>
+    <hr>
+
+    <div>
+      <strong>Medical Diagnosis:</strong>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.medical_diagnosis }}</div>
+    </div>
+    <hr>
+
+    <div>
+      <strong>Medical History/HNP:</strong>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.medical_history }}</div>
+    </div>
+    <hr>
+
+    <div>
+      <strong>Subjective:</strong>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.subjective }}</div>
+    </div>
+    <hr>
+
+    <div>
+      <strong>Pain:</strong>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.pain }}</div>
+    </div>
+    <hr>
+
+    <div>
+      <strong>Objective:</strong>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.objective }}</div>
+    </div>
+    <hr>
+
+    <div>
+      <strong>Assessment Summary:</strong>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.assessment_summary }}</div>
+    </div>
+    <hr>
+
+    <div>
+      <strong>Goals:</strong>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.goals }}</div>
+    </div>
+    <hr>
+
+    <div>
+      <strong>Frequency:</strong>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.frequency }}</div>
+    </div>
+    <hr>
+
+    <div>
+      <strong>Intervention:</strong>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.intervention }}</div>
+    </div>
+    <hr>
+
+    <div>
+      <strong>Treatment Procedures:</strong>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.treatment_procedures }}</div>
+    </div>
+    <hr>
+
+    <div class="mt-4">
+      <a href="{{ url_for('edit_visit', visit_id=visit.id) }}" class="btn btn-warning">Edit Visit</a>
+      <a href="{{ url_for('patient_detail', patient_id=visit.patient.id) }}" class="btn btn-secondary">Back to Patient</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
