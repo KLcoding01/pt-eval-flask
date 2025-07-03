@@ -293,7 +293,7 @@ def dashboard():
 @login_required
 def patients_list():
     patients = Patient.query.all()
-    return render_template('patients.html', patients=patients)
+    return render_template('patients.html', patients=patients, active_page='pt_builder')
 
 # 2. Add new patient
 @app.route('/patients/new', methods=['GET', 'POST'])
