@@ -248,7 +248,13 @@ def pt_save_to_patient():
 
     return jsonify({"message": "PT Evaluation saved to patient as Visit and Note."})
     
-    
+@app.template_filter('fromjson')
+def fromjson_filter(s):
+    try:
+        return json.loads(s)
+    except Exception:
+        return {}
+        
 @app.route('/edit_visit_date/<int:visit_id>', methods=['POST'])
 def edit_visit_date(visit_id):
     new_date = request.form.get('date')
