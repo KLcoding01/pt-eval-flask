@@ -997,7 +997,7 @@ def pt_generate_goals():
         "Decide the most relevant and individualized goals based on the data, but ALWAYS follow the exact goal format below. "
         "DO NOT add extra formatting, explanations, or ChatGPT commentary—output should be concise and in bullet list format only. "
         "Adapt content of each goal based on eval details. Do not repeat or copy the examples unless appropriate. "
-        "FORMAT TO FOLLOW:
+        "FORMAT TO FOLLOW:"
         "Short-Term Goals (1–12 visits):\n"
         "1. [goal statement]\n"
         "2. [goal statement]\n"
