@@ -275,7 +275,7 @@ def view_visit(visit_id):
 @login_required
 def visit_list():
     visits = Visit.query.order_by(Visit.visit_date.desc()).all()
-    notes = PTNote.query.order_by(PTNote.created_at.desc()).all()  # Show all notes for all patients
+    notes = PTNote.query.order_by(PTNote.date_created.desc()).all() 
     return render_template("visit_list.html", visits=visits, notes=notes)
 
 @app.route("/visit/<int:visit_id>")
