@@ -288,14 +288,19 @@ def dashboard():
 
 # ========== PATIENT CRUD ==========
 
-# 1. List all patients
 @app.route('/patients')
 @login_required
 def patients_list():
     patients = Patient.query.all()
     return render_template('patients.html', patients=patients, active_page='pt_builder')
 
-# 2. Add new patient
+@app.route('/patients/<int:patient_id>')
+@login_required
+def patient_detail(patient_id):
+    patient = Patient.query.get_or_404(patient_id)
+    return render_template('patient_detail.html', patient=patient)
+
+
 @app.route('/patients/new', methods=['GET', 'POST'])
 @login_required
 def new_patient():
