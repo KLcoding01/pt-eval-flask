@@ -52,7 +52,7 @@
     <div class="tab-content" id="patientTabsContent">
       <!-- Visits Tab -->
       <div class="tab-pane fade show active" id="visits" role="tabpanel" aria-labelledby="visits-tab">
-        {% if visits %}
+        {% if visits and visits|length > 0 %}
         <div class="table-responsive">
           <table class="table table-hover align-middle">
             <thead class="table-light">
@@ -67,7 +67,7 @@
             <tbody>
               {% for visit in visits %}
               <tr>
-                <td>{{ visit.date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ visit.visit_date.strftime('%Y-%m-%d %I:%M %p') if visit.visit_date else "N/A" }}</td>
                 <td>{{ visit.visit_type or 'Eval' }}</td>
                 <td>
                   <span class="badge
@@ -95,7 +95,7 @@
       </div>
       <!-- Attachments Tab -->
       <div class="tab-pane fade" id="attachments" role="tabpanel" aria-labelledby="attachments-tab">
-        {% if attachments %}
+        {% if attachments and attachments|length > 0 %}
         <div class="table-responsive">
           <table class="table table-hover align-middle">
             <thead class="table-light">

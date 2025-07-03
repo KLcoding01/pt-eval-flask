@@ -370,7 +370,9 @@ def patients_list():
 @login_required
 def patient_detail(patient_id):
     patient = Patient.query.get_or_404(patient_id)
-    return render_template('patient_detail.html', patient=patient)
+    visits = Visit.query.filter_by(patient_id=patient_id).order_by(Visit.visit_date.desc()).all()
+    attachments = Attachment.query.filter_by(patient_id=patient_id).order_by(Attachment.uploaded_at.desc()).all()
+    return render_template('patient_detail.html', patient=patient, visits=visits, attachments=attachments)
 
 
 @app.route('/patients/new', methods=['GET', 'POST'])
