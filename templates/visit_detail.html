@@ -7,70 +7,70 @@
     <h3 class="mb-3">PT Evaluation Details</h3>
     <div>
       <strong>Patient:</strong> {{ visit.patient.last_name }}, {{ visit.patient.first_name }}<br>
-      <strong>DOB:</strong> {{ visit.patient.dob }}<br>
+      <strong>DOB:</strong> {{ visit.patient.dob or 'N/A' }}<br>
       <strong>Therapist:</strong> {{ visit.therapist.last_name }}, {{ visit.therapist.first_name }}<br>
-      <strong>Date:</strong> {{ visit.date.strftime('%Y-%m-%d') }}<br>
-      <strong>Status:</strong> {{ visit.status }}<br>
+      <strong>Date:</strong> {{ visit.visit_date.strftime('%Y-%m-%d %I:%M %p') if visit.visit_date else 'N/A' }}<br>
+      <strong>Status:</strong> {{ visit.status or 'N/A' }}<br>
     </div>
     <hr>
 
     <div>
       <strong>Medical Diagnosis:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.medical_diagnosis }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.medical_diagnosis or 'N/A' }}</div>
     </div>
     <hr>
 
     <div>
       <strong>Medical History/HNP:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.medical_history }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.medical_history or 'N/A' }}</div>
     </div>
     <hr>
 
     <div>
       <strong>Subjective:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.subjective }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.subjective or 'N/A' }}</div>
     </div>
     <hr>
 
     <div>
       <strong>Pain:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.pain }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.pain or 'N/A' }}</div>
     </div>
     <hr>
 
     <div>
       <strong>Objective:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.objective }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.objective or 'N/A' }}</div>
     </div>
     <hr>
 
     <div>
       <strong>Assessment Summary:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.assessment_summary }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.assessment_summary or 'N/A' }}</div>
     </div>
     <hr>
 
     <div>
       <strong>Goals:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.goals }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.goals or 'N/A' }}</div>
     </div>
     <hr>
 
     <div>
       <strong>Frequency:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.frequency }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.frequency or 'N/A' }}</div>
     </div>
     <hr>
 
     <div>
       <strong>Intervention:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.intervention }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.intervention or 'N/A' }}</div>
     </div>
     <hr>
 
     <div>
       <strong>Treatment Procedures:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.treatment_procedures }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.treatment_procedures or 'N/A' }}</div>
     </div>
     <hr>
 

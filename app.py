@@ -445,6 +445,12 @@ def visits_list():
     visits = Visit.query.order_by(Visit.visit_date.desc()).all()
     return render_template('visits_list.html', visits=visits)
 
+@app.route('/visits/<int:visit_id>')
+@login_required
+def visit_detail(visit_id):
+    visit = Visit.query.get_or_404(visit_id)
+    return render_template('visit_detail.html', visit=visit)
+
 @app.route('/visits/new', methods=['GET', 'POST'])
 @login_required
 def new_visit():
