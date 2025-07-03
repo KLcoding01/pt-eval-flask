@@ -3,7 +3,7 @@ import io
 import re
 import json
 from flask import (Flask, request, jsonify, redirect, url_for, flash, render_template, send_file, session)
-from flask_login import login_required
+from flask_login import login_required, current_user
 from dotenv import load_dotenv
 from openai import OpenAI
 from docx import Document
