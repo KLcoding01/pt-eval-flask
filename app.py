@@ -468,7 +468,11 @@ def billing_overview():
     return render_template('billing.html')
 
 # ========== PT BUILDER & PATIENT PROFILE ==========
-
+@app.route('/pt_builder')
+@login_required
+def pt_builder():
+    return render_template('pt_builder.html'
+    
 @app.route('/patient/<int:patient_id>/pt_builder', methods=['GET'])
 @login_required
 def pt_builder_patient(patient_id):
@@ -484,7 +488,7 @@ def pt_builder_patient(patient_id):
             age = today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
         except Exception:
             age = ""
-    return render_template('pt_builder.html', patient=patient, age=age)
+    return render_template('pt_builder_patient.html', patient=patient, age=age)
     
 # ========== UPLOADS ==========
 @app.route('/uploads', methods=['GET'])
