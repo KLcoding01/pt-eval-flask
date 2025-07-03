@@ -274,6 +274,11 @@ def view_visit(visit_id):
         eval_data = visit.notes  # fallback: raw text
     return render_template('visit_detail.html', visit=visit, eval_data=eval_data)
 
+@app.route('/patient/<int:patient_id>/notes')
+def patient_notes(patient_id):
+    patient = Patient.query.get_or_404(patient_id)
+    notes = PTNote.query.filter_by(patient_id=patient_id).order_by(PTNote.date_created.desc()).all()
+    return render_template('patient_notes.html', patient=patient, notes=notes)
     
 # ========== DASHBOARD ==========
 @app.route('/dashboard')
@@ -463,14 +468,10 @@ def billing_overview():
     return render_template('billing.html')
 
 # ========== PT BUILDER & PATIENT PROFILE ==========
-@app.route('/pt_builder')
-@login_required
-def pt_builder():
-    return render_template('pt_builder.html')
 
-@app.route('/patient/<int:patient_id>/pt_builder', methods=['GET'])
+@app.route('/pt_builder/<int:patient_id>')
 @login_required
-def pt_builder_patient(patient_id):
+def pt_builder(patient_id):
     patient = Patient.query.get_or_404(patient_id)
     age = ""
     if patient.dob:
@@ -484,7 +485,7 @@ def pt_builder_patient(patient_id):
         except Exception:
             age = ""
     return render_template('pt_builder.html', patient=patient, age=age)
-
+    
 # ========== UPLOADS ==========
 @app.route('/uploads', methods=['GET'])
 @login_required
