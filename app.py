@@ -514,12 +514,11 @@ def edit_visit(visit_id):
 @login_required
 def delete_visit(visit_id):
     visit = Visit.query.get_or_404(visit_id)
-    delete_google_event(visit)
+    delete_google_event(visit)  # if using Google Calendar sync
     db.session.delete(visit)
     db.session.commit()
-    flash("Visit deleted (and removed from Google Calendar).", "info")
-    return redirect(url_for('visits_list'))
-
+    flash("Visit deleted.", "info")
+    return redirect(url_for('patient_detail', patient_id=visit.patient_id))
     
 # ========== PHYSICIAN, INSURANCE, BILLING ==========
 
