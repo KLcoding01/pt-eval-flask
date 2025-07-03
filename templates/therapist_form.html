@@ -3,7 +3,7 @@
 <div class="container mt-5">
   <h2>{{ 'Edit Therapist' if therapist else 'Add Therapist' }}</h2>
   <form method="post">
-      {{ csrf_token() }}
+      {{ form.hidden_tag() }}
     <div class="mb-3">
       <label>First Name</label>
       <input type="text" name="first_name" class="form-control" value="{{ therapist.first_name if therapist else '' }}">
