@@ -22,6 +22,8 @@ from google.auth.transport.requests import Request
 
 # DB MODELS
 from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, Visit, Therapist, Physician, Insurance, PTNote
+from flask_wtf.csrf import CSRFProtect
+
 
 # CONFIG & INIT
 load_dotenv()
@@ -31,6 +33,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db.init_app(app)
+csrf = CSRFProtect(app)
 with app.app_context():
     db.create_all()
 
