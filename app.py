@@ -449,7 +449,8 @@ def visits_list():
 @login_required
 def visit_detail(visit_id):
     visit = Visit.query.get_or_404(visit_id)
-    return render_template('visit_detail.html', visit=visit)
+    pt_note = PTNote.query.filter_by(visit_id=visit.id).order_by(PTNote.date_created.desc()).first()
+    return render_template('visit_detail.html', visit=visit, pt_note=pt_note)
 
 @app.route('/visits/new', methods=['GET', 'POST'])
 @login_required
