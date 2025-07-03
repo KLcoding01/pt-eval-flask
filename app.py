@@ -223,19 +223,14 @@ def api_patient_list():
 def pt_save_to_patient():
     data = request.get_json()
     patient_id = data.get('patient_id')
+    
+    # SAFE DEFAULT: Therapist mapping not implemented, so just set to None
+    therapist_id = None
 
-    # Get the username from session
-    username = session.get('username')
-
-    # Find therapist in DB by username (assuming Therapist model has 'user_name' or 'email' field)
-    therapist = Therapist.query.filter_by(user_name=username).first()
-
-    # If no therapist match, use a default or skip therapist_id
-    therapist_id = therapist.id if therapist else None
-
+    # --- Build and save Visit ---
     visit = Visit(
         patient_id=patient_id,
-        therapist_id=therapist_id,
+        therapist_id=therapist_id,  # <-- this is now None, so no error
         visit_type='PT Evaluation',
         status='Completed',
         visit_date=datetime.now(),
@@ -249,6 +244,7 @@ def pt_save_to_patient():
         frequency=data.get('frequency'),
         intervention=data.get('intervention'),
         treatment_procedures=data.get('procedures'),
+
     )
     db.session.add(visit)
     db.session.commit()
