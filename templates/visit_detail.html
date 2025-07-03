@@ -1,0 +1,18 @@
+<h3>PT Evaluation / Visit Details</h3>
+<p><b>Date:</b> {{ visit.visit_date.strftime('%Y-%m-%d') if visit.visit_date else '' }}</p>
+<p><b>Therapist:</b> {{ visit.therapist.first_name }} {{ visit.therapist.last_name }}</p>
+<p><b>Type:</b> {{ visit.visit_type }}</p>
+<p><b>Status:</b> {{ visit.status }}</p>
+
+{% if eval_data and eval_data.__class__ == dict %}
+  <h5>Evaluation Data</h5>
+  <ul>
+    {% for key, value in eval_data.items() %}
+      <li><b>{{ key.replace('_', ' ').title() }}:</b> {{ value }}</li>
+    {% endfor %}
+  </ul>
+{% elif eval_data %}
+  <pre>{{ eval_data }}</pre>
+{% else %}
+  <em>No evaluation details available.</em>
+{% endif %}

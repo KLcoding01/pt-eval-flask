@@ -1,5 +1,6 @@
 import os
 import io
+import re
 import json
 from flask import (
     Flask, request, jsonify, redirect, url_for, flash,
@@ -260,6 +261,18 @@ def edit_visit_date(visit_id):
     db.session.commit()
     return redirect(url_for('patient_profile', patient_id=visit.patient_id))
 
+@app.route('/visit/<int:visit_id>')
+@login_required
+def view_visit(visit_id):
+    visit = Visit.query.get_or_404(visit_id)
+    # If notes is JSON, parse it for display
+    eval_data = None
+    try:
+        import json
+        eval_data = json.loads(visit.notes) if visit.notes else None
+    except Exception:
+        eval_data = visit.notes  # fallback: raw text
+    return render_template('visit_detail.html', visit=visit, eval_data=eval_data)
 
     
 # ========== DASHBOARD ==========
@@ -554,7 +567,7 @@ PT_TEMPLATES = {
         "functional": "Supine Sit Up Test: Unable\n30 seconds Chair Sit to Stand: 6x w/ increase LBP\nSingle Leg Balance Test: B LE: <1 sec with loss of balance.\nSingle Heel Raises Test: Unremarkable\nWalking on Toes:\nWalking on Heels:\nFunctional Squat:",
         "special": "(-) Slump Test\n(-) Unilateral SLR Test\n(-) Double SLR\n(-) Spring/Central PA\n(-) Piriformis test\n(-) SI Cluster Test",
         "impairments": "Prolonged sitting: 5 min\nStanding: 5 min\nWalking: 5 min\nBending, sweeping, cleaning, lifting: 5 min.",
-        "goals": "Short-Term Goals (1–12 visits):\n1. Pt will report a reduction in low back pain to ≤1/10 to allow sffffffffffffffffffffffffffffffffffffffffffffffffffffffffde and comfortable participation in functional activities.\n2. Pt will demonstrate a ≥10% improvement in trunk AROM to enhance mobility and reduce risk of reinjury during daily tasks.\n3. Pt will improve gross LE strength by at least 0.5 muscle grade to enhance safety during ADLs and minimize pain/injury risk.\n4. Pt will self-report ≥50% improvement in functional limitations related to ADLs.\nLong-Term Goals (13–25 visits):\n1. Pt will demonstrate B LE strength of ≥4/5 to independently and safely perform all ADLs.\n2. Pt will complete ≥14 repetitions on the 30-second chair sit-to-stand test to reduce fall risk.\n3. Pt will tolerate ≥30 minutes of activity to safely resume household tasks without limitation.\n4. Pt will demonstrate independence with HEP, using proper body mechanics and strength to support safe return to ADLs without difficulty.",
+        "goals": "Short-Term Goals (1–12 visits):\n1. Pt will report a reduction in low back pain to ≤1/10 to allow comfortable participation in functional activities.\n2. Pt will demonstrate a ≥10% improvement in trunk AROM to enhance mobility and reduce risk of reinjury during daily tasks.\n3. Pt will improve gross LE strength by at least 0.5 muscle grade to enhance safety during ADLs and minimize pain/injury risk.\n4. Pt will self-report ≥50% improvement in functional limitations related to ADLs.\nLong-Term Goals (13–25 visits):\n1. Pt will demonstrate B LE strength of ≥4/5 to independently and safely perform all ADLs.\n2. Pt will complete ≥14 repetitions on the 30-second chair sit-to-stand test to reduce fall risk.\n3. Pt will tolerate ≥30 minutes of activity to safely resume household tasks without limitation.\n4. Pt will demonstrate independence with HEP, using proper body mechanics and strength to support safe return to ADLs without difficulty.",
         "frequency": "1wk1, 2wk12",
         "intervention": "Manual Therapy (STM/IASTM/Joint Mob), Therapeutic Exercise, Therapeutic Activities, Neuromuscular Re-education, Gait Training, Balance Training, Pain Management Training, Modalities ice/heat 10-15min, E-Stim, Ultrasound, fall/injury prevention training, safety education/training, HEP education/training.",
         "procedures": "97161 Low Complexity\n97162 Moderate Complexity\n97163 High Complexity\n97140 Manual Therapy\n97110 Therapeutic Exercise\n97530 Therapeutic Activity\n97112 Neuromuscular Re-ed\n97116 Gait Training"
@@ -1005,36 +1018,45 @@ def pt_generate_summary():
 @app.route("/pt_generate_goals", methods=["POST"])
 @login_required
 def pt_generate_goals():
-    f = request.json.get("fields", {})
+    # Get all eval fields (dictionary)
+    fields = request.json.get("fields", {})
+    # Make eval info readable for GPT
+    eval_info = '\n'.join([f"{k}: {v}" for k, v in fields.items() if v])
+
     prompt = f"""
-        You are a clinical assistant helping a PT write documentation.
-        Using ONLY the provided eval info (summary, objective findings, strength, ROM, impairments, and functional limitations),
-        generate clinically-appropriate medicare compliant short-term and long-term PT goals.
-        Decide the most relevant and individualized goals based on the data, but ALWAYS follow the exact goal format below.
-        DO NOT add extra formatting, explanations, or ChatGPT commentary—output should be concise and in bullet list format only.
-        Adapt content of each goal based on eval details. Do not repeat or copy the examples unless appropriate.
+You are a clinical assistant helping a PT write documentation.
+Using ONLY the provided eval info (summary, objective findings, strength, ROM, impairments, and functional limitations),
+generate clinically-appropriate, Medicare-compliant short-term and long-term PT goals.
+ALWAYS follow this exact format—do not add, skip, reorder, or alter any lines or labels.
+DO NOT add any explanations, introductions, dashes, bullets, or extra indentation. Output ONLY this structure:
 
-        FORMAT TO FOLLOW:
-        Short-Term Goals (1–12 visits):
-        1. [goal statement]
-        2. [goal statement]
-        3. [goal statement]
-        4. [goal statement]
-        
-        Long-Term Goals (13–25 visits):
-        1. [goal statement]
-        2. [goal statement]
-        3. [goal statement]
-        4. [goal statement]
+Short-Term Goals (1–12 visits):
+1. [goal statement]
+2. [goal statement]
+3. [goal statement]
+4. [goal statement]
 
-        Only generate goals in this structure.
+Long-Term Goals (13–25 visits):
+1. [goal statement]
+2. [goal statement]
+3. [goal statement]
+4. [goal statement]
 
-        Eval info:
-        {f}
-        """
+Replace [goal statement] with individualized goals based on eval info below.
+
+Eval info:
+{eval_info}
+"""
+
+    # Call your GPT function (replace with your real function if different)
     result = gpt_call(prompt, max_tokens=350)
-    return jsonify({"result": result})
 
+    # Clean up any dashes or spaces before the section headers (just in case)
+    result = result.replace('- Short-Term Goals', 'Short-Term Goals')
+    result = result.replace('- Long-Term Goals', 'Long-Term Goals')
+    result = re.sub(r'^\s+', '', result, flags=re.MULTILINE)
+
+    return jsonify({"result": result})
 
 @app.route('/pt_generate_daily_summary', methods=['POST'])
 @login_required
@@ -1237,6 +1259,7 @@ def gpt_call(prompt, max_tokens=350):
         return resp.choices[0].message.content.strip()
     except Exception as e:
         return f"OpenAI error: {e}"
+
 
 # ========== MAIN ==========
 

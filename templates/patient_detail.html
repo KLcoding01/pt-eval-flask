@@ -1,38 +1,25 @@
-{% extends 'base.html' %}
-{% block content %}
-<div class="container py-4">
-  <div class="row justify-content-center">
-    <div class="col-lg-7">
-      <div class="card shadow-lg rounded-4">
-        <div class="card-body p-4">
-          <div class="d-flex align-items-center mb-4">
-            <div class="avatar bg-primary text-white rounded-circle me-3" style="width:64px; height:64px; display:flex; align-items:center; justify-content:center; font-size:2rem;">
-              <span>{{ patient.first_name[0] }}{{ patient.last_name[0] }}</span>
-            </div>
-            <div>
-              <h3 class="mb-0">{{ patient.first_name }} {{ patient.last_name }}</h3>
-              <small class="text-muted">Patient ID: {{ patient.id }}</small>
-            </div>
-          </div>
-          <div class="row gy-3">
-            <div class="col-md-6">
-              <div class="mb-2"><i class="bi bi-calendar-date me-2"></i><strong>DOB:</strong> {{ patient.dob or "-" }}</div>
-              <div class="mb-2"><i class="bi bi-gender-ambiguous me-2"></i><strong>Gender:</strong> {{ patient.gender or "-" }}</div>
-              <div class="mb-2"><i class="bi bi-geo-alt me-2"></i><strong>Address:</strong> {{ patient.address or "-" }}</div>
-            </div>
-            <div class="col-md-6">
-              <div class="mb-2"><i class="bi bi-telephone me-2"></i><strong>Phone:</strong> {{ patient.phone or "-" }}</div>
-              <div class="mb-2"><i class="bi bi-envelope me-2"></i><strong>Email:</strong> {{ patient.email or "-" }}</div>
-              <div class="mb-2"><i class="bi bi-chat-left-text me-2"></i><strong>Notes:</strong> {{ patient.notes or "-" }}</div>
-            </div>
-          </div>
-        </div>
-        <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
-          <a href="{{ url_for('patients_list') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to List</a>
-          <a href="{{ url_for('edit_patient', patient_id=patient.id) }}" class="btn btn-primary"><i class="bi bi-pencil"></i> Edit</a>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-{% endblock %}
+<h3>Evaluations & Visits</h3>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Type</th>
+      <th>Status</th>
+      <th>Therapist</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for visit in patient.visits %}
+      <tr>
+        <td>{{ visit.visit_date.strftime('%Y-%m-%d') if visit.visit_date else '' }}</td>
+        <td>{{ visit.visit_type or '' }}</td>
+        <td>{{ visit.status or '' }}</td>
+        <td>{{ visit.therapist.first_name }} {{ visit.therapist.last_name }}</td>
+        <td>
+          <a href="{{ url_for('view_visit', visit_id=visit.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
