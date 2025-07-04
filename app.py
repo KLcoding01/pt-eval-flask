@@ -42,6 +42,11 @@ app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD", "your_app_password")
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv("MAIL_DEFAULT_SENDER", "your_email@gmail.com")
 mail = Mail(app)
 
+#======= OPEN AI=======
+OPENAI_KEY = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
+MODEL = "gpt-4o-mini"
+
 # ====== INIT DB ======
 db.init_app(app)
 
@@ -336,6 +341,8 @@ def therapist_list():
     therapists = Therapist.query.all()
     return jsonify([{'id': t.id, 'first_name': t.first_name, 'last_name': t.last_name} for t in therapists])
 
+import json
+
 @app.route('/pt_save_to_patient', methods=['POST'])
 @login_required
 def pt_save_to_patient():
@@ -343,37 +350,27 @@ def pt_save_to_patient():
     therapist_id = data.get('therapist_id')
     patient_id = data.get('patient_id')
     visit_type = data.get('visit_type', 'PT Evaluation')
-    duration = data.get('duration', 60)  # default to 60 mins
 
-    if not therapist_id:
-        return jsonify({'status': 'error', 'message': 'Therapist is required.'}), 400
-    if not patient_id:
-        return jsonify({'status': 'error', 'message': 'Patient is required.'}), 400
+    if not therapist_id or not patient_id:
+        return jsonify({'status': 'error', 'message': 'Therapist and Patient required.'}), 400
 
-    # Remove these from the notes dict (so they're not duplicated in notes)
-    data_to_save = dict(data)  # make a copy
-    data_to_save.pop('therapist_id', None)
-    data_to_save.pop('patient_id', None)
-    data_to_save.pop('visit_type', None)
-    data_to_save.pop('duration', None)
+    # Copy data and remove non-note fields
+    notes_dict = dict(data)
+    for k in ['therapist_id', 'patient_id', 'visit_type', 'duration']:
+        notes_dict.pop(k, None)
 
-    try:
-        visit = Visit(
-            patient_id=patient_id,
-            therapist_id=therapist_id,
-            visit_date=datetime.utcnow(),
-            end_time=None,
-            duration=duration,
-            visit_type=visit_type,
-            status='Completed',
-            notes=json.dumps(data_to_save),   # Save all PT Builder fields as JSON string!
-        )
-        db.session.add(visit)
-        db.session.commit()
-        return jsonify({'status': 'ok', 'message': 'Visit saved!', 'visit_id': visit.id})
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+    visit = Visit(
+        patient_id=patient_id,
+        therapist_id=therapist_id,
+        visit_date=datetime.utcnow(),
+        visit_type=visit_type,
+        status='Completed',
+        notes=json.dumps(notes_dict),
+    )
+    db.session.add(visit)
+    db.session.commit()
+    return jsonify({'status': 'ok', 'message': 'Visit saved!', 'visit_id': visit.id})
+
     
 @app.template_filter('fromjson')
 def fromjson_filter(s):
@@ -567,7 +564,7 @@ def visit_detail(visit_id):
     if visit.notes:
         try:
             notes = json.loads(visit.notes)
-        except Exception:
+        except Exception as e:
             notes = {}
     return render_template("visit_detail.html", visit=visit, notes=notes)
 
@@ -615,10 +612,7 @@ def edit_visit(visit_id):
         visit.therapist_id = request.form.get('therapist_id')
         visit.visit_type = request.form.get('visit_type')
         visit_date = request.form.get('visit_date')
-        visit_time = request.form.get('visit_time')
         visit.status = request.form.get('status')
-        visit.visit_date = datetime.strptime(f"{visit_date} {visit_time}", "%m-%d-%Y %H:%M")
-        visit.duration = 60
         db.session.commit()
         update_google_event(visit)
         flash("Visit updated!", "success")
