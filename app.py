@@ -54,6 +54,13 @@ def load_user(user_id):
     return Therapist.query.get(int(user_id))
 
 # AUTH
+
+@app.route('/reset_therapists')
+def reset_therapists():
+    Therapist.__table__.drop(db.engine)
+    Therapist.__table__.create(db.engine)
+    return "Therapist table reset. Now visit /create_therapists."
+    
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
