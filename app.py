@@ -485,10 +485,31 @@ def patients_list():
 @login_required
 def patient_detail(patient_id):
     patient = Patient.query.get_or_404(patient_id)
-    visits = Visit.query.filter_by(patient_id=patient_id).order_by(Visit.visit_date.desc()).all()
+    all_visits = Visit.query.filter_by(patient_id=patient_id).order_by(Visit.visit_date.desc()).all()
     attachments = Attachment.query.filter_by(patient_id=patient_id).order_by(Attachment.uploaded_at.desc()).all()
+
+    # 30 days ago cutoff
+    deleted_cutoff = datetime.utcnow() - timedelta(days=30)
+
+    # Filter deleted visits & purge old deleted visits
+    deleted_visits = [v for v in all_visits if v.status == "Deleted"]
+    for visit in deleted_visits:
+        if visit.visit_date < deleted_cutoff:
+            db.session.delete(visit)
+    db.session.commit()
+
+    # Active visits = all except deleted
+    active_visits = [v for v in all_visits if v.status != "Deleted"]
+
     edit_visit_id = request.args.get('edit_visit_id', type=int)
-    return render_template('patient_detail.html', patient=patient, visits=visits, attachments=attachments, edit_visit_id=edit_visit_id)
+    return render_template(
+        'patient_detail.html',
+        patient=patient,
+        visits=active_visits,
+        deleted_visits=deleted_visits,
+        attachments=attachments,
+        edit_visit_id=edit_visit_id
+    )
 
 
 @app.route('/patients/new', methods=['GET', 'POST'])
@@ -691,7 +712,7 @@ def recover_visit(visit_id):
     visit = Visit.query.get_or_404(visit_id)
     try:
         if visit.status == 'Deleted':
-            visit.status = 'Completed'  # or whatever status was before
+            visit.status = 'Completed'  # or your active status
             db.session.commit()
             flash("Visit recovered successfully.", "success")
         else:
@@ -699,7 +720,8 @@ def recover_visit(visit_id):
     except Exception as e:
         db.session.rollback()
         flash(f"Error recovering visit: {e}", "danger")
-    return redirect(url_for('visit_detail', visit_id=visit_id))
+    return redirect(url_for('patient_detail', patient_id=visit.patient_id))
+
 
 @app.route('/visits/<int:visit_id>/update_note', methods=['POST'])
 @login_required
@@ -721,6 +743,7 @@ def update_visit_note(visit_id):
     flash("Visit notes updated!", "success")
     # Redirect back to patient detail without editing mode
     return redirect(url_for('patient_detail', patient_id=visit.patient_id))
+
     
 # ========== PHYSICIAN, INSURANCE, BILLING ==========
 

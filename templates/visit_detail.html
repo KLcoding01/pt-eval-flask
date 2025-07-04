@@ -1,9 +1,101 @@
 {% extends "base.html" %}
-{% block title %}Visit Detail{% endblock %}
+{% block title %}Visit Detail & Visit List{% endblock %}
 
 {% block content %}
 <div class="container my-4">
-  <div class="card shadow rounded-4 p-4">
+
+  <!-- Bootstrap Tabs for Visits and Deleted Visits -->
+  <ul class="nav nav-tabs mb-3" id="visitTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="visits-tab" data-bs-toggle="tab" data-bs-target="#visits-tab-pane" type="button" role="tab" aria-controls="visits-tab-pane" aria-selected="true">Visits</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="deleted-visits-tab" data-bs-toggle="tab" data-bs-target="#deleted-visits-tab-pane" type="button" role="tab" aria-controls="deleted-visits-tab-pane" aria-selected="false">Deleted Visits</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a href="{{ url_for('patient_detail', patient_id=visit.patient.id if visit else patient.id) }}" class="btn btn-secondary ms-3">Refresh</a>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="visitTabsContent">
+    <!-- Visits List Tab -->
+    <div class="tab-pane fade show active" id="visits-tab-pane" role="tabpanel" aria-labelledby="visits-tab">
+      {% if visits %}
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Therapist</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in visits %}
+          <tr>
+            <td>{{ v.visit_date.strftime('%Y-%m-%d %I:%M %p') }}</td>
+            <td>{{ v.visit_type }}</td>
+            <td>
+              {% if v.status %}
+                <span class="badge bg-success">{{ v.status }}</span>
+              {% else %}
+                <span class="badge bg-secondary">N/A</span>
+              {% endif %}
+            </td>
+            <td>{{ v.therapist.first_name }}, {{ v.therapist.last_name }}</td>
+            <td>
+              <a href="{{ url_for('visit_detail', visit_id=v.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+              <a href="{{ url_for('edit_visit_note', visit_id=v.id) }}" class="btn btn-sm btn-outline-warning ms-2">Edit</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="alert alert-info">No visits found.</div>
+      {% endif %}
+    </div>
+
+    <!-- Deleted Visits Tab -->
+    <div class="tab-pane fade" id="deleted-visits-tab-pane" role="tabpanel" aria-labelledby="deleted-visits-tab">
+      {% if deleted_visits %}
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Therapist</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in deleted_visits %}
+          <tr>
+            <td>{{ v.visit_date.strftime('%Y-%m-%d %I:%M %p') }}</td>
+            <td>{{ v.visit_type }}</td>
+            <td><span class="badge bg-secondary">Deleted</span></td>
+            <td>{{ v.therapist.first_name }}, {{ v.therapist.last_name }}</td>
+            <td>
+              <a href="{{ url_for('visit_detail', visit_id=v.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+              <form action="{{ url_for('recover_visit', visit_id=v.id) }}" method="POST" style="display:inline;">
+                <button type="submit" class="btn btn-sm btn-outline-success ms-2">Recover</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="alert alert-info">No deleted visits.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Detailed Single Visit View -->
+  {% if visit %}
+  <div class="card shadow rounded-4 p-4 mt-5">
     <h3 class="mb-3">PT Evaluation Details</h3>
     <div>
       <strong>Patient:</strong> {{ visit.patient.last_name }}, {{ visit.patient.first_name }}<br>
@@ -110,6 +202,8 @@
       <a href="{{ url_for('patient_detail', patient_id=visit.patient.id) }}" class="btn btn-secondary">Back to Patient</a>
     </div>
   </div>
+  {% endif %}
+
 </div>
 
 <script>
