@@ -681,6 +681,15 @@ def delete_visit(visit_id):
     flash("Visit deleted.", "info")
     return redirect(url_for('patient_detail', patient_id=visit.patient_id))
 
+@app.route('/visits/<int:visit_id>/delete', methods=['POST'])
+@login_required
+def delete_visit(visit_id):
+    visit = Visit.query.get_or_404(visit_id)
+    db.session.delete(visit)
+    db.session.commit()
+    flash("Visit deleted.", "info")
+    return redirect(url_for('patient_notes', patient_id=visit.patient.id))
+
 @app.route('/visits/<int:visit_id>/update_note', methods=['POST'])
 @login_required
 def update_visit_note(visit_id):
