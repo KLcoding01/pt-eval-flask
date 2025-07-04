@@ -58,6 +58,10 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         therapist = Therapist.query.filter_by(username=username).first()
+        print(f"Login attempt: {username} / {password}")
+        print(f"User found: {therapist}")
+        if therapist:
+            print(f"Stored hash: {therapist.password}")
         if therapist and check_password_hash(therapist.password, password):
             login_user(therapist)
             flash(f"Welcome back, {username}!", "success")
@@ -65,6 +69,7 @@ def login():
         else:
             error = "Invalid username or password."
     return render_template('login.html', error=error)
+
 
 @app.route('/logout')
 @login_required
@@ -94,6 +99,11 @@ def create_therapists():
     db.session.commit()
     return f"Added {len(users)} therapists!"
 
+@app.route('/therapist_debug')
+def therapist_debug():
+    users = Therapist.query.all()
+    return "<br>".join([f"{u.username} | {u.email}" for u in users])
+    
 # ========== DASHBOARD ==========
 @app.route('/dashboard')
 @login_required
