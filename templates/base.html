@@ -112,13 +112,12 @@
     <a class="navbar-brand" href="{{ url_for('dashboard') }}">Clinic Scheduler</a>
     <div class="navbar-links d-none d-md-flex">
       <a href="{{ url_for('dashboard') }}">Dashboard</a>
-      <a href="{{ url_for('patients_list') }}">Patients</a>
+      <a href="{{ url_for('patients_list') }}">My Patients</a>
       <a href="{{ url_for('therapists_list') }}">Therapists</a>
       <a href="{{ url_for('physicians_list') }}">Physicians</a>
       <a href="{{ url_for('insurance_list') }}">Insurance</a>
       <a href="{{ url_for('billing_overview') }}">Billing</a>
       <a href="{{ url_for('pt_builder') }}">PT Builder</a>
-      <a href="{{ url_for('visits_list') }}">Patient Visit</a>
     </div>
     <div class="navbar-right">
       <a href="{{ url_for('logout') }}">Logout</a>
@@ -143,13 +142,12 @@
       <nav class="col-md-3 col-lg-2 d-none d-md-block sidebar">
         <div class="list-group list-group-flush">
           <a href="{{ url_for('dashboard') }}" class="list-group-item {% if active_page == 'dashboard' %}active{% endif %}">🏠 Dashboard</a>
-          <a href="{{ url_for('patients_list') }}" class="list-group-item {% if active_page == 'patients' %}active{% endif %}">👥 Patients</a>
+          <a href="{{ url_for('patients_list') }}" class="list-group-item {% if active_page == 'patients' %}active{% endif %}">👥 My Patients</a>
           <a href="{{ url_for('therapists_list') }}" class="list-group-item {% if active_page == 'therapists' %}active{% endif %}">🧑‍⚕️ Therapists</a>
                   <a href="{{ url_for('physicians_list') }}" class="list-group-item {% if active_page == 'physicians' %}active{% endif %}">👨‍⚕️ Physicians</a>
           <a href="{{ url_for('insurance_list') }}" class="list-group-item {% if active_page == 'insurance' %}active{% endif %}">🏦 Insurance</a>
           <a href="{{ url_for('billing_overview') }}" class="list-group-item {% if active_page == 'billing' %}active{% endif %}">💳 Billing</a>
           <a href="{{ url_for('pt_builder') }}" class="list-group-item {% if active_page == 'pt_builder' %}active{% endif %}">📝 PT Builder</a>
-          <a href="{{ url_for('visits_list') }}" class="list-group-item {% if active_page == 'visits_list' %}active{% endif %}">👤 Patient Visit</a>
         </div>
       </nav>
       <!-- Main Content -->

@@ -481,36 +481,59 @@ def patients_list():
     patients = Patient.query.all()
     return render_template('patients.html', patients=patients, active_page='pt_builder')
 
+from datetime import datetime, timedelta
+
 @app.route('/patients/<int:patient_id>')
 @login_required
 def patient_detail(patient_id):
     patient = Patient.query.get_or_404(patient_id)
+
     all_visits = Visit.query.filter_by(patient_id=patient_id).order_by(Visit.visit_date.desc()).all()
     attachments = Attachment.query.filter_by(patient_id=patient_id).order_by(Attachment.uploaded_at.desc()).all()
 
-    # 30 days ago cutoff
+    # Notes: active and deleted (soft delete assumed)
+    notes = PTNote.query.filter_by(patient_id=patient_id, deleted=False).order_by(PTNote.date_created.desc()).all()
     deleted_cutoff = datetime.utcnow() - timedelta(days=30)
+    deleted_notes = PTNote.query.filter(
+        PTNote.patient_id == patient_id,
+        PTNote.deleted == True,
+        PTNote.deleted_at >= deleted_cutoff
+    ).order_by(PTNote.deleted_at.desc()).all()
 
-    # Filter deleted visits & purge old deleted visits
+    # Visits: split active/deleted and purge old deleted visits
     deleted_visits = [v for v in all_visits if v.status == "Deleted"]
     for visit in deleted_visits:
         if visit.visit_date < deleted_cutoff:
             db.session.delete(visit)
     db.session.commit()
 
-    # Active visits = all except deleted
     active_visits = [v for v in all_visits if v.status != "Deleted"]
 
     edit_visit_id = request.args.get('edit_visit_id', type=int)
+
     return render_template(
         'patient_detail.html',
         patient=patient,
         visits=active_visits,
         deleted_visits=deleted_visits,
         attachments=attachments,
+        notes=notes,
+        deleted_notes=deleted_notes,
         edit_visit_id=edit_visit_id
     )
-
+    
+@app.route('/notes/<int:note_id>/recover', methods=['POST'])
+@login_required
+def recover_note(note_id):
+    note = PTNote.query.get_or_404(note_id)
+    if note.deleted:
+        note.deleted = False
+        note.deleted_at = None
+        db.session.commit()
+        flash("Note recovered successfully.", "success")
+    else:
+        flash("Note is not deleted.", "info")
+    return redirect(url_for('patient_detail', patient_id=note.patient_id))
 
 @app.route('/patients/new', methods=['GET', 'POST'])
 @login_required
