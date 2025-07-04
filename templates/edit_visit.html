@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Edit Visit{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <h3>Edit Visit Details</h3>
+  <form method="POST" action="{{ url_for('edit_visit', visit_id=visit.id) }}">
+    <div class="mb-3">
+      <label for="meddiag" class="form-label">Medical Diagnosis</label>
+      <textarea class="form-control" id="meddiag" name="meddiag" rows="3">{{ notes.get('meddiag', '') }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label for="history" class="form-label">Medical History/HNP</label>
+      <textarea class="form-control" id="history" name="history" rows="3">{{ notes.get('history', '') }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label for="subjective" class="form-label">Subjective</label>
+      <textarea class="form-control" id="subjective" name="subjective" rows="3">{{ notes.get('subjective', '') }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label for="frequency" class="form-label">Frequency</label>
+      <input type="text" class="form-control" id="frequency" name="frequency" value="{{ notes.get('frequency', '') }}">
+    </div>
+    <div class="mb-3">
+      <label for="intervention" class="form-label">Intervention</label>
+      <textarea class="form-control" id="intervention" name="intervention" rows="3">{{ notes.get('intervention', '') }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label for="procedures" class="form-label">Treatment Procedures</label>
+      <textarea class="form-control" id="procedures" name="procedures" rows="3">{{ notes.get('procedures', '') }}</textarea>
+    </div>
+    <!-- Add other fields as needed -->
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a href="{{ url_for('visit_detail', visit_id=visit.id) }}" class="btn btn-secondary ms-2">Cancel</a>
+  </form>
+</div>
+{% endblock %}

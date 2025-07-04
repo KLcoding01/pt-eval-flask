@@ -620,19 +620,32 @@ def new_visit():
 @login_required
 def edit_visit(visit_id):
     visit = Visit.query.get_or_404(visit_id)
-    patients = Patient.query.all()
-    therapists = Therapist.query.all()
+    notes = {}
+    if visit.notes:
+        try:
+            notes = json.loads(visit.notes)
+        except Exception:
+            notes = {}
+
     if request.method == 'POST':
-        visit.patient_id = request.form.get('patient_id')
-        visit.therapist_id = request.form.get('therapist_id')
-        visit.visit_type = request.form.get('visit_type')
-        visit_date = request.form.get('visit_date')
-        visit.status = request.form.get('status')
+        # Update notes from submitted form fields
+        notes['meddiag'] = request.form.get('meddiag', '').strip()
+        notes['history'] = request.form.get('history', '').strip()
+        notes['subjective'] = request.form.get('subjective', '').strip()
+        notes['frequency'] = request.form.get('frequency', '').strip()
+        notes['intervention'] = request.form.get('intervention', '').strip()
+        notes['procedures'] = request.form.get('procedures', '').strip()
+        # Add any other fields you want to save
+
+        # Save JSON back to visit.notes
+        visit.notes = json.dumps(notes)
         db.session.commit()
-        update_google_event(visit)
-        flash("Visit updated!", "success")
-        return redirect(url_for('visits_list'))
-    return render_template('visit_form.html', visit=visit, patients=patients, therapists=therapists, edit=True)
+
+        flash("Visit updated successfully!", "success")
+        return redirect(url_for('visit_detail', visit_id=visit.id))
+
+    # GET: render the form with current notes
+    return render_template('edit_visit.html', visit=visit, notes=notes)
     
 @app.route('/visits/<int:visit_id>/edit_note', methods=['GET', 'POST'])
 @login_required
