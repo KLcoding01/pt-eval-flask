@@ -95,15 +95,14 @@ class Visit(db.Model):
     therapist_id = db.Column(db.Integer, db.ForeignKey("therapists.id"), nullable=False)
     visit_date = db.Column(db.DateTime, default=datetime.utcnow)
     end_time = db.Column(db.DateTime)
-    duration = db.Column(db.Integer, default=60)  # in minutes, optional but useful
+    duration = db.Column(db.Integer, default=60)
     visit_type = db.Column(db.String(64))
     status = db.Column(db.String(32), default="Scheduled")
     cpt_code_id = db.Column(db.Integer, db.ForeignKey("cpt_codes.id"), nullable=True)
     icd10_code_id = db.Column(db.Integer, db.ForeignKey("icd10_codes.id"), nullable=True)
     notes = db.Column(db.Text)
-    google_event_id = db.Column(db.String(128), nullable=True) 
+    google_event_id = db.Column(db.String(128), nullable=True)
 
-    # Relationships
     billing = db.relationship("Billing", uselist=False, back_populates="visit", cascade="all, delete-orphan")
     attachments = db.relationship("Attachment", back_populates="visit", cascade="all, delete-orphan")
     patient = db.relationship("Patient", back_populates="visits")
@@ -157,7 +156,7 @@ class ScheduleEvent(db.Model):
 
     def __repr__(self):
         return f"<ScheduleEvent {self.title}>"
-
+        
 class PTNote(db.Model):
     __tablename__ = "pt_notes"
     id = db.Column(db.Integer, primary_key=True)
