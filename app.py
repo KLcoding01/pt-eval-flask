@@ -535,8 +535,8 @@ def patient_detail(patient_id):
 def recover_note(note_id):
     note = PTNote.query.get_or_404(note_id)
     if note.deleted:
-        note.deleted = False
-        note.deleted_at = None
+        note.deleted = True
+        note.deleted_at = datetime.utcnow()
         db.session.commit()
         flash("Note recovered successfully.", "success")
     else:
