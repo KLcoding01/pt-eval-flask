@@ -1247,18 +1247,19 @@ def pt_generate_summary():
     func = f.get("functional", "")
 
     prompt = (
-        "Generate a concise, 7-8 sentence Physical Therapy assessment summary medicare compliant form for PT documentation. "
+        "Generate a concise, 7-8 sentence Physical Therapy assessment summary medicare compliant for PT documentation. "
         "Use clinical, professional language and use abbreviations only (e.g., HEP, ADLs, LBP, STM, TherEx, etc.; "
         "do not spell out the abbreviation and do not write both full term and abbreviation). "
         "Never use the phrase 'The patient'; instead, use 'Pt' at the start of each relevant sentence. "
+        "Make sure to the summary is well written with no gramatical error and health care professional manner."
         f"Start with: \"{name}, a {age} y/o {gender} with relevant history of {pmh}.\" "
         f"Include: "
         f"How/when/why pt was seen (PT initial eval on {today} for {subj}), "
         f"mechanism of injury if available ({moi}), "
         f"main differential dx ({dx}), "
-        f"current impairments (strength: {strg}; ROM: {rom}; balance/mobility: {impair}), "
+        f"current impairments Summary, but not too specific(strength: {strg}; ROM: {rom}; balance/mobility: {impair}), "
         f"functional/activity/participation limitations: {func}, "
-        "a professional prognosis and that skilled PT will help pt return to PLOF. "
+        "a professional prognosis and that skilled PT will help pt address impairments and return to PLOF. "
         "Do not use bulleted or numbered lists—just a single, well-written summary paragraph."
     )
     result = gpt_call(prompt, max_tokens=350)
