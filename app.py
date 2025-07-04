@@ -5,6 +5,8 @@ import json
 from flask import (Flask, request, jsonify, redirect, url_for, flash, render_template, send_file, session)
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from werkzeug.security import check_password_hash
+if therapist and check_password_hash(therapist.password, password):
+    login_user(therapist)
 from dotenv import load_dotenv
 from openai import OpenAI
 from docx import Document
