@@ -384,11 +384,6 @@ def edit_visit_date(visit_id):
     db.session.commit()
     return redirect(url_for('patient_profile', patient_id=visit.patient_id))
 
-@app.route('/visit/<int:visit_id>')
-def visit_detail(visit_id):
-    visit = Visit.query.get_or_404(visit_id)
-    return render_template('visit_detail.html', visit=visit)
-
 @app.route("/visits")
 @login_required
 def visit_list():
