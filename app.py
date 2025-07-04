@@ -564,10 +564,10 @@ def visit_detail(visit_id):
     if visit.notes:
         try:
             notes = json.loads(visit.notes)
-        except Exception as e:
+        except Exception:
             notes = {}
     return render_template("visit_detail.html", visit=visit, notes=notes)
-
+    
 @app.route('/visits/new', methods=['GET', 'POST'])
 @login_required
 def new_visit():

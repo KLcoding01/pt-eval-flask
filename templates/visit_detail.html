@@ -17,7 +17,7 @@
     <div>
       <strong>Medical Diagnosis:</strong>
       <div class="border p-2 mb-3" style="white-space: pre-line;">
-        {{ visit.notes['meddiag'] if notes and 'meddiag' in notes else 'N/A' }}
+        {{ notes['meddiag'] if notes and 'meddiag' in notes else 'N/A' }}
       </div>
     </div>
     <hr>
@@ -33,7 +33,7 @@
     <div>
       <strong>Subjective:</strong>
       <div class="border p-2 mb-3" style="white-space: pre-line;">
-        {{ visit.notes['subjective'] if notes and 'subjective' in notes else 'N/A' }}
+        {{ notes['subjective'] if notes and 'subjective' in notes else 'N/A' }}
       </div>
     </div>
     <hr>
@@ -41,7 +41,7 @@
     <div>
       <strong>Pain:</strong>
       <div class="border p-2 mb-3" style="white-space: pre-line;">
-        {{ visit.notes['pain'] if notes and 'pain' in notes else 'N/A' }}
+        {{ notes['pain'] if notes and 'pain' in notes else 'N/A' }}
       </div>
     </div>
     <hr>
@@ -49,7 +49,7 @@
     <div>
       <strong>Objective:</strong>
       <div class="border p-2 mb-3" style="white-space: pre-line;">
-        {{ visit.notes['objective'] if notes and 'objective' in notes else 'N/A' }}
+        {{ notes['objective'] if notes and 'objective' in notes else 'N/A' }}
       </div>
     </div>
     <hr>
@@ -57,7 +57,7 @@
     <div>
       <strong>Assessment Summary:</strong>
       <div class="border p-2 mb-3" style="white-space: pre-line;">
-        {{ visit.notes['summary'] if notes and 'summary' in notes else 'N/A' }}
+        {{ notes['summary'] if notes and 'summary' in notes else 'N/A' }}
       </div>
     </div>
     <hr>
@@ -65,7 +65,7 @@
     <div>
       <strong>Goals:</strong>
       <div class="border p-2 mb-3" style="white-space: pre-line;">
-        {{ visit.notes['goals'] if notes and 'goals' in notes else 'N/A' }}
+        {{ notes['goals'] if notes and 'goals' in notes else 'N/A' }}
       </div>
     </div>
     <hr>
@@ -73,7 +73,7 @@
     <div>
       <strong>Frequency:</strong>
       <div class="border p-2 mb-3" style="white-space: pre-line;">
-        {{ visit.notes['frequency'] if notes and 'frequency' in notes else 'N/A' }}
+        {{ notes['frequency'] if notes and 'frequency' in notes else 'N/A' }}
       </div>
     </div>
     <hr>
@@ -81,7 +81,7 @@
     <div>
       <strong>Intervention:</strong>
       <div class="border p-2 mb-3" style="white-space: pre-line;">
-        {{ visit.notes['intervention'] if notes and 'intervention' in notes else 'N/A' }}
+        {{ notes['intervention'] if notes and 'intervention' in notes else 'N/A' }}
       </div>
     </div>
     <hr>
@@ -89,7 +89,7 @@
     <div>
       <strong>Treatment Procedures:</strong>
       <div class="border p-2 mb-3" style="white-space: pre-line;">
-        {{ visit.notes['procedures'] if notes and 'procedures' in notes else 'N/A' }}
+        {{ notes['procedures'] if notes and 'procedures' in notes else 'N/A' }}
       </div>
     </div>
     <hr>
