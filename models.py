@@ -1,7 +1,7 @@
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from sqlalchemy import Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
 
 db = SQLAlchemy()
 
@@ -159,22 +159,25 @@ class ScheduleEvent(db.Model):
 
 class PTNote(db.Model):
     __tablename__ = "pt_notes"
-    id = db.Column(db.Integer, primary_key=True)
-    patient_id = db.Column(db.Integer, db.ForeignKey("patients.id"), nullable=False)
-    therapist_id = db.Column(db.Integer, db.ForeignKey("therapists.id"), nullable=True)
-    visit_id = db.Column(db.Integer, db.ForeignKey("visits.id"), nullable=True)
-    date_created = db.Column(db.DateTime, default=datetime.utcnow)
-    note_type = db.Column(db.String(64), default="SOAP")  # e.g., "SOAP", "Eval", "Progress", "DC"
-    content = db.Column(db.Text, nullable=False)
+
+    id = Column(Integer, primary_key=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    therapist_id = Column(Integer, ForeignKey("therapists.id"), nullable=True)
+    visit_id = Column(Integer, ForeignKey("visits.id"), nullable=True)
+
+    date_created = Column(DateTime, default=datetime.utcnow, nullable=False)
+    note_type = Column(String(64), default="SOAP", nullable=False)  # e.g., "SOAP", "Eval", "Progress", "DC"
+    content = Column(Text, nullable=False)
 
     # Soft delete columns
-    deleted = db.Column(Boolean, default=False, nullable=False)
-    deleted_at = db.Column(DateTime, nullable=True)
+    deleted = db.Column(db.Boolean, default=False, nullable=False)
+    deleted_at = db.Column(db.DateTime, nullable=True)
 
-    # Relationships (optional but handy)
+    # Relationships for easy access
     patient = db.relationship('Patient', backref=db.backref('pt_notes', lazy='dynamic'))
     therapist = db.relationship('Therapist', backref=db.backref('pt_notes', lazy='dynamic'))
     visit = db.relationship('Visit', backref=db.backref('pt_notes', lazy='dynamic'))
 
     def __repr__(self):
         return f"<PTNote {self.id} Patient:{self.patient_id} Type:{self.note_type} Deleted:{self.deleted}>"
+

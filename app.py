@@ -15,7 +15,9 @@ from datetime import date, datetime, timedelta
 from io import BytesIO
 from functools import wraps
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.dialects.sqlite import JSON
+from flask_migrate import Migrate
 
 # Google Calendar imports
 from google_auth_oauthlib.flow import Flow
@@ -29,10 +31,15 @@ from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, 
 # ====== ENV & CONFIG ======
 load_dotenv()
 app = Flask(__name__)
+
 app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key_change_me")
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////static/uploads/db.sqlite3'
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+db_path = os.path.join(basedir, 'static', 'uploads', 'db.sqlite3')
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
+
 # ====== FORGOT PASSWORD RESET ======
 app.config['MAIL_SERVER'] = os.getenv("MAIL_SERVER", "smtp.gmail.com")
 app.config['MAIL_PORT'] = int(os.getenv("MAIL_PORT", 587))
@@ -49,6 +56,7 @@ MODEL = "gpt-4o-mini"
 
 # ====== INIT DB ======
 db.init_app(app)
+migrate = Migrate(app, db)
 
 # ====== LOGIN MANAGER ======
 login_manager = LoginManager()
@@ -491,7 +499,7 @@ def patient_detail(patient_id):
     all_visits = Visit.query.filter_by(patient_id=patient_id).order_by(Visit.visit_date.desc()).all()
     attachments = Attachment.query.filter_by(patient_id=patient_id).order_by(Attachment.uploaded_at.desc()).all()
 
-    # Notes: active and deleted (soft delete assumed)
+    # Notes: active and deleted (soft delete)
     notes = PTNote.query.filter_by(patient_id=patient_id, deleted=False).order_by(PTNote.date_created.desc()).all()
     deleted_cutoff = datetime.utcnow() - timedelta(days=30)
     deleted_notes = PTNote.query.filter(
