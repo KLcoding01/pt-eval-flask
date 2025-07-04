@@ -29,7 +29,7 @@ class Therapist(db.Model, UserMixin):
     __tablename__ = "therapists"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)   # Should be hashed!
+    password = db.Column(db.String(200), nullable=False)
     first_name = db.Column(db.String(64), nullable=False)
     last_name = db.Column(db.String(64), nullable=False)
     credentials = db.Column(db.String(128))
@@ -37,13 +37,13 @@ class Therapist(db.Model, UserMixin):
     phone = db.Column(db.String(20))
     availability = db.Column(db.String(256))
 
-    # Relationships
+    # Relationships (stubs for now, implement these if your other models exist)
     visits = db.relationship("Visit", back_populates="therapist", cascade="all, delete-orphan")
     schedule_events = db.relationship('ScheduleEvent', back_populates='therapist', cascade='all, delete-orphan')
 
     def __repr__(self):
         return f"<Therapist {self.first_name} {self.last_name}>"
-
+        
 class Physician(db.Model):
     __tablename__ = "physicians"
     id = db.Column(db.Integer, primary_key=True)

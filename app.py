@@ -24,78 +24,113 @@ from google.auth.transport.requests import Request
 # DB MODELS
 from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, Therapist, Visit, Physician, Insurance, PTNote
     
-# CONFIG & INIT
+# ====== ENV & CONFIG ======
 load_dotenv()
 app = Flask(__name__)
-    
-# Flask-Login setup
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = "login"
-
-@login_manager.user_loader
-def load_user(user_id):
-    return Therapist.query.get(int(user_id))
-
-# SECRET KEY
 app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key_change_me")
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////static/uploads/db.sqlite3'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
+
+# ====== INIT DB ======
 db.init_app(app)
 
+# ====== LOGIN MANAGER ======
+login_manager = LoginManager()
+login_manager.login_view = 'login'
+login_manager.init_app(app)
 
-# OPENAI
-OPENAI_KEY = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
-MODEL = "gpt-4o-mini"
 @login_manager.user_loader
 def load_user(user_id):
     return Therapist.query.get(int(user_id))
 
-# ---------- AUTH ROUTES ----------
+# ====== CREATE TABLES & ADMIN IF NONE ======
+with app.app_context():
+    db.create_all()
+    # Only run this once! Add a default admin user if none exists:
+    if not Therapist.query.filter_by(username="admin").first():
+        hashed_pw = generate_password_hash("admin123")
+        admin = Therapist(
+            username="admin",
+            password=hashed_pw,
+            first_name="Admin",
+            last_name="User",
+            credentials="PT",
+            email="admin@example.com",
+            phone="555-555-5555",
+            availability="M-F"
+        )
+        db.session.add(admin)
+        db.session.commit()
+        print("Default admin user created: username=admin, password=admin123")
+
+# ====== ROUTES ======
+@app.route('/')
+def index():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('login'))
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    error = None
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        therapist = Therapist.query.filter_by(username=username).first()
-        print(f"Login attempt: {username} / {password}")
-        print(f"User found: {therapist}")
-        if therapist:
-            print(f"Stored hash: {therapist.password}")
-        if therapist and check_password_hash(therapist.password, password):
-            login_user(therapist)
-            flash(f"Welcome back, {username}!", "success")
+        username = request.form['username']
+        password = request.form['password']
+        user = Therapist.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password, password):
+            login_user(user)
             return redirect(url_for('dashboard'))
         else:
-            error = "Invalid username or password."
-    return render_template('login.html', error=error)
+            flash("Invalid username or password", "danger")
+    return render_template('login.html')
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
-    flash("You have been logged out.", "info")
     return redirect(url_for('login'))
-
-@app.route('/')
-def home():
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
-    else:
-        return redirect(url_for('login'))
 
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html', user=current_user)
-    
-# --------- DB INIT -----------
-with app.app_context():
-    db.create_all()
-    
+    return f"""
+        <h2>Welcome, {current_user.first_name} {current_user.last_name}!</h2>
+        <p>Username: {current_user.username}</p>
+        <p>Email: {current_user.email}</p>
+        <a href='/logout'>Logout</a>
+    """
+
+# Optional: Registration (delete or lock down after initial use!)
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        first_name = request.form['first_name']
+        last_name = request.form['last_name']
+        credentials = request.form['credentials']
+        email = request.form['email']
+        phone = request.form['phone']
+        availability = request.form['availability']
+        if Therapist.query.filter_by(username=username).first():
+            flash("Username already exists.", "danger")
+            return redirect(url_for('register'))
+        hashed_pw = generate_password_hash(password)
+        user = Therapist(
+            username=username,
+            password=hashed_pw,
+            first_name=first_name,
+            last_name=last_name,
+            credentials=credentials,
+            email=email,
+            phone=phone,
+            availability=availability
+        )
+        db.session.add(user)
+        db.session.commit()
+        flash("Registration successful. Please log in.", "success")
+        return redirect(url_for('login'))
+    return render_template('register.html')
     
 # =================== GOOGLE CALENDAR INTEGRATION ===================
 SCOPES = ['https://www.googleapis.com/auth/calendar']

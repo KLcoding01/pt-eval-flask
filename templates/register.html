@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register Therapist</title>
+</head>
+<body>
+    <h2>Register Therapist</h2>
+    <form method="POST">
+        <input name="username" placeholder="Username" required>
+        <input name="password" type="password" placeholder="Password" required>
+        <input name="first_name" placeholder="First Name" required>
+        <input name="last_name" placeholder="Last Name" required>
+        <input name="credentials" placeholder="Credentials (e.g., PT)" required>
+        <input name="email" placeholder="Email" required>
+        <input name="phone" placeholder="Phone" required>
+        <input name="availability" placeholder="Availability" required>
+        <button type="submit">Register</button>
+    </form>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+        {% for category, message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+</body>
+</html>
