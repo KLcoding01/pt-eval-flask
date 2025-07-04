@@ -82,6 +82,19 @@ def home():
     else:
         return redirect(url_for('login'))
         
+@app.route('/create_therapists')
+def create_therapists():
+    users = [
+        dict(username="kelvin", password="Thanh123!", first_name="Kelvin", last_name="Lam", email="kelvin@example.com"),
+        dict(username="thera2", password="Pass456!", first_name="Thera", last_name="Second", email="thera2@example.com"),
+        dict(username="thera3", password="Wow789!", first_name="Thera", last_name="Third", email="thera3@example.com")
+    ]
+    for u in users:
+        t = Therapist(**u)
+        db.session.add(t)
+    db.session.commit()
+    return f"Added {len(users)} therapists!"
+        
 # =================== GOOGLE CALENDAR INTEGRATION ===================
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
