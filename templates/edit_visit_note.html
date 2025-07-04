@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Edit Visit Note{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <h2>Edit Visit Note - {{ visit.patient.first_name }} {{ visit.patient.last_name }}</h2>
+  <form method="POST">
+    {% for key, value in notes.items() %}
+      <div class="mb-3">
+        <label for="{{ key }}" class="form-label"><strong>{{ key | capitalize }}</strong></label>
+        <textarea
+          class="form-control"
+          id="{{ key }}"
+          name="{{ key }}"
+          rows="4"
+          >{{ value }}</textarea>
+      </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Save Note</button>
+    <a href="{{ url_for('visit_detail', visit_id=visit.id) }}" class="btn btn-secondary ms-2">Cancel</a>
+  </form>
+</div>
+{% endblock %}
+

@@ -487,7 +487,8 @@ def patient_detail(patient_id):
     patient = Patient.query.get_or_404(patient_id)
     visits = Visit.query.filter_by(patient_id=patient_id).order_by(Visit.visit_date.desc()).all()
     attachments = Attachment.query.filter_by(patient_id=patient_id).order_by(Attachment.uploaded_at.desc()).all()
-    return render_template('patient_detail.html', patient=patient, visits=visits, attachments=attachments)
+    edit_visit_id = request.args.get('edit_visit_id', type=int)
+    return render_template('patient_detail.html', patient=patient, visits=visits, attachments=attachments, edit_visit_id=edit_visit_id)
 
 
 @app.route('/patients/new', methods=['GET', 'POST'])
@@ -665,6 +666,27 @@ def delete_visit(visit_id):
     db.session.delete(visit)
     db.session.commit()
     flash("Visit deleted.", "info")
+    return redirect(url_for('patient_detail', patient_id=visit.patient_id))
+
+@app.route('/visits/<int:visit_id>/update_note', methods=['POST'])
+@login_required
+def update_visit_note(visit_id):
+    visit = Visit.query.get_or_404(visit_id)
+    notes = {}
+    if visit.notes:
+        try:
+            notes = json.loads(visit.notes)
+        except Exception:
+            notes = {}
+
+    # Update notes from form submission
+    for key in notes.keys():
+        notes[key] = request.form.get(key, '').strip()
+
+    visit.notes = json.dumps(notes)
+    db.session.commit()
+    flash("Visit notes updated!", "success")
+    # Redirect back to patient detail without editing mode
     return redirect(url_for('patient_detail', patient_id=visit.patient_id))
     
 # ========== PHYSICIAN, INSURANCE, BILLING ==========
