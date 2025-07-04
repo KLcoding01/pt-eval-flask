@@ -4,7 +4,7 @@ import re
 import json
 from flask import (Flask, request, jsonify, redirect, url_for, flash, render_template, send_file, session)
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
-from werkzeug.security import check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 from openai import OpenAI
 from docx import Document
