@@ -1,6 +1,8 @@
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 db = SQLAlchemy()
+
 
 class Patient(db.Model):
     __tablename__ = "patients"
@@ -23,9 +25,12 @@ class Patient(db.Model):
     def __repr__(self):
         return f"<Patient {self.first_name} {self.last_name}>"
 
-class Therapist(db.Model):
+class Therapist(db.Model, UserMixin):
     __tablename__ = "therapists"
     id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)  # For login
+    password = db.Column(db.String(200), nullable=False)               # For login (should be hashed)
+    
     first_name = db.Column(db.String(64), nullable=False)
     last_name = db.Column(db.String(64), nullable=False)
     credentials = db.Column(db.String(128))

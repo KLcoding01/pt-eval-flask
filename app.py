@@ -4,6 +4,7 @@ import re
 import json
 from flask import (Flask, request, jsonify, redirect, url_for, flash, render_template, send_file, session)
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
+from werkzeug.security import check_password_hash
 from dotenv import load_dotenv
 from openai import OpenAI
 from docx import Document
@@ -21,11 +22,21 @@ from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
 
 # DB MODELS
-from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, Visit, Therapist, Physician, Insurance, PTNote
+from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, Therapist, Visit, Physician, Insurance, PTNote
 
 # CONFIG & INIT
 load_dotenv()
 app = Flask(__name__)
+
+# LOGIN MANAGER
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Therapist.query.get(int(user_id))
+
+# SECRET KEY
 app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key_change_me")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -40,24 +51,15 @@ client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 MODEL = "gpt-4o-mini"
 
 # AUTH
-USERS = {"kelvin": "Thanh123!", "test1": "test1"}
-def login_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if 'username' not in session:
-            flash("Please log in to access this page.", "warning")
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        if username in USERS and USERS[username] == password:
-            session['username'] = username
+        therapist = Therapist.query.filter_by(username=username).first()
+        if therapist and therapist.password == password:  # Use password hashing in production!
+            login_user(therapist)
             flash(f"Welcome back, {username}!", "success")
             return redirect(url_for('dashboard'))
         else:
@@ -67,18 +69,17 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
-    session.pop('username', None)
-    session.pop('credentials', None)
+    logout_user()
     flash("You have been logged out.", "info")
     return redirect(url_for('login'))
 
 @app.route('/')
 def home():
-    if 'username' in session:
+    if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
     else:
         return redirect(url_for('login'))
-
+        
 # =================== GOOGLE CALENDAR INTEGRATION ===================
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
@@ -221,36 +222,26 @@ def api_patient_list():
 @app.route('/pt_save_to_patient', methods=['POST'])
 @login_required
 def pt_save_to_patient():
+    import json
     data = request.get_json()
     patient_id = data.get('patient_id')
 
-    # Map form fields to Visit model fields!
     visit = Visit(
         patient_id=patient_id,
-        therapist_id=current_user.id,  # or from data['therapist_id'] if you let user select
+        therapist_id=None,  # Or get from session/form if available
         visit_type='PT Evaluation',
         status='Completed',
         visit_date=datetime.now(),
-        medical_diagnosis=data.get('meddiag'),
-        medical_history=data.get('history'),
-        subjective=data.get('subjective'),
-        pain=data.get('pain_description'),  # map as appropriate
-        objective=data.get('objective'),
-        assessment_summary=data.get('summary'),
-        goals=data.get('goals'),
-        frequency=data.get('frequency'),
-        intervention=data.get('intervention'),
-        treatment_procedures=data.get('procedures'),
-        # etc...
+        notes=json.dumps(data)  # <-- Only use valid fields
     )
     db.session.add(visit)
     db.session.commit()
 
-    # Save the PTNote and link to Visit
+    # Optionally also save as PTNote
     pt_note = PTNote(
         patient_id=patient_id,
-        visit_id=visit.id,        # link note to visit!
-        content=data.get('summary'),
+        visit_id=visit.id,
+        content=data.get('summary', ''),
         date_created=datetime.now()
     )
     db.session.add(pt_note)
@@ -258,7 +249,13 @@ def pt_save_to_patient():
 
     return jsonify({"message": "PT Evaluation saved to patient as Visit and Note."})
     
-    
+@app.template_filter('fromjson')
+def fromjson_filter(s):
+    try:
+        return json.loads(s)
+    except Exception:
+        return {}
+        
 @app.route('/edit_visit_date/<int:visit_id>', methods=['POST'])
 def edit_visit_date(visit_id):
     new_date = request.form.get('date')
@@ -518,12 +515,11 @@ def edit_visit(visit_id):
 @login_required
 def delete_visit(visit_id):
     visit = Visit.query.get_or_404(visit_id)
-    delete_google_event(visit)
+    delete_google_event(visit)  # if using Google Calendar sync
     db.session.delete(visit)
     db.session.commit()
-    flash("Visit deleted (and removed from Google Calendar).", "info")
-    return redirect(url_for('visits_list'))
-
+    flash("Visit deleted.", "info")
+    return redirect(url_for('patient_detail', patient_id=visit.patient_id))
     
 # ========== PHYSICIAN, INSURANCE, BILLING ==========
 
@@ -1399,3 +1395,4 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True)
+
