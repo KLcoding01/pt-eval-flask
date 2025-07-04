@@ -1265,28 +1265,27 @@ def pt_generate_summary():
 @login_required
 def pt_generate_goals():
     fields = request.json.get("fields", {})
-    prompt = f"""
-You are a clinical assistant helping a PT write documentation.
-Using ONLY the provided eval info (summary, objective findings, strength, ROM, impairments, and functional limitations),
-generate clinically-appropriate, Medicare-compliant short-term and long-term PT goals.
-ALWAYS follow this exact format—do not add, skip, reorder, or alter any lines or labels.
-DO NOT add any explanations, introductions, dashes, bullets, or extra indentation. Output ONLY this structure:
+    prompt = """
+    You are a clinical assistant helping a PT write documentation.
+    Using ONLY the provided eval info (summary, objective findings, strength, ROM, impairments, and functional limitations),
+    generate clinically-appropriate, Medicare-compliant short-term and long-term PT goals.
+    ALWAYS follow this exact format—do not add, skip, reorder, or alter any lines or labels.
+    DO NOT add any explanations, introductions, dashes, bullets, or extra indentation. Output ONLY this structure:
 
-Short-Term Goals (1–12 visits):
-1. [goal statement]
-2. [goal statement]
-3. [goal statement]
-4. [goal statement]
+    Short-Term Goals (1–12 visits):
+    1. [goal statement]
+    2. [goal statement]
+    3. [goal statement]
+    4. [goal statement]
 
-Long-Term Goals (13–25 visits):
-1. [goal statement]
-2. [goal statement]
-3. [goal statement]
-4. [goal statement]
-"""
-    # You may want to actually fill in the fields into the prompt if desired
+    Long-Term Goals (13–25 visits):
+    1. [goal statement]
+    2. [goal statement]
+    3. [goal statement]
+    4. [goal statement]
+    """
 
-    result = gpt_call(prompt, max_tokens=350)  # result = plain string from GPT
+    result = gpt_call(prompt, max_tokens=350)
     return jsonify({"result": result})
     
 
