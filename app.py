@@ -28,6 +28,15 @@ from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, 
 load_dotenv()
 app = Flask(__name__)
 
+# Flask-Login setup
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Therapist.query.get(int(user_id))
+
 # SECRET KEY
 app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key_change_me")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
@@ -40,15 +49,6 @@ db.init_app(app)
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 MODEL = "gpt-4o-mini"
-@login_manager.user_loader
-def load_user(user_id):
-    return Therapist.query.get(int(user_id))
-
-# Flask-Login setup
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = "login"
-
 @login_manager.user_loader
 def load_user(user_id):
     return Therapist.query.get(int(user_id))
