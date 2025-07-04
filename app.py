@@ -781,7 +781,7 @@ def new_therapist():
         phone = request.form.get('phone')
         availability = request.form.get('availability')
 
-        # Basic validation (add more as needed)
+        # Validate required fields
         if not first_name or not last_name or not email:
             flash("First name, last name, and email are required.", "danger")
             return redirect(url_for('new_therapist'))
@@ -789,10 +789,10 @@ def new_therapist():
         therapist = Therapist(
             first_name=first_name,
             last_name=last_name,
-            credentials=credentials,
+            credentials=credentials or "",
             email=email,
-            phone=phone,
-            availability=availability
+            phone=phone or "",
+            availability=availability or ""
         )
         db.session.add(therapist)
         db.session.commit()
