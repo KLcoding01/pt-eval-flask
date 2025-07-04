@@ -22,9 +22,16 @@
       <td>{{ v.patient.first_name }} {{ v.patient.last_name }}</td>
       <td>{{ v.therapist.first_name }} {{ v.therapist.last_name }}</td>
       <td>{{ v.visit_type }}</td>
-      <td>{{ v.status }}</td>
       <td>
-        <!-- You can add Edit/View/Delete links here -->
+        {% if v.status %}
+          <span class="badge bg-success">{{ v.status }}</span>
+        {% else %}
+          <span class="badge bg-secondary">N/A</span>
+        {% endif %}
+      </td>
+      <td>
+        <a href="{{ url_for('visit_detail', visit_id=v.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+        <a href="{{ url_for('edit_visit_note', visit_id=v.id) }}" class="btn btn-sm btn-outline-warning ms-2">Edit</a>
       </td>
     </tr>
     {% endfor %}

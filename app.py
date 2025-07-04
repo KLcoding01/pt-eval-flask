@@ -632,7 +632,31 @@ def edit_visit(visit_id):
         flash("Visit updated!", "success")
         return redirect(url_for('visits_list'))
     return render_template('visit_form.html', visit=visit, patients=patients, therapists=therapists, edit=True)
+    
+@app.route('/visits/<int:visit_id>/edit_note', methods=['GET', 'POST'])
+@login_required
+def edit_visit_note(visit_id):
+    visit = Visit.query.get_or_404(visit_id)
+    notes = {}
+    if visit.notes:
+        try:
+            notes = json.loads(visit.notes)
+        except Exception:
+            notes = {}
 
+    if request.method == 'POST':
+        # Update note fields from form
+        updated_notes = {}
+        for key in notes.keys():
+            updated_notes[key] = request.form.get(key, '').strip()
+        # Update visit.notes JSON string
+        visit.notes = json.dumps(updated_notes)
+        db.session.commit()
+        flash("Visit note updated!", "success")
+        return redirect(url_for('visit_detail', visit_id=visit.id))
+
+    return render_template('edit_visit_note.html', visit=visit, notes=notes)
+    
 @app.route('/visits/<int:visit_id>/delete', methods=['POST'])
 @login_required
 def delete_visit(visit_id):
