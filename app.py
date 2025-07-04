@@ -538,7 +538,6 @@ def patient_detail(patient_id):
         deleted_notes=deleted_notes,
         edit_visit_id=edit_visit_id
     )
-
     
 @app.route('/notes/<int:note_id>/recover', methods=['POST'])
 @login_required
@@ -740,12 +739,14 @@ def delete_visit(visit_id):
     try:
         # Soft delete example: mark visit as deleted instead of removing completely
         visit.status = 'Deleted'
+        visit.deleted_at = datetime.utcnow()  # make sure this column exists in your model
         db.session.commit()
         flash("Visit deleted successfully.", "success")
     except Exception as e:
         db.session.rollback()
         flash(f"Error deleting visit: {e}", "danger")
     return redirect(url_for('patient_detail', patient_id=visit.patient_id))
+
 
 @app.route('/visits/<int:visit_id>/recover', methods=['POST'])
 @login_required
