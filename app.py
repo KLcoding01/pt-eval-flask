@@ -530,12 +530,12 @@ def patient_detail(patient_id):
         edit_visit_id=edit_visit_id
     )
     
-@@app.route('/notes/<int:note_id>/recover', methods=['POST'])
+@app.route('/notes/<int:note_id>/recover', methods=['POST'])
 @login_required
 def recover_note(note_id):
     note = PTNote.query.get_or_404(note_id)
     if note.deleted:
-        note.deleted = False 
+        note.deleted = False
         note.deleted_at = None
         db.session.commit()
         flash("Note recovered successfully.", "success")
