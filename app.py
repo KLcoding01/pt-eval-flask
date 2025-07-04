@@ -78,13 +78,6 @@ def logout():
     flash("You have been logged out.", "info")
     return redirect(url_for('login'))
 
-@app.route('/')
-def home():
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
-    else:
-        return redirect(url_for('login'))
-        
 @app.route('/create_therapists')
 def create_therapists():
     users = [
@@ -99,10 +92,6 @@ def create_therapists():
     db.session.commit()
     return f"Added {len(users)} therapists!"
 
-@app.route('/therapist_debug')
-def therapist_debug():
-    users = Therapist.query.all()
-    return "<br>".join([f"{u.username} | {u.email}" for u in users])
     
 # ========== DASHBOARD ==========
 @app.route('/dashboard')
