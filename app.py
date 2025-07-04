@@ -1251,48 +1251,34 @@ def pt_generate_summary():
     return jsonify({"result": result})
 
 
-@app.route("/pt_generate_goals", methods=["POST"])
+@app.route('/pt_generate_goals', methods=['POST'])
 @login_required
 def pt_generate_goals():
-    # Get all eval fields (dictionary)
     fields = request.json.get("fields", {})
-    # Make eval info readable for GPT
-    eval_info = '\n'.join([f"{k}: {v}" for k, v in fields.items() if v])
+    prompt = """
+    You are a clinical assistant helping a PT write documentation.
+    Using ONLY the provided eval info (summary, objective findings, strength, ROM, impairments, and functional limitations),
+    generate clinically-appropriate, Medicare-compliant short-term and long-term PT goals.
+    ALWAYS follow this exact format—do not add, skip, reorder, or alter any lines or labels.
+    DO NOT add any explanations, introductions, dashes, bullets, or extra indentation. Output ONLY this structure:
 
-    prompt = f"""
-You are a clinical assistant helping a PT write documentation.
-Using ONLY the provided eval info (summary, objective findings, strength, ROM, impairments, and functional limitations),
-generate clinically-appropriate, Medicare-compliant short-term and long-term PT goals.
-ALWAYS follow this exact format—do not add, skip, reorder, or alter any lines or labels.
-DO NOT add any explanations, introductions, dashes, bullets, or extra indentation. Output ONLY this structure:
+    Short-Term Goals (1–12 visits):
+    1. [goal statement]
+    2. [goal statement]
+    3. [goal statement]
+    4. [goal statement]
 
-Short-Term Goals (1–12 visits):
-1. [goal statement]
-2. [goal statement]
-3. [goal statement]
-4. [goal statement]
-
-Long-Term Goals (13–25 visits):
-1. [goal statement]
-2. [goal statement]
-3. [goal statement]
-4. [goal statement]
-
-Replace [goal statement] with individualized goals based on eval info below.
-
-Eval info:
-{eval_info}
-"""
-
-    # Call your GPT function (replace with your real function if different)
-    result = gpt_call(prompt, max_tokens=350)
-
-    # Clean up any dashes or spaces before the section headers (just in case)
-    result = result.replace('- Short-Term Goals', 'Short-Term Goals')
-    result = result.replace('- Long-Term Goals', 'Long-Term Goals')
-    result = re.sub(r'^\s+', '', result, flags=re.MULTILINE)
-
+    Long-Term Goals (13–25 visits):
+    1. [goal statement]
+    2. [goal statement]
+    3. [goal statement]
+    4. [goal statement]
+    """
+    # (Add your logic to build out the prompt from `fields` here)
+    result = gpt_call(prompt, max_tokens=350)  # result is a string!
     return jsonify({"result": result})
+    
+    
 
 @app.route('/pt_generate_daily_summary', methods=['POST'])
 @login_required
