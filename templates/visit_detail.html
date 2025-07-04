@@ -94,10 +94,27 @@
     </div>
     <hr>
 
-    <div class="mt-4">
+    <div class="mt-4 d-flex justify-content-end gap-2">
+      <!-- Delete Visit Form with confirmation -->
+      <form id="delete-visit-form" action="{{ url_for('delete_visit', visit_id=visit.id) }}" method="POST" onsubmit="return confirmDelete();">
+        <button type="submit" class="btn btn-danger">Delete Visit</button>
+      </form>
+
+      <!-- Recover Visit Button -->
+      <form id="recover-visit-form" action="{{ url_for('recover_visit', visit_id=visit.id) }}" method="POST">
+        <button type="submit" class="btn btn-success">Recover Visit</button>
+      </form>
+
+      <!-- Edit & Back Buttons -->
       <a href="{{ url_for('edit_visit', visit_id=visit.id) }}" class="btn btn-warning">Edit Visit</a>
       <a href="{{ url_for('patient_detail', patient_id=visit.patient.id) }}" class="btn btn-secondary">Back to Patient</a>
     </div>
   </div>
 </div>
+
+<script>
+  function confirmDelete() {
+    return confirm('Are you sure you want to DELETE this visit? This action cannot be undone.');
+  }
+</script>
 {% endblock %}

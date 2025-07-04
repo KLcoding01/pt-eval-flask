@@ -676,13 +676,30 @@ def edit_visit_note(visit_id):
 def delete_visit(visit_id):
     visit = Visit.query.get_or_404(visit_id)
     try:
-        db.session.delete(visit)
+        # Soft delete example: mark visit as deleted instead of removing completely
+        visit.status = 'Deleted'
         db.session.commit()
         flash("Visit deleted successfully.", "success")
     except Exception as e:
         db.session.rollback()
         flash(f"Error deleting visit: {e}", "danger")
     return redirect(url_for('patient_detail', patient_id=visit.patient_id))
+
+@app.route('/visits/<int:visit_id>/recover', methods=['POST'])
+@login_required
+def recover_visit(visit_id):
+    visit = Visit.query.get_or_404(visit_id)
+    try:
+        if visit.status == 'Deleted':
+            visit.status = 'Completed'  # or whatever status was before
+            db.session.commit()
+            flash("Visit recovered successfully.", "success")
+        else:
+            flash("Visit is not deleted.", "info")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error recovering visit: {e}", "danger")
+    return redirect(url_for('visit_detail', visit_id=visit_id))
 
 @app.route('/visits/<int:visit_id>/update_note', methods=['POST'])
 @login_required
