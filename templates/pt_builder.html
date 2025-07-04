@@ -355,7 +355,7 @@
       .then(r => r.json())
       .then(data => {
         if (data.result) {
-          document.getElementById('pt_goals').value = data.result;
+          document.getElementById('pt_goals').value = data.result;  // direct, raw output
           ptSetStatus('Done','green');
         } else if (data.error) {
           ptSetStatus('AI error: ' + data.error, 'red');

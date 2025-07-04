@@ -566,6 +566,16 @@ def visit_detail(visit_id):
             notes = json.loads(visit.notes)
         except Exception:
             notes = {}
+
+    # Clean up any old "goals" that were saved as a {"result": "..."} object
+    goal_result = notes.get('goals', '')
+    if isinstance(goal_result, str) and goal_result.strip().startswith('{'):
+        try:
+            goal_result = json.loads(goal_result).get('result', goal_result)
+        except Exception:
+            pass
+        notes['goals'] = goal_result
+
     return render_template("visit_detail.html", visit=visit, notes=notes)
     
 @app.route('/visits/new', methods=['GET', 'POST'])
@@ -1255,30 +1265,31 @@ def pt_generate_summary():
 @login_required
 def pt_generate_goals():
     fields = request.json.get("fields", {})
-    prompt = """
-    You are a clinical assistant helping a PT write documentation.
-    Using ONLY the provided eval info (summary, objective findings, strength, ROM, impairments, and functional limitations),
-    generate clinically-appropriate, Medicare-compliant short-term and long-term PT goals.
-    ALWAYS follow this exact format—do not add, skip, reorder, or alter any lines or labels.
-    DO NOT add any explanations, introductions, dashes, bullets, or extra indentation. Output ONLY this structure:
+    prompt = f"""
+You are a clinical assistant helping a PT write documentation.
+Using ONLY the provided eval info (summary, objective findings, strength, ROM, impairments, and functional limitations),
+generate clinically-appropriate, Medicare-compliant short-term and long-term PT goals.
+ALWAYS follow this exact format—do not add, skip, reorder, or alter any lines or labels.
+DO NOT add any explanations, introductions, dashes, bullets, or extra indentation. Output ONLY this structure:
 
-    Short-Term Goals (1–12 visits):
-    1. [goal statement]
-    2. [goal statement]
-    3. [goal statement]
-    4. [goal statement]
+Short-Term Goals (1–12 visits):
+1. [goal statement]
+2. [goal statement]
+3. [goal statement]
+4. [goal statement]
 
-    Long-Term Goals (13–25 visits):
-    1. [goal statement]
-    2. [goal statement]
-    3. [goal statement]
-    4. [goal statement]
-    """
-    # (Add your logic to build out the prompt from `fields` here)
-    result = gpt_call(prompt, max_tokens=350)  # result is a string!
+Long-Term Goals (13–25 visits):
+1. [goal statement]
+2. [goal statement]
+3. [goal statement]
+4. [goal statement]
+"""
+    # You may want to actually fill in the fields into the prompt if desired
+
+    result = gpt_call(prompt, max_tokens=350)  # result = plain string from GPT
     return jsonify({"result": result})
     
-    
+
 
 @app.route('/pt_generate_daily_summary', methods=['POST'])
 @login_required
