@@ -94,6 +94,9 @@
                   <a href="{{ url_for('visit_detail', visit_id=visit.id) }}" class="btn btn-outline-info btn-sm">
                     <i class="bi bi-eye"></i> View
                   </a>
+                  <form method="POST" action="{{ url_for('delete_visit', visit_id=visit.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to DELETE this visit? This action cannot be undone.');">
+                    <button type="submit" class="btn btn-danger btn-sm ms-2">Delete Visit</button>
+                  </form>
                 </td>
               </tr>
               {% endfor %}
