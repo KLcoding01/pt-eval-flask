@@ -385,16 +385,9 @@ def edit_visit_date(visit_id):
     return redirect(url_for('patient_profile', patient_id=visit.patient_id))
 
 @app.route('/visit/<int:visit_id>')
-@login_required
-def view_visit(visit_id):
+def visit_detail(visit_id):
     visit = Visit.query.get_or_404(visit_id)
-    eval_data = None
-    try:
-        import json
-        eval_data = json.loads(visit.notes) if visit.notes else None
-    except Exception:
-        eval_data = visit.notes
-    return render_template('visit_detail.html', visit=visit, eval_data=eval_data)
+    return render_template('visit_detail.html', visit=visit)
 
 @app.route("/visits")
 @login_required

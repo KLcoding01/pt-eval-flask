@@ -16,61 +16,81 @@
 
     <div>
       <strong>Medical Diagnosis:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.medical_diagnosis or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">
+        {{ visit.notes['meddiag'] if visit.notes and 'meddiag' in visit.notes else 'N/A' }}
+      </div>
     </div>
     <hr>
 
     <div>
       <strong>Medical History/HNP:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.medical_history or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">
+        {{ visit.notes['history'] if visit.notes and 'history' in visit.notes else 'N/A' }}
+      </div>
     </div>
     <hr>
 
     <div>
       <strong>Subjective:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.subjective or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">
+        {{ visit.notes['subjective'] if visit.notes and 'subjective' in visit.notes else 'N/A' }}
+      </div>
     </div>
     <hr>
 
     <div>
       <strong>Pain:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.pain or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">
+        {{ visit.notes['pain'] if visit.notes and 'pain' in visit.notes else 'N/A' }}
+      </div>
     </div>
     <hr>
 
     <div>
       <strong>Objective:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.objective or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">
+        {{ visit.notes['objective'] if visit.notes and 'objective' in visit.notes else 'N/A' }}
+      </div>
     </div>
     <hr>
 
     <div>
       <strong>Assessment Summary:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.assessment_summary or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">
+        {{ visit.notes['summary'] if visit.notes and 'summary' in visit.notes else 'N/A' }}
+      </div>
     </div>
     <hr>
 
     <div>
       <strong>Goals:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.goals or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">
+        {{ visit.notes['goals'] if visit.notes and 'goals' in visit.notes else 'N/A' }}
+      </div>
     </div>
     <hr>
 
     <div>
       <strong>Frequency:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.frequency or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">
+        {{ visit.notes['frequency'] if visit.notes and 'frequency' in visit.notes else 'N/A' }}
+      </div>
     </div>
     <hr>
 
     <div>
       <strong>Intervention:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.intervention or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">
+        {{ visit.notes['intervention'] if visit.notes and 'intervention' in visit.notes else 'N/A' }}
+      </div>
     </div>
     <hr>
 
     <div>
       <strong>Treatment Procedures:</strong>
-      <div class="border p-2 mb-3" style="white-space: pre-line;">{{ visit.treatment_procedures or 'N/A' }}</div>
+      <div class="border p-2 mb-3" style="white-space: pre-line;">
+        {{ visit.notes['procedures'] if visit.notes and 'procedures' in visit.notes else 'N/A' }}
+      </div>
     </div>
     <hr>
 
