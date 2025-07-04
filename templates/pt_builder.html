@@ -174,12 +174,15 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Select Patient to Save Eval</h5>
+        <h5 class="modal-title">Select Patient and Therapist to Save Eval</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <select id="pt-patient-select" class="form-select">
-          <!-- Dynamically filled with patient names from backend -->
+        <label class="fw-bold mb-1">Patient:</label>
+        <select id="pt-patient-select" class="form-select mb-2"></select>
+        <label class="fw-bold mb-1">Therapist:</label>
+        <select id="pt-therapist-select" class="form-select">
+          <!-- Dynamically filled with therapist names from backend -->
         </select>
       </div>
       <div class="modal-footer">
@@ -188,7 +191,6 @@
     </div>
   </div>
 </div>
-
 <!-- Save Button (somewhere on your form) -->
 <button id="pt-save-btn" class="btn btn-success btn-sm">Save to Patient</button>
 <div id="pt-save-status" style="margin-top:10px;"></div>
@@ -203,15 +205,27 @@
       .then(list => {
         document.getElementById('pt-patient-select').innerHTML =
           list.map(p => `<option value="${p.id}">${p.last_name}, ${p.first_name} (DOB: ${p.dob})</option>`).join('');
-        // Show modal
-        new bootstrap.Modal(document.getElementById('ptSelectPatientModal')).show();
       });
+
+    // Fetch therapist list
+    fetch('/api/therapist_list')
+      .then(r => r.json())
+      .then(list => {
+        document.getElementById('pt-therapist-select').innerHTML =
+          list.map(t => `<option value="${t.id}">${t.last_name}, ${t.first_name}</option>`).join('');
+      });
+
+    // Show modal after both lists are loaded
+    new bootstrap.Modal(document.getElementById('ptSelectPatientModal')).show();
   };
 
   document.getElementById('pt-save-patient-confirm').onclick = () => {
     const patientId = document.getElementById('pt-patient-select').value;
+    const therapistId = document.getElementById('pt-therapist-select').value;
     const fields = ptGetFields();
     fields['patient_id'] = patientId;
+    fields['therapist_id'] = therapistId;
+
     fetch('/pt_save_to_patient', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},

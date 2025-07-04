@@ -328,35 +328,46 @@ def api_patient_list():
         for p in patients
     ])
     
+@app.route('/api/therapist_list')
+@login_required
+def therapist_list():
+    # Assuming your Therapist model has id, first_name, last_name
+    therapists = Therapist.query.all()
+    return jsonify([{'id': t.id, 'first_name': t.first_name, 'last_name': t.last_name} for t in therapists])
+
 @app.route('/pt_save_to_patient', methods=['POST'])
 @login_required
 def pt_save_to_patient():
-    import json
     data = request.get_json()
+    # Defensive: require therapist_id!
+    therapist_id = data.get('therapist_id')
     patient_id = data.get('patient_id')
+    visit_type = data.get('visit_type', 'PT Evaluation')
+    notes = data.get('notes', '')
+    duration = data.get('duration', 60)  # default to 60 mins
 
-    visit = Visit(
-        patient_id=patient_id,
-        therapist_id=None,  # Or get from session/form if available
-        visit_type='PT Evaluation',
-        status='Completed',
-        visit_date=datetime.now(),
-        notes=json.dumps(data)  # <-- Only use valid fields
-    )
-    db.session.add(visit)
-    db.session.commit()
+    if not therapist_id:
+        return jsonify({'status': 'error', 'message': 'Therapist is required.'}), 400
+    if not patient_id:
+        return jsonify({'status': 'error', 'message': 'Patient is required.'}), 400
 
-    # Optionally also save as PTNote
-    pt_note = PTNote(
-        patient_id=patient_id,
-        visit_id=visit.id,
-        content=data.get('summary', ''),
-        date_created=datetime.now()
-    )
-    db.session.add(pt_note)
-    db.session.commit()
-
-    return jsonify({"message": "PT Evaluation saved to patient as Visit and Note."})
+    try:
+        visit = Visit(
+            patient_id=patient_id,
+            therapist_id=therapist_id,
+            visit_date=datetime.utcnow(),
+            end_time=None,
+            duration=duration,
+            visit_type=visit_type,
+            status='Completed',
+            notes=notes,
+        )
+        db.session.add(visit)
+        db.session.commit()
+        return jsonify({'status': 'ok', 'message': 'Visit saved!', 'visit_id': visit.id})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
     
 @app.template_filter('fromjson')
 def fromjson_filter(s):
