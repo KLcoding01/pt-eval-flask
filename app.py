@@ -15,6 +15,7 @@ from datetime import date, datetime, timedelta
 from io import BytesIO
 from functools import wraps
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.dialects.sqlite import JSON
 
 # Google Calendar imports
 from google_auth_oauthlib.flow import Flow
@@ -339,17 +340,22 @@ def therapist_list():
 @login_required
 def pt_save_to_patient():
     data = request.get_json()
-    # Defensive: require therapist_id!
     therapist_id = data.get('therapist_id')
     patient_id = data.get('patient_id')
     visit_type = data.get('visit_type', 'PT Evaluation')
-    notes = data.get('notes', '')
     duration = data.get('duration', 60)  # default to 60 mins
 
     if not therapist_id:
         return jsonify({'status': 'error', 'message': 'Therapist is required.'}), 400
     if not patient_id:
         return jsonify({'status': 'error', 'message': 'Patient is required.'}), 400
+
+    # Remove these from the notes dict (so they're not duplicated in notes)
+    data_to_save = dict(data)  # make a copy
+    data_to_save.pop('therapist_id', None)
+    data_to_save.pop('patient_id', None)
+    data_to_save.pop('visit_type', None)
+    data_to_save.pop('duration', None)
 
     try:
         visit = Visit(
@@ -360,7 +366,7 @@ def pt_save_to_patient():
             duration=duration,
             visit_type=visit_type,
             status='Completed',
-            notes=notes,
+            notes=json.dumps(data_to_save),   # Save all PT Builder fields as JSON string!
         )
         db.session.add(visit)
         db.session.commit()
@@ -557,8 +563,13 @@ def visits_list():
 @login_required
 def visit_detail(visit_id):
     visit = Visit.query.get_or_404(visit_id)
-    pt_note = PTNote.query.filter_by(visit_id=visit.id).order_by(PTNote.date_created.desc()).first()
-    return render_template('visit_detail.html', visit=visit, pt_note=pt_note)
+    notes = {}
+    if visit.notes:
+        try:
+            notes = json.loads(visit.notes)
+        except Exception:
+            notes = {}
+    return render_template("visit_detail.html", visit=visit, notes=notes)
 
 @app.route('/visits/new', methods=['GET', 'POST'])
 @login_required
