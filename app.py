@@ -503,9 +503,9 @@ def patient_detail(patient_id):
     notes = PTNote.query.filter_by(patient_id=patient_id, deleted=False).order_by(PTNote.date_created.desc()).all()
     deleted_cutoff = datetime.utcnow() - timedelta(days=30)
     deleted_notes = PTNote.query.filter(
-        PTNote.patient_id == patient_id,
-        PTNote.deleted == True,
-        PTNote.deleted_at >= deleted_cutoff
+    PTNote.patient_id == patient_id,
+    PTNote.deleted == True,
+    PTNote.deleted_at >= deleted_cutoff
     ).order_by(PTNote.deleted_at.desc()).all()
 
     # Visits: split active/deleted and purge old deleted visits
@@ -530,19 +530,19 @@ def patient_detail(patient_id):
         edit_visit_id=edit_visit_id
     )
     
-@app.route('/notes/<int:note_id>/recover', methods=['POST'])
+@@app.route('/notes/<int:note_id>/recover', methods=['POST'])
 @login_required
 def recover_note(note_id):
     note = PTNote.query.get_or_404(note_id)
     if note.deleted:
-        note.deleted = True
-        note.deleted_at = datetime.utcnow()
+        note.deleted = False 
+        note.deleted_at = None
         db.session.commit()
         flash("Note recovered successfully.", "success")
     else:
         flash("Note is not deleted.", "info")
     return redirect(url_for('patient_detail', patient_id=note.patient_id))
-
+    
 @app.route('/patients/new', methods=['GET', 'POST'])
 @login_required
 def new_patient():
