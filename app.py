@@ -359,6 +359,11 @@ def pt_save_to_patient():
     for k in ['therapist_id', 'patient_id', 'visit_type', 'duration']:
         notes_dict.pop(k, None)
 
+    # Trim whitespace/newlines for all string values in notes_dict
+    for key, val in notes_dict.items():
+        if isinstance(val, str):
+            notes_dict[key] = val.strip()
+
     visit = Visit(
         patient_id=patient_id,
         therapist_id=therapist_id,
@@ -370,7 +375,6 @@ def pt_save_to_patient():
     db.session.add(visit)
     db.session.commit()
     return jsonify({'status': 'ok', 'message': 'Visit saved!', 'visit_id': visit.id})
-
     
 @app.template_filter('fromjson')
 def fromjson_filter(s):
