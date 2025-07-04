@@ -24,6 +24,10 @@ from google.auth.transport.requests import Request
 # DB MODELS
 from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, Therapist, Visit, Physician, Insurance, PTNote
 
+# --------- DB INIT -----------
+with app.app_context():
+    db.create_all()
+    
 # CONFIG & INIT
 load_dotenv()
 app = Flask(__name__)
@@ -63,18 +67,21 @@ def reset_therapists():
 # --------- CREATE DEMO THERAPISTS (RUN ONCE, THEN REMOVE!) ----------
 @app.route('/create_therapists')
 def create_therapists():
-    users = [
-        dict(username="kelvin", password="Thanh123!", first_name="Kelvin", last_name="Lam", credentials="", email="kelvin@example.com", phone="", availability=""),
-        dict(username="test", password="test", first_name="Thera", last_name="Second", credentials="", email="thera2@example.com", phone="", availability=""),
-        dict(username="thera3", password="Wow789!", first_name="Thera", last_name="Third", credentials="", email="thera3@example.com", phone="", availability="")
-    ]
-    for u in users:
-        if not Therapist.query.filter_by(username=u["username"]).first():
-            u["password"] = generate_password_hash(u["password"])
-            t = Therapist(**u)
-            db.session.add(t)
-    db.session.commit()
-    return f"Added {len(users)} therapists!"
+    try:
+        users = [
+            dict(username="kelvin", password="Thanh123!", first_name="Kelvin", last_name="Lam", credentials="", email="kelvin@example.com", phone="", availability=""),
+            dict(username="test", password="test", first_name="Thera", last_name="Second", credentials="", email="thera2@example.com", phone="", availability=""),
+            dict(username="thera3", password="Wow789!", first_name="Thera", last_name="Third", credentials="", email="thera3@example.com", phone="", availability="")
+        ]
+        for u in users:
+            if not Therapist.query.filter_by(username=u["username"]).first():
+                u["password"] = generate_password_hash(u["password"])
+                t = Therapist(**u)
+                db.session.add(t)
+        db.session.commit()
+        return f"Added {len(users)} therapists!"
+    except Exception as e:
+        return f"ERROR: {e}"
 
 # --------- DEBUG ROUTE (SEE USERS) ----------
 @app.route('/therapist_debug')
@@ -121,9 +128,7 @@ def home():
 def dashboard():
     return f"Hello, {current_user.first_name}! (ID: {current_user.id})"
     
-# --------- DB INIT -----------
-with app.app_context():
-    db.create_all()
+
     
     
 # =================== GOOGLE CALENDAR INTEGRATION ===================
