@@ -5,8 +5,6 @@ import json
 from flask import (Flask, request, jsonify, redirect, url_for, flash, render_template, send_file, session)
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from werkzeug.security import check_password_hash
-if therapist and check_password_hash(therapist.password, password):
-    login_user(therapist)
 from dotenv import load_dotenv
 from openai import OpenAI
 from docx import Document
@@ -60,7 +58,7 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         therapist = Therapist.query.filter_by(username=username).first()
-        if therapist and therapist.password == password:  # Use password hashing in production!
+        if therapist and check_password_hash(therapist.password, password):
             login_user(therapist)
             flash(f"Welcome back, {username}!", "success")
             return redirect(url_for('dashboard'))
@@ -86,15 +84,22 @@ def home():
 def create_therapists():
     users = [
         dict(username="kelvin", password="Thanh123!", first_name="Kelvin", last_name="Lam", email="kelvin@example.com"),
-        dict(username="thera2", password="Pass456!", first_name="Thera", last_name="Second", email="thera2@example.com"),
+        dict(username="test", password="test", first_name="Thera", last_name="Second", email="thera2@example.com"),
         dict(username="thera3", password="Wow789!", first_name="Thera", last_name="Third", email="thera3@example.com")
     ]
     for u in users:
+        u["password"] = generate_password_hash(u["password"])
         t = Therapist(**u)
         db.session.add(t)
     db.session.commit()
     return f"Added {len(users)} therapists!"
-        
+
+# ========== DASHBOARD ==========
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return f"Hello, {current_user.first_name}! (ID: {current_user.id})"
+    
 # =================== GOOGLE CALENDAR INTEGRATION ===================
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
@@ -371,12 +376,7 @@ def add_visit():
         cpt_codes=cpt_codes,
         icd10_codes=icd10_codes
     )
-    
-# ========== DASHBOARD ==========
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    return render_template('dashboard.html')
+
 
 # ========== PATIENT CRUD ==========
 
