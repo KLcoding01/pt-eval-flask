@@ -49,11 +49,17 @@ db.init_app(app)
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 MODEL = "gpt-4o-mini"
-
 @login_manager.user_loader
 def load_user(user_id):
     return Therapist.query.get(int(user_id))
 
+# --------- RESET TABLE ROUTE (RUN IF DB IS BROKEN OR DUPLICATES) ----------
+@app.route('/reset_therapists')
+def reset_therapists():
+    Therapist.__table__.drop(db.engine)
+    Therapist.__table__.create(db.engine)
+    return "Therapist table reset. Now visit /create_therapists."
+    
 # --------- CREATE DEMO THERAPISTS (RUN ONCE, THEN REMOVE!) ----------
 @app.route('/create_therapists')
 def create_therapists():
@@ -72,6 +78,12 @@ def create_therapists():
         return f"Added {len(users)} therapists!"
     except Exception as e:
         return f"ERROR: {e}"
+
+# --------- DEBUG ROUTE (SEE USERS) ----------
+@app.route('/therapist_debug')
+def therapist_debug():
+    users = Therapist.query.all()
+    return "<br>".join([f"{u.username} | {u.email}" for u in users])
 
 # ---------- AUTH ROUTES ----------
 @app.route('/login', methods=['GET', 'POST'])
