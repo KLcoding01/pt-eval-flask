@@ -539,19 +539,33 @@ def patient_detail(patient_id):
         edit_visit_id=edit_visit_id
     )
     
+@app.route('/notes/<int:note_id>/delete', methods=['POST'])
+@login_required
+def delete_note(note_id):
+    note = PTNote.query.get_or_404(note_id)
+    try:
+        note.deleted = True
+        note.deleted_at = datetime.utcnow()
+        db.session.commit()
+        flash("Note deleted successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error deleting note: {e}", "danger")
+    return redirect(url_for('patient_detail', patient_id=note.patient_id))
+    
 @app.route('/notes/<int:note_id>/recover', methods=['POST'])
 @login_required
 def recover_note(note_id):
     note = PTNote.query.get_or_404(note_id)
-    if note.deleted:
+    try:
         note.deleted = False
         note.deleted_at = None
         db.session.commit()
         flash("Note recovered successfully.", "success")
-    else:
-        flash("Note is not deleted.", "info")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error recovering note: {e}", "danger")
     return redirect(url_for('patient_detail', patient_id=note.patient_id))
-    
 @app.route('/patients/new', methods=['GET', 'POST'])
 @login_required
 def new_patient():
