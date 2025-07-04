@@ -53,38 +53,6 @@ MODEL = "gpt-4o-mini"
 def load_user(user_id):
     return Therapist.query.get(int(user_id))
 
-# --------- RESET TABLE ROUTE (RUN IF DB IS BROKEN OR DUPLICATES) ----------
-@app.route('/reset_therapists')
-def reset_therapists():
-    Therapist.__table__.drop(db.engine)
-    Therapist.__table__.create(db.engine)
-    return "Therapist table reset. Now visit /create_therapists."
-    
-# --------- CREATE DEMO THERAPISTS (RUN ONCE, THEN REMOVE!) ----------
-@app.route('/create_therapists')
-def create_therapists():
-    try:
-        users = [
-            dict(username="kelvin", password="Thanh123!", first_name="Kelvin", last_name="Lam", credentials="", email="kelvin@example.com", phone="", availability=""),
-            dict(username="test", password="test", first_name="Thera", last_name="Second", credentials="", email="thera2@example.com", phone="", availability=""),
-            dict(username="thera3", password="Wow789!", first_name="Thera", last_name="Third", credentials="", email="thera3@example.com", phone="", availability="")
-        ]
-        for u in users:
-            if not Therapist.query.filter_by(username=u["username"]).first():
-                u["password"] = generate_password_hash(u["password"])
-                t = Therapist(**u)
-                db.session.add(t)
-        db.session.commit()
-        return f"Added {len(users)} therapists!"
-    except Exception as e:
-        return f"ERROR: {e}"
-
-# --------- DEBUG ROUTE (SEE USERS) ----------
-@app.route('/therapist_debug')
-def therapist_debug():
-    users = Therapist.query.all()
-    return "<br>".join([f"{u.username} | {u.email}" for u in users])
-
 # ---------- AUTH ROUTES ----------
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -122,7 +90,7 @@ def home():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return f"Hello, {current_user.first_name}! (ID: {current_user.id})"
+    return render_template('dashboard.html', user=current_user)
     
 # --------- DB INIT -----------
 with app.app_context():
