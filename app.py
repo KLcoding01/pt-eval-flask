@@ -675,20 +675,14 @@ def edit_visit_note(visit_id):
 @login_required
 def delete_visit(visit_id):
     visit = Visit.query.get_or_404(visit_id)
-    delete_google_event(visit)  # if using Google Calendar sync
-    db.session.delete(visit)
-    db.session.commit()
-    flash("Visit deleted.", "info")
+    try:
+        db.session.delete(visit)
+        db.session.commit()
+        flash("Visit deleted successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error deleting visit: {e}", "danger")
     return redirect(url_for('patient_detail', patient_id=visit.patient_id))
-
-@app.route('/visits/<int:visit_id>/delete', methods=['POST'])
-@login_required
-def delete_visit(visit_id):
-    visit = Visit.query.get_or_404(visit_id)
-    db.session.delete(visit)
-    db.session.commit()
-    flash("Visit deleted.", "info")
-    return redirect(url_for('patient_notes', patient_id=visit.patient.id))
 
 @app.route('/visits/<int:visit_id>/update_note', methods=['POST'])
 @login_required
