@@ -79,12 +79,6 @@ def create_therapists():
     except Exception as e:
         return f"ERROR: {e}"
 
-# --------- DEBUG ROUTE (SEE USERS) ----------
-@app.route('/therapist_debug')
-def therapist_debug():
-    users = Therapist.query.all()
-    return "<br>".join([f"{u.username} | {u.email}" for u in users])
-
 # ---------- AUTH ROUTES ----------
 @app.route('/login', methods=['GET', 'POST'])
 def login():
