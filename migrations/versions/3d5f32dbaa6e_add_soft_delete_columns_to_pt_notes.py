@@ -1,8 +1,8 @@
-"""Initial create
+"""Add soft delete columns to pt_notes
 
-Revision ID: da4946deb57e
-Revises: 073ab8f8da61
-Create Date: 2025-07-04 12:46:22.019363
+Revision ID: 3d5f32dbaa6e
+Revises: c3d0af66d038
+Create Date: 2025-07-04 13:13:18.566458
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'da4946deb57e'
-down_revision: Union[str, Sequence[str], None] = '073ab8f8da61'
+revision: str = '3d5f32dbaa6e'
+down_revision: Union[str, Sequence[str], None] = 'c3d0af66d038'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

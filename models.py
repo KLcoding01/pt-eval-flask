@@ -1,8 +1,9 @@
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-db = SQLAlchemy()
+from sqlalchemy import Boolean, DateTime
 
+db = SQLAlchemy()
 
 class Patient(db.Model):
     __tablename__ = "patients"
@@ -37,13 +38,12 @@ class Therapist(db.Model, UserMixin):
     phone = db.Column(db.String(20))
     availability = db.Column(db.String(256))
 
-    # Relationships (stubs for now, implement these if your other models exist)
     visits = db.relationship("Visit", back_populates="therapist", cascade="all, delete-orphan")
     schedule_events = db.relationship('ScheduleEvent', back_populates='therapist', cascade='all, delete-orphan')
 
     def __repr__(self):
         return f"<Therapist {self.first_name} {self.last_name}>"
-        
+
 class Physician(db.Model):
     __tablename__ = "physicians"
     id = db.Column(db.Integer, primary_key=True)
@@ -112,7 +112,7 @@ class Visit(db.Model):
 
     def __repr__(self):
         return f"<Visit {self.visit_type} for {self.patient.first_name} {self.patient.last_name}>"
-        
+
 class Billing(db.Model):
     __tablename__ = "billings"
     id = db.Column(db.Integer, primary_key=True)
@@ -156,9 +156,6 @@ class ScheduleEvent(db.Model):
 
     def __repr__(self):
         return f"<ScheduleEvent {self.title}>"
-        
-from datetime import datetime
-from sqlalchemy import Boolean, DateTime
 
 class PTNote(db.Model):
     __tablename__ = "pt_notes"
@@ -181,4 +178,3 @@ class PTNote(db.Model):
 
     def __repr__(self):
         return f"<PTNote {self.id} Patient:{self.patient_id} Type:{self.note_type} Deleted:{self.deleted}>"
-
