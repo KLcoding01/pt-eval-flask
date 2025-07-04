@@ -2,6 +2,7 @@ import os
 import io
 import re
 import json
+from sqlalchemy import or_
 from flask import Flask, request, jsonify, redirect, url_for, flash, render_template, send_file, session
 from flask_mail import Mail, Message
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
@@ -491,6 +492,9 @@ def patients_list():
 
 from datetime import datetime, timedelta
 
+from sqlalchemy import or_
+from datetime import datetime, timedelta
+
 @app.route('/patients/<int:patient_id>')
 @login_required
 def patient_detail(patient_id):
@@ -499,13 +503,18 @@ def patient_detail(patient_id):
     all_visits = Visit.query.filter_by(patient_id=patient_id).order_by(Visit.visit_date.desc()).all()
     attachments = Attachment.query.filter_by(patient_id=patient_id).order_by(Attachment.uploaded_at.desc()).all()
 
-    # Notes: active and deleted (soft delete)
+    # Active notes (not deleted)
     notes = PTNote.query.filter_by(patient_id=patient_id, deleted=False).order_by(PTNote.date_created.desc()).all()
+
+    # Deleted notes: filter for deleted=True and deleted_at within last 30 days OR deleted_at is None
     deleted_cutoff = datetime.utcnow() - timedelta(days=30)
     deleted_notes = PTNote.query.filter(
-    PTNote.patient_id == patient_id,
-    PTNote.deleted == True,
-    PTNote.deleted_at >= deleted_cutoff
+        PTNote.patient_id == patient_id,
+        PTNote.deleted == True,
+        or_(
+            PTNote.deleted_at == None,
+            PTNote.deleted_at >= deleted_cutoff
+        )
     ).order_by(PTNote.deleted_at.desc()).all()
 
     # Visits: split active/deleted and purge old deleted visits
@@ -529,6 +538,7 @@ def patient_detail(patient_id):
         deleted_notes=deleted_notes,
         edit_visit_id=edit_visit_id
     )
+
     
 @app.route('/notes/<int:note_id>/recover', methods=['POST'])
 @login_required
