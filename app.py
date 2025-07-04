@@ -2,7 +2,8 @@ import os
 import io
 import re
 import json
-from flask import (Flask, request, jsonify, redirect, url_for, flash, render_template, send_file, session)
+from flask import Flask, request, jsonify, redirect, url_for, flash, render_template, send_file, session
+from flask_mail import Mail, Message
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
@@ -31,6 +32,14 @@ app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key_change_me")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////static/uploads/db.sqlite3'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
+# ====== FORGOT PASSWORD RESET ======
+app.config['MAIL_SERVER'] = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+app.config['MAIL_PORT'] = int(os.getenv("MAIL_PORT", 587))
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME", "your_email@gmail.com")
+app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD", "your_app_password")
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv("MAIL_DEFAULT_SENDER", "your_email@gmail.com")
+mail = Mail(app)
 
 # ====== INIT DB ======
 db.init_app(app)
@@ -89,16 +98,64 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('login'))
+       
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form['email']
+        therapist = Therapist.query.filter_by(email=email).first()
+        if therapist:
+            token = serializer.dumps(email, salt="password-reset-salt")
+            reset_url = url_for('reset_password', token=token, _external=True)
+            msg = Message(
+                "PT/OT App Password Reset",
+                recipients=[email],
+                body=f"Hi {therapist.first_name},\n\n"
+                     f"Click the link below to reset your password:\n{reset_url}\n\n"
+                     f"If you did not request a reset, ignore this email."
+            )
+            mail.send(msg)
+        flash("If your email is on file, you'll receive reset instructions.", "info")
+        return redirect(url_for('login'))
+    return render_template_string('''
+        <form method="POST" style="max-width:400px;margin:40px auto;padding:2rem;background:#fff;border-radius:18px;box-shadow:0 6px 40px 0 rgba(0,0,0,.10);">
+            <h4 class="mb-3">Reset Password</h4>
+            <input name="email" class="form-control mb-3" placeholder="Enter your email" required>
+            <button type="submit" class="btn btn-primary">Send Reset Link</button>
+            <a href="{{ url_for('login') }}" class="btn btn-link">Back to Login</a>
+        </form>
+    ''')
+    
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    try:
+        email = serializer.loads(token, salt="password-reset-salt", max_age=3600)
+    except Exception:
+        flash("Invalid or expired reset link.", "danger")
+        return redirect(url_for('login'))
+    therapist = Therapist.query.filter_by(email=email).first()
+    if not therapist:
+        flash("Invalid user.", "danger")
+        return redirect(url_for('login'))
+    if request.method == 'POST':
+        new_password = request.form['password']
+        therapist.password = generate_password_hash(new_password)
+        db.session.commit()
+        flash("Your password has been reset. Please log in.", "success")
+        return redirect(url_for('login'))
+    return render_template_string('''
+        <form method="POST" style="max-width:400px;margin:40px auto;padding:2rem;background:#fff;border-radius:18px;box-shadow:0 6px 40px 0 rgba(0,0,0,.10);">
+            <h4 class="mb-3">Set New Password</h4>
+            <input name="password" type="password" class="form-control mb-3" placeholder="New password" required>
+            <button type="submit" class="btn btn-primary">Reset Password</button>
+            <a href="{{ url_for('login') }}" class="btn btn-link">Back to Login</a>
+        </form>
+    ''')
 
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return f"""
-        <h2>Welcome, {current_user.first_name} {current_user.last_name}!</h2>
-        <p>Username: {current_user.username}</p>
-        <p>Email: {current_user.email}</p>
-        <a href='/logout'>Logout</a>
-    """
+    return render_template('dashboard.html')
 
 # Optional: Registration (delete or lock down after initial use!)
 @app.route('/register', methods=['GET', 'POST'])
