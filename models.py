@@ -28,9 +28,8 @@ class Patient(db.Model):
 class Therapist(db.Model, UserMixin):
     __tablename__ = "therapists"
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True, nullable=False)  # For login
-    password = db.Column(db.String(200), nullable=False)               # For login (should be hashed)
-    
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)   # Should be hashed!
     first_name = db.Column(db.String(64), nullable=False)
     last_name = db.Column(db.String(64), nullable=False)
     credentials = db.Column(db.String(128))
@@ -38,6 +37,7 @@ class Therapist(db.Model, UserMixin):
     phone = db.Column(db.String(20))
     availability = db.Column(db.String(256))
 
+    # Relationships
     visits = db.relationship("Visit", back_populates="therapist", cascade="all, delete-orphan")
     schedule_events = db.relationship('ScheduleEvent', back_populates='therapist', cascade='all, delete-orphan')
 

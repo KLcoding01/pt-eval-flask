@@ -28,9 +28,10 @@ from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, 
 load_dotenv()
 app = Flask(__name__)
 
-# LOGIN MANAGER
+# Flask-Login setup
 login_manager = LoginManager()
 login_manager.init_app(app)
+login_manager.login_view = "login"
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -42,13 +43,15 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db.init_app(app)
-with app.app_context():
-    db.create_all()
+
 
 # OPENAI
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 MODEL = "gpt-4o-mini"
+@login_manager.user_loader
+def load_user(user_id):
+    return Therapist.query.get(int(user_id))
 
 # AUTH
 @app.route('/login', methods=['GET', 'POST'])
@@ -70,7 +73,6 @@ def login():
             error = "Invalid username or password."
     return render_template('login.html', error=error)
 
-
 @app.route('/logout')
 @login_required
 def logout():
@@ -78,6 +80,19 @@ def logout():
     flash("You have been logged out.", "info")
     return redirect(url_for('login'))
 
+@app.route('/')
+def home():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    else:
+        return redirect(url_for('login'))
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return f"Hello, {current_user.first_name}! (ID: {current_user.id})"
+
+# Create demo therapists ONCE, then remove this route for security!
 @app.route('/create_therapists')
 def create_therapists():
     users = [
@@ -86,18 +101,24 @@ def create_therapists():
         dict(username="thera3", password="Wow789!", first_name="Thera", last_name="Third", email="thera3@example.com")
     ]
     for u in users:
-        u["password"] = generate_password_hash(u["password"])
-        t = Therapist(**u)
-        db.session.add(t)
+        # Only add if not already exists!
+        if not Therapist.query.filter_by(username=u["username"]).first():
+            u["password"] = generate_password_hash(u["password"])
+            t = Therapist(**u)
+            db.session.add(t)
     db.session.commit()
     return f"Added {len(users)} therapists!"
 
+# Debug: see who is in your database
+@app.route('/therapist_debug')
+def therapist_debug():
+    users = Therapist.query.all()
+    return "<br>".join([f"{u.username} | {u.email}" for u in users])
+
+# Initialize database
+with app.app_context():
+    db.create_all()
     
-# ========== DASHBOARD ==========
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    return f"Hello, {current_user.first_name}! (ID: {current_user.id})"
     
 # =================== GOOGLE CALENDAR INTEGRATION ===================
 SCOPES = ['https://www.googleapis.com/auth/calendar']
