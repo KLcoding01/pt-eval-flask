@@ -27,10 +27,6 @@ from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, 
 # CONFIG & INIT
 load_dotenv()
 app = Flask(__name__)
-
-# --------- DB INIT -----------
-with app.app_context():
-    db.create_all()
     
 # Flask-Login setup
 login_manager = LoginManager()
@@ -128,7 +124,9 @@ def home():
 def dashboard():
     return f"Hello, {current_user.first_name}! (ID: {current_user.id})"
     
-
+# --------- DB INIT -----------
+with app.app_context():
+    db.create_all()
     
     
 # =================== GOOGLE CALENDAR INTEGRATION ===================
