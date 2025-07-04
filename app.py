@@ -23,15 +23,15 @@ from google.auth.transport.requests import Request
 
 # DB MODELS
 from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, Therapist, Visit, Physician, Insurance, PTNote
-
-# --------- DB INIT -----------
-with app.app_context():
-    db.create_all()
     
 # CONFIG & INIT
 load_dotenv()
 app = Flask(__name__)
 
+# --------- DB INIT -----------
+with app.app_context():
+    db.create_all()
+    
 # Flask-Login setup
 login_manager = LoginManager()
 login_manager.init_app(app)
