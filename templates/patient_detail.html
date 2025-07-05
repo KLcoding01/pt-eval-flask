@@ -48,6 +48,12 @@
           <i class="bi bi-paperclip"></i> Attachments
         </button>
       </li>
+      <!-- New Deleted Visits Tab Button -->
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="deleted-visits-tab" data-bs-toggle="tab" data-bs-target="#deleted-visits" type="button" role="tab" aria-controls="deleted-visits" aria-selected="false">
+          <i class="bi bi-trash"></i> Deleted Visits
+        </button>
+      </li>
       <li class="nav-item" role="presentation">
         <button class="nav-link" id="deleted-notes-tab" data-bs-toggle="tab" data-bs-target="#deleted-notes" type="button" role="tab" aria-controls="deleted-notes" aria-selected="false">
           <i class="bi bi-trash3"></i> Deleted Notes
@@ -89,9 +95,6 @@
                   <a href="{{ url_for('visit_detail', visit_id=visit.id) }}" class="btn btn-outline-info btn-sm">
                     <i class="bi bi-eye"></i> View
                   </a>
-                  <form method="POST" action="{{ url_for('delete_visit', visit_id=visit.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to DELETE this visit? This action cannot be undone.');">
-                    <button type="submit" class="btn btn-danger btn-sm ms-2">Delete Visit</button>
-                  </form>
                 </td>
               </tr>
               {% endfor %}
@@ -141,20 +144,20 @@
         {% endif %}
       </div>
 
-      <!-- Deleted Notes Tab -->
-      <div class="tab-pane fade" id="deleted-notes" role="tabpanel" aria-labelledby="deleted-notes-tab">
-        {% if deleted_notes and deleted_notes|length > 0 %}
+      <!-- Deleted Visits Tab Content -->
+      <div class="tab-pane fade" id="deleted-visits" role="tabpanel" aria-labelledby="deleted-visits-tab">
+        {% if deleted_visits and deleted_visits|length > 0 %}
         <ul class="list-group mt-3">
-          {% for note in deleted_notes %}
+          {% for visit in deleted_visits %}
           <li class="list-group-item d-flex justify-content-between align-items-start">
             <div class="me-auto">
-              <strong>{{ note.title or 'Untitled' }}</strong>
+              <strong>Visit on {{ visit.visit_date.strftime('%Y-%m-%d') if visit.visit_date else 'N/A' }}</strong>
               <br>
-              <small class="text-muted">Deleted on {{ note.deleted_at.strftime('%Y-%m-%d') }}</small>
-              <p style="white-space: pre-line;">{{ note.content }}</p>
+              <small class="text-muted">Deleted on {{ visit.deleted_at.strftime('%Y-%m-%d') if visit.deleted_at else 'Unknown' }}</small>
+              <p>{{ visit.visit_type or 'N/A' }}</p>
             </div>
-            <form method="POST" action="{{ url_for('recover_note', note_id=note.id) }}" class="ms-3">
-              <button type="submit" class="btn btn-sm btn-outline-success" onclick="return confirm('Recover this note?')">
+            <form method="POST" action="{{ url_for('recover_visit', visit_id=visit.id) }}" class="ms-3">
+              <button type="submit" class="btn btn-sm btn-outline-success" onclick="return confirm('Recover this visit?')">
                 <i class="bi bi-arrow-counterclockwise"></i> Recover
               </button>
             </form>
@@ -162,7 +165,7 @@
           {% endfor %}
         </ul>
         {% else %}
-        <p class="mt-3">No deleted notes in the last 30 days.</p>
+        <p class="mt-3">No deleted visits in the last 30 days.</p>
         {% endif %}
       </div>
     </div>

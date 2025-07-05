@@ -499,15 +499,24 @@ from datetime import datetime, timedelta
 @login_required
 def patient_detail(patient_id):
     patient = Patient.query.get_or_404(patient_id)
+    deleted_cutoff = datetime.utcnow() - timedelta(days=30)
 
+    # Fetch all visits
     all_visits = Visit.query.filter_by(patient_id=patient_id).order_by(Visit.visit_date.desc()).all()
     attachments = Attachment.query.filter_by(patient_id=patient_id).order_by(Attachment.uploaded_at.desc()).all()
 
-    # Active notes (not deleted)
-    notes = PTNote.query.filter_by(patient_id=patient_id, deleted=False).order_by(PTNote.date_created.desc()).all()
+    # Split visits into active and deleted
+    deleted_visits = [v for v in all_visits if v.status == "Deleted"]
+    for visit in deleted_visits:
+        if visit.deleted_at and visit.deleted_at < deleted_cutoff:
+            db.session.delete(visit)
+    db.session.commit()
 
-    # Deleted notes: filter for deleted=True and deleted_at within last 30 days OR deleted_at is None
-    deleted_cutoff = datetime.utcnow() - timedelta(days=30)
+    active_visits = [v for v in all_visits if v.status != "Deleted"]
+
+    # Active notes and deleted notes unchanged (optional)
+
+    notes = PTNote.query.filter_by(patient_id=patient_id, deleted=False).order_by(PTNote.date_created.desc()).all()
     deleted_notes = PTNote.query.filter(
         PTNote.patient_id == patient_id,
         PTNote.deleted == True,
@@ -516,15 +525,6 @@ def patient_detail(patient_id):
             PTNote.deleted_at >= deleted_cutoff
         )
     ).order_by(PTNote.deleted_at.desc()).all()
-
-    # Visits: split active/deleted and purge old deleted visits
-    deleted_visits = [v for v in all_visits if v.status == "Deleted"]
-    for visit in deleted_visits:
-        if visit.visit_date < deleted_cutoff:
-            db.session.delete(visit)
-    db.session.commit()
-
-    active_visits = [v for v in all_visits if v.status != "Deleted"]
 
     edit_visit_id = request.args.get('edit_visit_id', type=int)
 
@@ -765,12 +765,10 @@ def delete_visit(visit_id):
 def recover_visit(visit_id):
     visit = Visit.query.get_or_404(visit_id)
     try:
-        if visit.status == 'Deleted':
-            visit.status = 'Completed'  # or your active status
-            db.session.commit()
-            flash("Visit recovered successfully.", "success")
-        else:
-            flash("Visit is not deleted.", "info")
+        visit.status = 'Scheduled'  # or previous status if stored
+        visit.deleted_at = None
+        db.session.commit()
+        flash("Visit recovered successfully.", "success")
     except Exception as e:
         db.session.rollback()
         flash(f"Error recovering visit: {e}", "danger")
