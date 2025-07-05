@@ -513,6 +513,7 @@ def serialize_patient(patient):
         "zip_code": patient.zip_code,
         "insurance_id": patient.insurance_id,
         "physician_id": patient.physician_id,
+        "other_notes": other_notes
     }
     
 @app.route('/api/patient/<int:patient_id>')

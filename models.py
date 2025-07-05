@@ -20,6 +20,7 @@ class Patient(db.Model):
     zip_code = db.Column(db.String(20))
     insurance_id = db.Column(db.Integer, db.ForeignKey("insurances.id"))
     physician_id = db.Column(db.Integer, db.ForeignKey("physicians.id"))
+    other_notes = db.Column(db.Text, nullable=True)
     # Relationships
     visits = db.relationship("Visit", back_populates="patient", cascade="all, delete-orphan")
     insurance = db.relationship("Insurance", back_populates="patients")
