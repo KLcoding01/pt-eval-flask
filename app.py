@@ -246,7 +246,7 @@ def create_google_event(visit):
     event_body = {
         'summary': f"{visit.patient.first_name} {visit.patient.last_name} - {visit.visit_type}",
         'start': {'dateTime': visit.visit_date.isoformat(), 'timeZone': 'America/Los_Angeles'},
-        'end': {'dateTime': (visit.visit_date + timedelta(minutes=getattr(visit, "duration", 60))).isoformat(), 'timeZone': 'America/Los_Angeles'},
+        'end': {'dateTime': (visit.visit_date + timedelta(minutes=getattr(visit, 'duration', 60))).isoformat(), 'timeZone': 'America/Los_Angeles'},
         'description': f"Therapist ID: {visit.therapist_id}"
     }
     event = service.events().insert(calendarId='primary', body=event_body).execute()
@@ -259,7 +259,7 @@ def update_google_event(visit):
     event_body = {
         'summary': f"{visit.patient.first_name} {visit.patient.last_name} - {visit.visit_type}",
         'start': {'dateTime': visit.visit_date.isoformat(), 'timeZone': 'America/Los_Angeles'},
-        'end': {'dateTime': (visit.visit_date + timedelta(minutes=getattr(visit, "duration", 60))).isoformat(), 'timeZone': 'America/Los_Angeles'},
+        'end': {'dateTime': (visit.visit_date + timedelta(minutes=getattr(visit, 'duration', 60))).isoformat(), 'timeZone': 'America/Los_Angeles'},
         'description': f"Therapist ID: {visit.therapist_id}"
     }
     service.events().update(calendarId='primary', eventId=visit.google_event_id, body=event_body).execute()
@@ -276,6 +276,7 @@ def delete_google_event(visit):
         print(f"Google Calendar delete event error: {e}")
         return False
 
+# OAuth2 Routes for Google Calendar
 @app.route('/authorize')
 @login_required
 def authorize():
@@ -314,6 +315,7 @@ def oauth2callback():
     flash("Google Calendar connected!", "success")
     return redirect(url_for('dashboard'))
 
+# Core API route to get or create events
 @app.route('/api/events', methods=['GET', 'POST'])
 @login_required
 def api_events():
@@ -321,9 +323,8 @@ def api_events():
         therapist_id = request.args.get('therapist_id', type=int)
         if not therapist_id:
             return jsonify([])
-
         visits = Visit.query.filter_by(therapist_id=therapist_id).all()
-
+        app.logger.info(f"Fetching events for therapist_id={therapist_id}, found {len(visits)} visits")
         events = []
         for visit in visits:
             events.append({
@@ -376,8 +377,7 @@ def api_events():
             db.session.rollback()
             return jsonify({'error': str(e)}), 500
 
-
-
+# PUT update event
 @app.route('/api/events/<int:event_id>', methods=['PUT'])
 @login_required
 def api_update_event(event_id):
@@ -414,7 +414,7 @@ def api_update_event(event_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-
+# DELETE event
 @app.route('/api/events/<int:event_id>', methods=['DELETE'])
 @login_required
 def api_delete_event(event_id):
@@ -430,15 +430,28 @@ def api_delete_event(event_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
-    
+
+# Therapist list for dropdown
 @app.route('/api/therapist_list')
 @login_required
 def therapist_list():
-    # Assuming your Therapist model has id, first_name, last_name
     therapists = Therapist.query.all()
     return jsonify([{'id': t.id, 'first_name': t.first_name, 'last_name': t.last_name} for t in therapists])
 
-import json
+# Patient list for dropdown
+@app.route('/api/patient_list')
+@login_required
+def api_patient_list():
+    patients = Patient.query.order_by(Patient.last_name).all()
+    return jsonify([
+        {
+            "id": p.id,
+            "first_name": p.first_name,
+            "last_name": p.last_name,
+            "dob": p.dob.strftime('%m-%d-%Y') if p.dob else ""
+        }
+        for p in patients
+    ])
 
 @app.route('/pt_save_to_patient', methods=['POST'])
 @login_required
