@@ -554,21 +554,29 @@ def delete_note(note_id):
         flash(f"Error deleting note: {e}", "danger")
     return redirect(url_for('patient_detail', patient_id=note.patient_id))
     
-@app.route('/notes/<int:note_id>/recover', methods=['POST'])
+@app.route('/patients/new', methods=['GET', 'POST'])
 @login_required
-def recover_note(note_id):
-    note = PTNote.query.get_or_404(note_id)
-    try:
-        note.deleted = False
-        note.deleted_at = None
-        db.session.commit()
-        flash("Note recovered successfully.", "success")
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Error recovering note: {e}", "danger")
-    return redirect(url_for('patient_detail', patient_id=note.patient_id))
-    
--%m-%d").date() if dob else None
+def new_patient():
+    insurances = Insurance.query.all()
+    physicians = Physician.query.all()
+
+    if request.method == 'POST':
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
+        dob = request.form.get('dob') or None
+        phone = request.form.get('phone')
+        email = request.form.get('email')
+        address = request.form.get('address')
+        city = request.form.get('city')
+        state = request.form.get('state')
+        zip_code = request.form.get('zip_code')
+        insurance_id = request.form.get('insurance') or None
+        physician_id = request.form.get('physician') or None
+        other_notes = request.form.get('other_notes')
+        mrn = request.form.get('mrn')
+
+        # Convert DOB to date object if provided
+        dob_date = datetime.strptime(dob, "%m-%d-%Y").date() if dob else None
 
         # Validation
         if not first_name or not last_name:
@@ -617,7 +625,6 @@ def recover_note(note_id):
             insurances=insurances,
             physicians=physicians
         )
-        
 # 3. Edit patient
 @app.route('/patients/<int:patient_id>/edit', methods=['GET', 'POST'])
 @login_required
