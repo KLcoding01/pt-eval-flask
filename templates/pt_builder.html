@@ -34,7 +34,6 @@
         <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-diffdx" role="tab">Diff Dx</a></li>
         <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-summary" role="tab">Assessment Summary</a></li>
         <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-plan" role="tab">Plan</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pt-dailynote" role="tab">Daily Note</a></li>
       </ul>
       <form id="pt-evalform">
         <div class="tab-content">
@@ -105,37 +104,7 @@
             <textarea name="intervention" id="pt_intervention" class="form-control mb-2" placeholder="Intervention"></textarea>
             <textarea name="procedures" id="pt_procedures" class="form-control mb-2" placeholder="Treatment Procedures"></textarea>
           </div>
-
-          <div class="tab-pane fade" id="pt-dailynote" role="tabpanel">
-            <div class="mb-2">
-              <label class="fw-bold">Diagnosis:</label>
-              <input type="text" id="pt_daily_diagnosis" class="form-control" placeholder="Enter Diagnosis">
-            </div>
-            <div class="mb-2">
-              <label class="fw-bold">Interventions:</label>
-              <textarea id="pt_daily_interventions" class="form-control" rows="2" placeholder="Enter Interventions"></textarea>
-            </div>
-            <div class="mb-2">
-              <label class="fw-bold">Tx Tolerance:</label>
-              <textarea id="pt_daily_tolerance" class="form-control" rows="2" placeholder="Enter Tx Tolerance"></textarea>
-            </div>
-            <div class="mb-2">
-              <label class="fw-bold">Current Progress:</label>
-              <textarea id="pt_daily_progress" class="form-control" rows="2" placeholder="Enter Current Progress"></textarea>
-            </div>
-            <div class="mb-2">
-              <label class="fw-bold">Next Visit Plan:</label>
-              <textarea id="pt_daily_plan" class="form-control" rows="2" placeholder="Enter Next Visit Plan"></textarea>
-            </div>
-            <div class="mb-2">
-              <label class="fw-bold">Summary:</label>
-              <textarea id="pt_daily_summary" class="form-control" rows="4" placeholder="Daily summary will appear here"></textarea>
-            </div>
-            <button type="button" id="pt-generate-daily-summary" class="btn btn-outline-success btn-sm">Generate Daily Summary</button>
-            <span id="pt-daily-summary-status" class="ms-2"></span>
-          </div>
         </div>
-
         <!-- PT Save Eval -->
         <div class="mb-3">
           <button type="button" id="pt-save-btn" class="btn btn-success">Save Evaluation to Patient</button>
@@ -146,10 +115,140 @@
     <!-- OT EVAL BUILDER TAB -->
     <div class="tab-pane fade" id="ot-tab-panel" role="tabpanel">
       <h2>OT Eval Builder</h2>
-      <p>OT Eval form coming soon…</p>
+      <<div class="d-flex align-items-center mb-3">
+          <label class="fw-bold me-2">Template:</label>
+          <select id="ot-template-select" class="form-select w-auto me-2"></select>
+          <button id="ot-load-template-btn" class="btn btn-outline-primary btn-sm">Load</button>
+          <button id="ot-save-word-btn" class="btn btn-info btn-sm">Export Word</button>
+          <button id="ot-save-pdf-btn" class="btn btn-danger btn-sm">Export PDF</button>
+          <span id="ot-status-msg" class="ms-3"></span>
+        </div>
+        <ul class="nav nav-tabs mb-2" id="ot-inner-tab" role="tablist">
+          <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#ot-patientinfo" role="tab">Patient Info</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ot-history" role="tab">History</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ot-pain" role="tab">Pain</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ot-objective" role="tab">Objective</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ot-diffdx" role="tab">Diff Dx</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ot-summary" role="tab">Assessment Summary</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ot-plan" role="tab">Plan</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ot-dailynote" role="tab">Daily Note</a></li>
+        </ul>
+        <form id="ot-evalform">
+          <div class="tab-content">
+            <div class="tab-pane fade show active" id="ot-patientinfo" role="tabpanel">
+              <div class="row mb-2">
+                <div class="col"><input name="name" id="ot_name" class="form-control" placeholder="Patient Name"></div>
+                <div class="col">
+                  <select name="gender" id="ot_gender" class="form-select">
+                    <option>Female</option>
+                    <option>Male</option>
+                  </select>
+                </div>
+                <div class="col"><input name="dob" id="ot_dob" class="form-control" placeholder="DOB (MM/DD/YYYY)"></div>
+                <div class="col"><input name="age" id="ot_age" class="form-control" placeholder="Age"></div>
+              </div>
+              <div class="row">
+                <div class="col"><input name="currentdate" id="ot_currentdate" class="form-control" placeholder="Current Date"></div>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="ot-history" role="tabpanel">
+              <textarea name="meddiag" id="ot_meddiag" class="form-control mb-2" placeholder="Medical Diagnosis"></textarea>
+              <textarea name="history" id="ot_history" class="form-control mb-2" placeholder="Medical History/HNP"></textarea>
+              <textarea name="subjective" id="ot_subjective" class="form-control mb-2" placeholder="Subjective (HPI)"></textarea>
+              <textarea name="meds" id="ot_meds" class="form-control mb-2" placeholder="Current Medication(s)"></textarea>
+              <textarea name="tests" id="ot_tests" class="form-control mb-2" placeholder="Diagnostic Test(s)"></textarea>
+              <textarea name="dme" id="ot_dme" class="form-control mb-2" placeholder="DME/Assistive Device"></textarea>
+              <textarea name="plof" id="ot_plof" class="form-control mb-2" placeholder="PLOF"></textarea>
+            </div>
+
+            <div class="tab-pane fade" id="ot-pain" role="tabpanel">
+              <input name="pain_location" id="ot_pain_location" class="form-control mb-2" placeholder="Area/Location of Injury">
+              <input name="pain_onset" id="ot_pain_onset" class="form-control mb-2" placeholder="Onset/Exacerbation Date">
+              <input name="pain_condition" id="ot_pain_condition" class="form-control mb-2" placeholder="Condition of Injury">
+              <input name="pain_mechanism" id="ot_pain_mechanism" class="form-control mb-2" placeholder="Mechanism of Injury">
+              <input name="pain_rating" id="ot_pain_rating" class="form-control mb-2" placeholder="Pain Rating (P/B/W)">
+              <input name="pain_frequency" id="ot_pain_frequency" class="form-control mb-2" placeholder="Pain Frequency">
+              <input name="pain_description" id="ot_pain_description" class="form-control mb-2" placeholder="Description">
+              <input name="pain_aggravating" id="ot_pain_aggravating" class="form-control mb-2" placeholder="Aggravating Factor">
+              <input name="pain_relieved" id="ot_pain_relieved" class="form-control mb-2" placeholder="Relieved By">
+              <input name="pain_interferes" id="ot_pain_interferes" class="form-control mb-2" placeholder="Interferes With">
+            </div>
+
+            <div class="tab-pane fade" id="ot-objective" role="tabpanel">
+              <textarea name="posture" id="ot_posture" class="form-control mb-2" rows="7" placeholder="Posture"></textarea>
+              <textarea name="rom" id="ot_rom" class="form-control mb-2" rows="7" placeholder="ROM"></textarea>
+              <textarea name="strength" id="ot_strength" class="form-control mb-2" rows="7" placeholder="Muscle Strength Test"></textarea>
+              <textarea name="palpation" id="ot_palpation" class="form-control mb-2" rows="7" placeholder="Palpation"></textarea>
+              <textarea name="functional" id="ot_functional" class="form-control mb-2" rows="7" placeholder="Functional Test(s)"></textarea>
+              <textarea name="special" id="ot_special" class="form-control mb-2" rows="7" placeholder="Special Test(s)"></textarea>
+              <textarea name="impairments" id="ot_impairments" class="form-control mb-2" rows="7" placeholder="Current Functional Mobility Impairment(s)"></textarea>
+            </div>
+
+            <div class="tab-pane fade" id="ot-diffdx" role="tabpanel">
+              <button type="button" id="ot-ai-generate-diffdx" class="btn btn-outline-success btn-sm mb-2">AI Generate</button>
+              <textarea name="diffdx" id="ot_diffdx" class="form-control" rows="8"></textarea>
+            </div>
+
+            <div class="tab-pane fade" id="ot-summary" role="tabpanel">
+              <button type="button" id="ot-ai-generate-summary" class="btn btn-outline-success btn-sm mb-2">AI Generate</button>
+              <textarea name="summary" id="ot_summary" class="form-control" rows="10"></textarea>
+            </div>
+
+            <div class="tab-pane fade" id="ot-plan" role="tabpanel">
+              <button type="button" id="ot-ai-generate-goals" class="btn btn-outline-success btn-sm mb-2">AI Generate Goals</button>
+              <textarea name="goals" id="ot_goals" class="form-control mb-2" rows="20"></textarea>
+              <input name="frequency" id="ot_frequency" class="form-control mb-2" placeholder="Frequency/Duration">
+              <textarea name="intervention" id="ot_intervention" class="form-control mb-2" placeholder="Intervention"></textarea>
+              <textarea name="procedures" id="ot_procedures" class="form-control mb-2" placeholder="Treatment Procedures"></textarea>
+            </div>
+          </div>
+          <!-- OT Save Eval -->
+          <div class="mb-3">
+            <button type="button" id="ot-save-btn" class="btn btn-success">Save Evaluation to Patient</button>
+            <span id="ot-save-status" class="ms-3"></span>
+          </div>
+        </form>
+      </div>
+     </div>
+    <!-- PT SOAP Tab -->
+     <div class="tab-pane fade" id="pt-soap-tab-panel" role="tabpanel">
+       <h2>PT SOAP - Daily Note</h2>
+       <form id="pt-soap-form">
+         <div class="mb-2">
+           <label class="fw-bold">Diagnosis:</label>
+           <input type="text" id="pt_daily_diagnosis" class="form-control" placeholder="Enter Diagnosis">
+         </div>
+         <div class="mb-2">
+           <label class="fw-bold">Interventions:</label>
+           <textarea id="pt_daily_interventions" class="form-control" rows="2" placeholder="Enter Interventions"></textarea>
+         </div>
+         <div class="mb-2">
+           <label class="fw-bold">Tx Tolerance:</label>
+           <textarea id="pt_daily_tolerance" class="form-control" rows="2" placeholder="Enter Tx Tolerance"></textarea>
+         </div>
+         <div class="mb-2">
+           <label class="fw-bold">Current Progress:</label>
+           <textarea id="pt_daily_progress" class="form-control" rows="2" placeholder="Enter Current Progress"></textarea>
+         </div>
+         <div class="mb-2">
+           <label class="fw-bold">Next Visit Plan:</label>
+           <textarea id="pt_daily_plan" class="form-control" rows="2" placeholder="Enter Next Visit Plan"></textarea>
+         </div>
+         <div class="mb-2">
+           <label class="fw-bold">Summary:</label>
+           <textarea id="pt_daily_summary" class="form-control" rows="4" placeholder="Daily summary will appear here"></textarea>
+         </div>
+         <button type="button" id="pt-generate-daily-summary" class="btn btn-outline-success btn-sm">Generate Daily Summary</button>
+         <span id="pt-daily-summary-status" class="ms-2"></span>
+         <div class="mt-3">
+           <button type="button" id="pt-soap-save-btn" class="btn btn-success">Save PT SOAP Note</button>
+           <span id="pt-soap-save-status" class="ms-3"></span>
+         </div>
+       </form>
+     </div>
     </div>
-  </div>
-</div>
+      {% endblock %}
 
 <!-- PT Signature Modal -->
 <div class="modal fade" id="ptSignatureModal" tabindex="-1" aria-hidden="true">

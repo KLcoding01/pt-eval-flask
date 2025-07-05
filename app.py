@@ -854,6 +854,9 @@ def update_visit_note(visit_id):
 @login_required
 def new_therapist():
     if request.method == 'POST':
+        username = request.form.get('username')    # <--- ADD THIS
+        password = request.form.get('password')    # <--- ADD THIS
+
         first_name = request.form.get('first_name')
         last_name = request.form.get('last_name')
         credentials = request.form.get('credentials')
@@ -862,11 +865,19 @@ def new_therapist():
         availability = request.form.get('availability')
 
         # Validate required fields
+        if not username or not password:
+            flash("Username and password are required.", "danger")
+            return redirect(url_for('new_therapist'))
+
         if not first_name or not last_name or not email:
             flash("First name, last name, and email are required.", "danger")
             return redirect(url_for('new_therapist'))
 
+        hashed_pw = generate_password_hash(password)
+
         therapist = Therapist(
+            username=username,
+            password=hashed_pw,
             first_name=first_name,
             last_name=last_name,
             credentials=credentials or "",
@@ -880,12 +891,6 @@ def new_therapist():
         return redirect(url_for('therapists_list'))
 
     return render_template('therapist_form.html')
-
-@app.route('/physicians/add', methods=['GET', 'POST'])
-@login_required
-def physicians_add():
-    # Add your physician creation logic here
-    return render_template('physician_form.html')
     
 @app.route('/therapists')
 @login_required
