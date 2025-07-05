@@ -339,7 +339,7 @@ def api_patient_list():
             "id": p.id,
             "first_name": p.first_name,
             "last_name": p.last_name,
-            "dob": p.dob.strftime('%Y-%m-%d') if p.dob else ""
+            "dob": p.dob.strftime('%m-%d-%Y') if p.dob else ""
         }
         for p in patients
     ])
@@ -441,8 +441,8 @@ def add_visit():
         google_event_id = request.form.get('google_event_id')
 
         # ---- FIX 1: Parse datetime ----
-        visit_date = datetime.strptime(visit_date_str, "%Y-%m-%dT%H:%M") if visit_date_str else None
-        end_time = datetime.strptime(end_time_str, "%Y-%m-%dT%H:%M") if end_time_str else None
+        visit_date = datetime.strptime(visit_date_str, "%m-%d-%YT%H:%M") if visit_date_str else None
+        end_time = datetime.strptime(end_time_str, "%m-%d-%YT%H:%M") if end_time_str else None
 
         # ---- FIX 2: Validate patient_id ----
         if not patient_id:
@@ -636,7 +636,7 @@ def edit_patient(patient_id):
         patient.first_name = request.form.get('first_name')
         patient.last_name = request.form.get('last_name')
         dob = request.form.get('dob') or None
-        patient.dob = datetime.strptime(dob, "%Y-%m-%d").date() if dob else None
+        patient.dob = datetime.strptime(dob, "%m-%d-%Y").date() if dob else None
         patient.phone = request.form.get('phone')
         patient.email = request.form.get('email')
         patient.address = request.form.get('address')
