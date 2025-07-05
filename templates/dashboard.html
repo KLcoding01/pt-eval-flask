@@ -108,42 +108,9 @@
   document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
     var therapistSelect = document.getElementById('therapist-select');
+    var patientSelect = document.getElementById('event-patient');
 
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: 'dayGridMonth',
-      selectable: true,
-      editable: true,
-      height: "auto",
-      headerToolbar: {
-        left: 'prev,next today',
-        center: 'title',
-        right: 'dayGridMonth,timeGridWeek,timeGridDay'
-      },
-      events: function(fetchInfo, successCallback, failureCallback) {
-        var therapistId = therapistSelect.value;
-        if (!therapistId) {
-          successCallback([]);
-          return;
-        }
-        fetch('/api/events?therapist_id=' + therapistId)
-          .then(response => response.json())
-          .then(data => successCallback(data))
-          .catch(() => failureCallback());
-      },
-      loading: function(isLoading) {
-        calendarEl.style.opacity = isLoading ? 0.5 : 1;
-      },
-      eventClick: function(info) {
-        openEditEventModal(info.event);
-      },
-      select: function(selectionInfo) {
-        openCreateEventModal(selectionInfo.startStr, selectionInfo.endStr);
-      }
-    });
-
-    calendar.render();
-
-    // Load therapist list for dropdowns
+    // Load therapists first, then initialize calendar
     fetch('/api/therapist_list')
       .then(res => res.json())
       .then(data => {
@@ -154,15 +121,17 @@
           therapistSelect.appendChild(option);
         });
         copyTherapistsToModal();
-      });
+        initCalendar();
+      })
+      .catch(() => alert('Failed to load therapists.'));
 
-    // Function to load patient list for modal dropdown (reusable)
+    // Load patients into modal dropdown
     function loadPatientList() {
       fetch('/api/patient_list')
         .then(res => res.json())
         .then(data => {
-          var patientSelect = document.getElementById('event-patient');
-          patientSelect.innerHTML = ''; // clear old options
+          if (!patientSelect) return;
+          patientSelect.innerHTML = '';
           data.forEach(p => {
             var option = document.createElement('option');
             option.value = p.id;
@@ -171,14 +140,49 @@
           });
         });
     }
-
-    // Initial patient list load
     loadPatientList();
 
-    // Reload events when therapist changes
-    therapistSelect.addEventListener('change', function() {
-      calendar.refetchEvents();
-    });
+    var calendar;
+
+    function initCalendar() {
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        selectable: true,
+        editable: true,
+        height: "auto",
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: function(fetchInfo, successCallback, failureCallback) {
+          var therapistId = therapistSelect.value;
+          if (!therapistId) {
+            successCallback([]);
+            return;
+          }
+          fetch('/api/events?therapist_id=' + therapistId)
+            .then(response => response.json())
+            .then(data => successCallback(data))
+            .catch(() => failureCallback());
+        },
+        loading: function(isLoading) {
+          calendarEl.style.opacity = isLoading ? 0.5 : 1;
+        },
+        eventClick: function(info) {
+          openEditEventModal(info.event);
+        },
+        select: function(selectionInfo) {
+          openCreateEventModal(selectionInfo.startStr, selectionInfo.endStr);
+        }
+      });
+
+      calendar.render();
+
+      therapistSelect.addEventListener('change', function() {
+        calendar.refetchEvents();
+      });
+    }
 
     // Copy therapists from dropdown to modal select
     function copyTherapistsToModal() {
@@ -217,7 +221,6 @@
     }
 
     function openEditEventModal(event) {
-      // Add therapist_id and patient_id into extendedProps if missing
       if (!event.extendedProps.therapist_id) {
         event.extendedProps.therapist_id = therapistSelect.value;
       }
@@ -288,7 +291,6 @@
       modal.style.display = 'none';
     };
 
-    // Expose loadPatientList globally so you can call after patient creation
     window.loadPatientList = loadPatientList;
   });
 </script>
