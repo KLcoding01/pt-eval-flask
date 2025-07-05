@@ -3,7 +3,7 @@ import io
 import re
 import json
 from sqlalchemy import or_
-from flask import Flask, request, jsonify, redirect, url_for, flash, render_template, send_file, session
+from flask import Flask, request, jsonify, redirect, url_for, flash, render_template, send_file, session, abort
 from flask_mail import Mail, Message
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -315,48 +315,80 @@ def oauth2callback():
     flash("Google Calendar connected!", "success")
     return redirect(url_for('dashboard'))
 
-@app.route('/api/events')
+@app.route('/api/events', methods=['POST'])
 @login_required
-def api_events():
-    service = get_google_calendar_service()
-    if not service:
-        return jsonify([])
-    try:
-        now = datetime.utcnow().isoformat() + 'Z'
-        events_result = service.events().list(
-            calendarId='primary',
-            timeMin=now,
-            maxResults=50,
-            singleEvents=True,
-            orderBy='startTime'
-        ).execute()
-        items = events_result.get('items', [])
-        events = []
-        for item in items:
-            start = item['start'].get('dateTime', item['start'].get('date'))
-            end = item['end'].get('dateTime', item['end'].get('date'))
-            events.append({
-                'id': item['id'],
-                'title': item.get('summary', 'No Title'),
-                'start': start,
-                'end': end,
-            })
-        return jsonify(events)
-    except Exception as e:
-        return jsonify([{"title": "Error loading events", "start": datetime.utcnow().isoformat()}])
-        
-@app.route('/api/patient_list')
-def api_patient_list():
-    patients = Patient.query.order_by(Patient.last_name).all()
-    return jsonify([
-        {
-            "id": p.id,
-            "first_name": p.first_name,
-            "last_name": p.last_name,
-            "dob": p.dob.strftime('%m-%d-%Y') if p.dob else ""
-        }
-        for p in patients
-    ])
+def api_create_event():
+    data = request.json
+    therapist_id = data.get('therapist_id')
+    title = data.get('title')
+    start = data.get('start')
+    end = data.get('end')
+
+    if not (therapist_id and title and start and end):
+        return jsonify({'error': 'Missing fields'}), 400
+
+    # Create new Visit and Google Calendar event
+    visit = Visit(
+        therapist_id=therapist_id,
+        visit_date=datetime.fromisoformat(start),
+        duration=int((datetime.fromisoformat(end) - datetime.fromisoformat(start)).total_seconds() / 60),
+        visit_type=title,
+        status='Scheduled'
+    )
+    db.session.add(visit)
+    db.session.commit()
+
+    event_id = create_google_event(visit)
+    if event_id:
+        visit.google_event_id = event_id
+        db.session.commit()
+
+    return jsonify({'success': True, 'id': visit.id})
+
+@app.route('/api/events/<string:event_id>', methods=['PUT'])
+@login_required
+def api_update_event(event_id):
+    data = request.json
+    title = data.get('title')
+    start = data.get('start')
+    end = data.get('end')
+
+    visit = Visit.query.filter_by(google_event_id=event_id).first()
+    if not visit:
+        abort(404)
+
+    if title:
+        visit.visit_type = title
+    if start:
+        visit.visit_date = datetime.fromisoformat(start)
+    if end:
+        duration = int((datetime.fromisoformat(end) - datetime.fromisoformat(start)).total_seconds() / 60)
+        visit.duration = duration
+
+    db.session.commit()
+
+    success = update_google_event(visit)
+    if not success:
+        return jsonify({'error': 'Failed to update Google event'}), 500
+
+    return jsonify({'success': True})
+
+@app.route('/api/events/<string:event_id>', methods=['DELETE'])
+@login_required
+def api_delete_event(event_id):
+    visit = Visit.query.filter_by(google_event_id=event_id).first()
+    if not visit:
+        abort(404)
+
+    success = delete_google_event(visit)
+    if not success:
+        return jsonify({'error': 'Failed to delete Google event'}), 500
+
+    visit.status = 'Deleted'
+    visit.deleted_at = datetime.utcnow()
+    db.session.commit()
+
+    return jsonify({'success': True})
     
 @app.route('/api/therapist_list')
 @login_required
@@ -767,12 +799,21 @@ def edit_visit(visit_id):
         visit.notes = json.dumps(notes)
         db.session.commit()
 
+        # Sync Google Calendar event
+        if visit.google_event_id:
+            update_google_event(visit)
+        else:
+            event_id = create_google_event(visit)
+            if event_id:
+                visit.google_event_id = event_id
+                db.session.commit()
+
         flash("Visit updated successfully!", "success")
         return redirect(url_for('visit_detail', visit_id=visit.id))
 
     # GET: render the form with current notes
     return render_template('edit_visit.html', visit=visit, notes=notes)
-    
+
 @app.route('/visits/<int:visit_id>/edit_note', methods=['GET', 'POST'])
 @login_required
 def edit_visit_note(visit_id):

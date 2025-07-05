@@ -30,36 +30,224 @@
       font-weight: 700;
       letter-spacing: 1px;
     }
+    /* Modal styles */
+    #event-modal {
+      display: none;
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 20px;
+      z-index: 1000;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border-radius: 8px;
+    }
+    #event-modal label {
+      display: block;
+      margin-bottom: 8px;
+    }
+    #event-modal input, #event-modal select {
+      width: 100%;
+      padding: 6px 8px;
+      margin-top: 4px;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+    }
+    #event-modal button {
+      margin-right: 10px;
+    }
   </style>
 {% endblock %}
 
 {% block content %}
-  <h2>Clinic Google Calendar Scheduler</h2>
-  <div id="calendar" tabindex="0"></div>
+<h2>Clinic Google Calendar Scheduler</h2>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      var calendarEl = document.getElementById('calendar');
-      var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        selectable: true,
-        editable: true,
-        height: "auto",
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        events: '/api/events', // Your Flask route serving JSON events
-        loading: function(isLoading) {
-          calendarEl.style.opacity = isLoading ? 0.5 : 1;
-        },
-        eventClick: function(info) {
-          alert('Event: ' + info.event.title);
-          // Optional: implement custom modal or details popup here
+<label for="therapist-select">Select Therapist:</label>
+<select id="therapist-select">
+  <option value="">-- Select Therapist --</option>
+</select>
+
+<div id="calendar" tabindex="0"></div>
+
+<!-- Modal for event create/edit -->
+<div id="event-modal">
+  <h3 id="modal-title">Event</h3>
+  <form id="event-form">
+    <input type="hidden" id="event-id" />
+    <label>
+      Title:
+      <input type="text" id="event-title" required />
+    </label>
+    <label>
+      Start:
+      <input type="datetime-local" id="event-start" required />
+    </label>
+    <label>
+      End:
+      <input type="datetime-local" id="event-end" required />
+    </label>
+    <label>
+      Therapist:
+      <select id="event-therapist" required></select>
+    </label>
+    <button type="submit">Save</button>
+    <button type="button" id="delete-event-btn" style="display:none;">Delete</button>
+    <button type="button" id="cancel-btn">Cancel</button>
+  </form>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var therapistSelect = document.getElementById('therapist-select');
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      selectable: true,
+      editable: true,
+      height: "auto",
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+      },
+      events: function(fetchInfo, successCallback, failureCallback) {
+        var therapistId = therapistSelect.value;
+        if (!therapistId) {
+          successCallback([]);
+          return;
         }
-      });
-      calendar.render();
+        fetch('/api/events?therapist_id=' + therapistId)
+          .then(response => response.json())
+          .then(data => successCallback(data))
+          .catch(() => failureCallback());
+      },
+      loading: function(isLoading) {
+        calendarEl.style.opacity = isLoading ? 0.5 : 1;
+      },
+      eventClick: function(info) {
+        openEditEventModal(info.event);
+      },
+      select: function(selectionInfo) {
+        openCreateEventModal(selectionInfo.startStr, selectionInfo.endStr);
+      }
     });
-  </script>
+
+    calendar.render();
+
+    // Load therapist list for dropdown
+    fetch('/api/therapist_list')
+      .then(res => res.json())
+      .then(data => {
+        data.forEach(t => {
+          var option = document.createElement('option');
+          option.value = t.id;
+          option.textContent = t.first_name + ' ' + t.last_name;
+          therapistSelect.appendChild(option);
+        });
+        copyTherapistsToModal();
+      });
+
+    // Reload events when therapist changes
+    therapistSelect.addEventListener('change', function() {
+      calendar.refetchEvents();
+    });
+
+    // Copy therapists from dropdown to modal select
+    function copyTherapistsToModal() {
+      const modalTherapistSelect = document.getElementById('event-therapist');
+      modalTherapistSelect.innerHTML = '';
+      Array.from(therapistSelect.options).forEach(opt => {
+        const newOpt = document.createElement('option');
+        newOpt.value = opt.value;
+        newOpt.textContent = opt.textContent;
+        modalTherapistSelect.appendChild(newOpt);
+      });
+    }
+
+    // Modal handling
+    var modal = document.getElementById('event-modal');
+    var form = document.getElementById('event-form');
+    var deleteBtn = document.getElementById('delete-event-btn');
+    var cancelBtn = document.getElementById('cancel-btn');
+
+    function showEventModal(eventData) {
+      var isNew = !eventData.id;
+      document.getElementById('modal-title').textContent = isNew ? 'Create Event' : 'Edit Event';
+      document.getElementById('event-id').value = eventData.id || '';
+      document.getElementById('event-title').value = eventData.title || '';
+      document.getElementById('event-start').value = eventData.start ? eventData.start.slice(0,16) : '';
+      document.getElementById('event-end').value = eventData.end ? eventData.end.slice(0,16) : '';
+      document.getElementById('event-therapist').value = eventData.extendedProps?.therapist_id || therapistSelect.value;
+
+      deleteBtn.style.display = isNew ? 'none' : 'inline';
+      modal.style.display = 'block';
+    }
+
+    function openCreateEventModal(start, end) {
+      showEventModal({start: start, end: end});
+    }
+
+    function openEditEventModal(event) {
+      // Add therapist_id into extendedProps if missing
+      if (!event.extendedProps.therapist_id) {
+        event.extendedProps.therapist_id = therapistSelect.value;
+      }
+      showEventModal(event);
+    }
+
+    form.onsubmit = async function(e) {
+      e.preventDefault();
+      var id = document.getElementById('event-id').value;
+      var title = document.getElementById('event-title').value;
+      var start = document.getElementById('event-start').value;
+      var end = document.getElementById('event-end').value;
+      var therapist_id = document.getElementById('event-therapist').value;
+
+      var payload = { title: title, start: new Date(start).toISOString(), end: new Date(end).toISOString(), therapist_id: parseInt(therapist_id) };
+      var url = '/api/events';
+      var method = 'POST';
+      if (id) {
+        url += '/' + id;
+        method = 'PUT';
+      }
+
+      var res = await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        modal.style.display = 'none';
+        calendar.refetchEvents();
+      } else {
+        alert('Error saving event');
+      }
+    };
+
+    deleteBtn.onclick = async function() {
+      var id = document.getElementById('event-id').value;
+      if (!id) return;
+      if (!confirm('Delete this event?')) return;
+
+      var res = await fetch('/api/events/' + id, { method: 'DELETE' });
+      if (res.ok) {
+        modal.style.display = 'none';
+        calendar.refetchEvents();
+      } else {
+        alert('Error deleting event');
+      }
+    };
+
+    cancelBtn.onclick = function() {
+      modal.style.display = 'none';
+    };
+
+  });
+</script>
 {% endblock %}
