@@ -156,19 +156,24 @@
         copyTherapistsToModal();
       });
 
-    // Load patient list for modal dropdown
-    fetch('/api/patient_list')
-      .then(res => res.json())
-      .then(data => {
-        var patientSelect = document.getElementById('event-patient');
-        patientSelect.innerHTML = ''; // clear old options
-        data.forEach(p => {
-          var option = document.createElement('option');
-          option.value = p.id;
-          option.textContent = p.first_name + ' ' + p.last_name;
-          patientSelect.appendChild(option);
+    // Function to load patient list for modal dropdown (reusable)
+    function loadPatientList() {
+      fetch('/api/patient_list')
+        .then(res => res.json())
+        .then(data => {
+          var patientSelect = document.getElementById('event-patient');
+          patientSelect.innerHTML = ''; // clear old options
+          data.forEach(p => {
+            var option = document.createElement('option');
+            option.value = p.id;
+            option.textContent = p.first_name + ' ' + p.last_name;
+            patientSelect.appendChild(option);
+          });
         });
-      });
+    }
+
+    // Initial patient list load
+    loadPatientList();
 
     // Reload events when therapist changes
     therapistSelect.addEventListener('change', function() {
@@ -212,6 +217,7 @@
     }
 
     function openEditEventModal(event) {
+      // Add therapist_id and patient_id into extendedProps if missing
       if (!event.extendedProps.therapist_id) {
         event.extendedProps.therapist_id = therapistSelect.value;
       }
@@ -282,6 +288,8 @@
       modal.style.display = 'none';
     };
 
+    // Expose loadPatientList globally so you can call after patient creation
+    window.loadPatientList = loadPatientList;
   });
 </script>
 {% endblock %}
