@@ -103,6 +103,8 @@ class Visit(db.Model):
     notes = db.Column(db.Text)
     google_event_id = db.Column(db.String(128), nullable=True)
 
+    deleted_at = db.Column(db.DateTime, nullable=True)
+    
     billing = db.relationship("Billing", uselist=False, back_populates="visit", cascade="all, delete-orphan")
     attachments = db.relationship("Attachment", back_populates="visit", cascade="all, delete-orphan")
     patient = db.relationship("Patient", back_populates="visits")

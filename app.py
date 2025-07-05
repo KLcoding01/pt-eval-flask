@@ -752,7 +752,7 @@ def delete_visit(visit_id):
     visit = Visit.query.get_or_404(visit_id)
     try:
         visit.status = 'Deleted'
-        visit.deleted_at = datetime.utcnow()
+        visit.deleted_at = datetime.utcnow()  # Set deleted timestamp
         db.session.commit()
         flash("Visit deleted successfully.", "success")
     except Exception as e:
