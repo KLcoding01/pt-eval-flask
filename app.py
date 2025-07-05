@@ -29,6 +29,16 @@ from google.auth.transport.requests import Request
 # DB MODELS
 from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, Therapist, Visit, Physician, Insurance, PTNote
 
+# ====== DOB =========
+
+def parse_dob(dob_str):
+    if not dob_str:
+        return None
+    normalized_dob = dob_str.replace('/', '-')
+    try:
+        return datetime.strptime(normalized_dob, "%m-%d-%Y").date()
+    except ValueError:
+        return None
 
 # ====== ENV & CONFIG ======
 load_dotenv()
@@ -55,6 +65,10 @@ mail = Mail(app)
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 MODEL = "gpt-4o-mini"
+
+# Usage example in your route:
+dob = request.form.get('dob')
+dob_date = parse_dob(dob)
 
 # ====== INIT DB ======
 db.init_app(app)
@@ -575,19 +589,16 @@ def new_patient():
         other_notes = request.form.get('other_notes')
         mrn = request.form.get('mrn')
 
-        # Convert DOB to date object if provided
-        dob_date = datetime.strptime(dob, "%m-%d-%Y").date() if dob else None
+        dob_date = parse_dob(dob)
 
-        # Validation
         if not first_name or not last_name:
             flash("First name and last name are required.", "danger")
             return redirect(url_for('new_patient'))
 
-        if not mrn or not re.fullmatch(r"\d{7}", mrn):
-            flash("Medical Record Number (MRN) must be a 7-digit number.", "danger")
+        if dob and not dob_date:
+            flash("Date of Birth must be in MM-DD-YYYY or MM/DD/YYYY format.", "danger")
             return redirect(url_for('new_patient'))
 
-        # Create and save patient record
         patient = Patient(
             first_name=first_name,
             last_name=last_name,
@@ -603,28 +614,29 @@ def new_patient():
             other_notes=other_notes,
             mrn=mrn
         )
+
         db.session.add(patient)
         db.session.commit()
 
         flash("New patient added!", "success")
         return redirect(url_for('patients_list'))
 
+    # GET method: generate MRN for new patient form
+    max_mrn_obj = db.session.query(func.max(Patient.mrn)).first()
+    max_mrn = max_mrn_obj[0] if max_mrn_obj and max_mrn_obj[0] else None
+
+    if max_mrn and max_mrn.isdigit():
+        generated_mrn = str(int(max_mrn) + 1).zfill(7)
     else:
-        # GET request: generate next MRN
-        max_mrn_obj = db.session.query(func.max(Patient.mrn)).first()
-        max_mrn = max_mrn_obj[0] if max_mrn_obj and max_mrn_obj[0] else None
+        generated_mrn = "1000001"
 
-        if max_mrn and max_mrn.isdigit():
-            generated_mrn = str(int(max_mrn) + 1).zfill(7)
-        else:
-            generated_mrn = "1000001"
-
-        return render_template(
-            'add_patient.html',
-            generated_mrn=generated_mrn,
-            insurances=insurances,
-            physicians=physicians
-        )
+    return render_template(
+        'add_patient.html',
+        generated_mrn=generated_mrn,
+        insurances=insurances,
+        physicians=physicians
+    )
+    
 # 3. Edit patient
 @app.route('/patients/<int:patient_id>/edit', methods=['GET', 'POST'])
 @login_required
