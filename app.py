@@ -662,6 +662,11 @@ def edit_patient(patient_id):
         return redirect(url_for('patients_list'))
     return render_template('patient_form.html', patient=patient, insurances=insurances, physicians=physicians)
 
+@app.route('/some-route')
+def some_route():
+    redirect_url = url_for('new_patient')  # inside request
+    return redirect(redirect_url)
+    
 # ========== VISIT CRUD WITH GOOGLE CALENDAR SYNC ==========
 @app.route('/visits')
 @login_required
