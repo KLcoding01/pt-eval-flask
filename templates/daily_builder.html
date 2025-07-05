@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+  <h1>Welcome, {{ session['username'] }}!</h1>
+  <hr>
+
+  <!-- MAIN PT/OT SELECTOR -->
+  <ul class="nav nav-tabs mb-3" id="mainTab" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" id="pt-tab-link" data-bs-toggle="tab" href="#pt-tab-panel" role="tab">Dail SOAP</a>
+    </li>
+  </ul>
+  <div class="tab-content" id="mainTabContent">
+    <!-- PT SOAP BUILDER TAB -->
+    <div class="tab-pane fade show active" id="pt-tab-panel" role="tabpanel">
+      <h2>PT Eval Builder</h2>
+      <div class="tab-pane fade" id="pt-dailynote" role="tabpanel">
+        <div class="mb-2">
+          <label class="fw-bold">Diagnosis:</label>
+          <input type="text" id="pt_daily_diagnosis" class="form-control" placeholder="Enter Diagnosis">
+        </div>
+        <div class="mb-2">
+          <label class="fw-bold">Interventions:</label>
+          <textarea id="pt_daily_interventions" class="form-control" rows="2" placeholder="Enter Interventions"></textarea>
+        </div>
+        <div class="mb-2">
+          <label class="fw-bold">Tx Tolerance:</label>
+          <textarea id="pt_daily_tolerance" class="form-control" rows="2" placeholder="Enter Tx Tolerance"></textarea>
+        </div>
+        <div class="mb-2">
+          <label class="fw-bold">Current Progress:</label>
+          <textarea id="pt_daily_progress" class="form-control" rows="2" placeholder="Enter Current Progress"></textarea>
+        </div>
+        <div class="mb-2">
+          <label class="fw-bold">Next Visit Plan:</label>
+          <textarea id="pt_daily_plan" class="form-control" rows="2" placeholder="Enter Next Visit Plan"></textarea>
+        </div>
+        <div class="mb-2">
+          <label class="fw-bold">Summary:</label>
+          <textarea id="pt_daily_summary" class="form-control" rows="4" placeholder="Daily summary will appear here"></textarea>
+        </div>
+        <button type="button" id="pt-generate-daily-summary" class="btn btn-outline-success btn-sm">Generate Daily Summary</button>
+        <span id="pt-daily-summary-status" class="ms-2"></span>
+      </div>
+    </div>
+<!-- Save Button (somewhere on your form) -->
+<button id="pt-save-btn" class="btn btn-success btn-sm">Save to Patient</button>
+<div id="pt-save-status" style="margin-top:10px;"></div>
+
+<!-- Your script goes at the bottom! -->
+<script>
+  // ==== Save to Patient: Show Modal and Populate List ====
+  document.getElementById('pt-save-btn').onclick = () => {
+    // Fetch patient list
+    fetch('/api/patient_list')
+      .then(r => r.json())
+      .then(list => {
+        document.getElementById('pt-patient-select').innerHTML =
+          list.map(p => `<option value="${p.id}">${p.last_name}, ${p.first_name} (DOB: ${p.dob})</option>`).join('');
+        // Show modal
+        new bootstrap.Modal(document.getElementById('ptSelectPatientModal')).show();
+      });
+  };
+
+  document.getElementById('pt-save-patient-confirm').onclick = () => {
+    const patientId = document.getElementById('pt-patient-select').value;
+    const fields = ptGetFields();
+    fields['patient_id'] = patientId;
+    fetch('/pt_save_to_patient', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(fields)
+    })
+    .then(r => r.json())
+    .then(res => {
+      ptSetStatus(res.message || "Saved!", 'green');
+      document.getElementById('pt-save-status').textContent = "Saved!";
+    })
+    .catch(() => {
+      ptSetStatus('Error saving!', 'red');
+      document.getElementById('pt-save-status').textContent = "Error saving!";
+    });
+  };
+
+  // ===== PT Functions =====
+  function ptGetFields() {
+    const data = {};
+    document.querySelectorAll('#pt-evalform [name]').forEach(el => data[el.name] = el.value);
+    return data;
+  }
+  function ptSetStatus(msg, color='green') {
+    const s = document.getElementById('pt-status-msg');
+    s.textContent = msg;
+    s.style.color = color;
+  }
+
+  fetch('/pt_load_template', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({template: ''})
+  })
+    .then(r => r.json())
+    .then(names => {
+      document.getElementById('pt-template-select').innerHTML =
+        names.map(n => `<option>${n}</option>`).join('');
+    });
+
+  document.getElementById('pt-load-template-btn').onclick = () => {
+    fetch('/pt_load_template', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({template: document.getElementById('pt-template-select').value})
+    })
+      .then(r => r.json())
+      .then(data => {
+        Object.entries(data).forEach(([k,v]) => {
+          const fld = document.getElementById('pt_'+k) || document.querySelector(`#pt-evalform [name="${k}"]`);
+          if (fld) fld.value = v;
+        });
+      });
+    };
+    document.getElementById('pt-generate-daily-summary').onclick = () => {
+      document.getElementById('pt-daily-summary-status').textContent = 'Generating summary…';
+      fetch('/pt_generate_daily_summary', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          diagnosis: document.getElementById('pt_daily_diagnosis').value,
+          interventions: document.getElementById('pt_daily_interventions').value,
+          tolerance: document.getElementById('pt_daily_tolerance').value,
+          progress: document.getElementById('pt_daily_progress').value,
+          plan: document.getElementById('pt_daily_plan').value
+        })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.result) {
+          document.getElementById('pt_daily_summary').value = data.result;
+          document.getElementById('pt-daily-summary-status').textContent = 'Summary generated!';
+        } else if (data.error) {
+          document.getElementById('pt-daily-summary-status').textContent = 'AI error: ' + data.error;
+        } else {
+          document.getElementById('pt-daily-summary-status').textContent = 'Unexpected AI response';
+        }
+      })
+      .catch(() => {
+        document.getElementById('pt-daily-summary-status').textContent = 'AI error';
+      });
+    };
+  };
+  document.getElementById('pt-save-word-btn').onclick = () => {
+    ptSetStatus('Exporting Word...', 'orange');
+    fetch('/pt_export_word', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(ptGetFields())
+    })
+      .then(r => r.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'PT_Eval.docx';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        ptSetStatus('Word downloaded!', 'green');
+      });
+  };
+
+  document.getElementById('pt-save-pdf-btn').onclick = () => {
+    ptSetStatus('Exporting PDF...', 'orange');
+    fetch('/pt_export_pdf', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(ptGetFields())
+    })
+      .then(r => r.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'PT_Eval.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        ptSetStatus('PDF downloaded!', 'green');
+      });
+  };
+
+  document.getElementById('pt-generate-daily-summary').onclick = () => {
+    document.getElementById('pt-daily-summary-status').textContent = 'Generating summary…';
+    fetch('/pt_generate_daily_summary', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        diagnosis: document.getElementById('pt_daily_diagnosis').value,
+        interventions: document.getElementById('pt_daily_interventions').value,
+        tolerance: document.getElementById('pt_daily_tolerance').value,
+        progress: document.getElementById('pt_daily_progress').value,
+        plan: document.getElementById('pt_daily_plan').value
+      })
+    })
+      .then(r => r.text())
+      .then(text => {
+        document.getElementById('pt_daily_summary').value = text;
+        document.getElementById('pt-daily-summary-status').textContent = 'Summary generated!';
+      })
+      .catch(() => {
+        document.getElementById('pt-daily-summary-status').textContent = 'AI error';
+      });
+  };
+</script>
+{% endblock %}

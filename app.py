@@ -920,6 +920,12 @@ def billing_overview():
 @login_required
 def pt_builder():
     return render_template('pt_builder.html')
+
+@app.route('/patient/<int:patient_id>/pt_soap')
+@login_required
+def pt_soap(patient_id):
+    patient = Patient.query.get_or_404(patient_id)
+    return render_template('pt_soap.html', patient=patient)
     
 @app.route('/patient/<int:patient_id>/pt_builder', methods=['GET'])
 @login_required
