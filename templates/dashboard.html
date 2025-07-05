@@ -161,6 +161,7 @@
       .then(res => res.json())
       .then(data => {
         var patientSelect = document.getElementById('event-patient');
+        patientSelect.innerHTML = ''; // clear old options
         data.forEach(p => {
           var option = document.createElement('option');
           option.value = p.id;
@@ -211,7 +212,6 @@
     }
 
     function openEditEventModal(event) {
-      // Add therapist_id and patient_id into extendedProps if missing
       if (!event.extendedProps.therapist_id) {
         event.extendedProps.therapist_id = therapistSelect.value;
       }
