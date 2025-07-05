@@ -68,7 +68,7 @@
 
 <label for="therapist-select">Select Therapist:</label>
 <select id="therapist-select">
-  <option value="">-- Select Therapist --</option>
+  <option value="">-- All Therapists --</option>
 </select>
 
 <div id="calendar" tabindex="0"></div>
@@ -122,11 +122,14 @@
       events: function(fetchInfo, successCallback, failureCallback) {
         const therapistId = therapistSelect.value;
         console.log("Fetching events for therapist ID:", therapistId);
-        if (!therapistId) {
-          successCallback([]);
-          return;
+
+        // If no therapist selected, fetch all events (no query param)
+        let url = '/api/events';
+        if (therapistId) {
+          url += '?therapist_id=' + therapistId;
         }
-        fetch('/api/events?therapist_id=' + therapistId)
+
+        fetch(url)
           .then(response => {
             if (!response.ok) {
               throw new Error('Network response was not ok');

@@ -321,9 +321,10 @@ def oauth2callback():
 def api_events():
     if request.method == 'GET':
         therapist_id = request.args.get('therapist_id', type=int)
-        if not therapist_id:
-            return jsonify([])
-        visits = Visit.query.filter_by(therapist_id=therapist_id).all()
+        if therapist_id:
+            visits = Visit.query.filter_by(therapist_id=therapist_id).all()
+        else:
+            visits = Visit.query.all()
         app.logger.info(f"Fetching events for therapist_id={therapist_id}, found {len(visits)} visits")
         events = []
         for visit in visits:
@@ -377,6 +378,7 @@ def api_events():
             db.session.rollback()
             return jsonify({'error': str(e)}), 500
 
+
 # PUT update event
 @app.route('/api/events/<int:event_id>', methods=['PUT'])
 @login_required
@@ -413,6 +415,7 @@ def api_update_event(event_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
 
 # DELETE event
 @app.route('/api/events/<int:event_id>', methods=['DELETE'])
