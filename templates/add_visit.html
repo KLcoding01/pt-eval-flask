@@ -1,80 +1,73 @@
 {% extends "base.html" %}
-{% block title %}Add New Patient{% endblock %}
+{% block title %}Add Visit{% endblock %}
 
 {% block content %}
-<h2>Add New Patient</h2>
-<form method="POST" action="{{ url_for('add_patient') }}">
+<h2>Add Visit</h2>
+<form method="POST">
   <div class="mb-3">
-    <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
-    <input type="text" class="form-control" id="first_name" name="first_name" required>
-  </div>
-  <div class="mb-3">
-    <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
-    <input type="text" class="form-control" id="last_name" name="last_name" required>
-  </div>
-
-  <div class="mb-3">
-    <label for="dob" class="form-label">Date of Birth</label>
-    <input type="date" class="form-control" id="dob" name="dob">
-  </div>
-  <div class="mb-3">
-    <label for="phone" class="form-label">Phone</label>
-    <input type="tel" class="form-control" id="phone" name="phone">
-  </div>
-
-  <div class="mb-3">
-    <label for="address" class="form-label">Address</label>
-    <input type="text" class="form-control" id="address" name="address">
-  </div>
-  <div class="mb-3">
-    <label for="city" class="form-label">City</label>
-    <input type="text" class="form-control" id="city" name="city">
-  </div>
-  <div class="mb-3">
-    <label for="state" class="form-label">State</label>
-    <input type="text" class="form-control" id="state" name="state" maxlength="2" placeholder="e.g. CA">
-  </div>
-  <div class="mb-3">
-    <label for="zip_code" class="form-label">Zip Code</label>
-    <input type="text" class="form-control" id="zip_code" name="zip_code" maxlength="10">
-  </div>
-
-  <div class="mb-3">
-    <label for="email" class="form-label">Email</label>
-    <input type="email" class="form-control" id="email" name="email">
-  </div>
-
-  <div class="mb-3">
-    <label for="insurance" class="form-label">Insurance</label>
-    <select class="form-select" id="insurance" name="insurance">
-      <option value="">-- Select --</option>
-      {% for insurance in insurances %}
-      <option value="{{ insurance.id }}">{{ insurance.name }}</option>
+    <label for="patient_id" class="form-label">Patient</label>
+    <select class="form-select" name="patient_id" id="patient_id" required>
+      <option value="">Select Patient</option>
+      {% for p in patients %}
+        <option value="{{ p.id }}">{{ p.last_name }}, {{ p.first_name }} (DOB: {{ p.dob }})</option>
       {% endfor %}
     </select>
   </div>
-
   <div class="mb-3">
-    <label for="physician" class="form-label">Physician</label>
-    <select class="form-select" id="physician" name="physician">
-      <option value="">-- Select --</option>
-      {% for physician in physicians %}
-      <option value="{{ physician.id }}">{{ physician.name }}</option>
+    <label for="therapist_id" class="form-label">Therapist</label>
+    <select class="form-select" name="therapist_id" id="therapist_id" required>
+      <option value="">Select Therapist</option>
+      {% for t in therapists %}
+        <option value="{{ t.id }}">{{ t.last_name }}, {{ t.first_name }}</option>
       {% endfor %}
     </select>
   </div>
-
   <div class="mb-3">
-    <label for="mrn" class="form-label">Medical Record Number</label>
-    <input type="text" class="form-control" id="mrn" name="mrn" readonly value="{{ generated_mrn }}">
+    <label for="visit_date" class="form-label">Visit Start</label>
+    <input type="datetime-local" class="form-control" name="visit_date" id="visit_date" required>
   </div>
-
   <div class="mb-3">
-    <label for="other_notes" class="form-label">Other Notes</label>
-    <textarea class="form-control" id="other_notes" name="other_notes" rows="3"></textarea>
+    <label for="end_time" class="form-label">Visit End</label>
+    <input type="datetime-local" class="form-control" name="end_time" id="end_time">
   </div>
-
-  <button type="submit" class="btn btn-primary">Save Patient</button>
-  <a href="{{ url_for('patients_list') }}" class="btn btn-secondary ms-2">Cancel</a>
+  <div class="mb-3">
+    <label for="duration" class="form-label">Duration (minutes)</label>
+    <input type="number" class="form-control" name="duration" id="duration" min="1" value="60">
+  </div>
+  <div class="mb-3">
+    <label for="visit_type" class="form-label">Visit Type</label>
+    <input type="text" class="form-control" name="visit_type" id="visit_type" required>
+  </div>
+  <div class="mb-3">
+    <label for="status" class="form-label">Status</label>
+    <select class="form-select" name="status" id="status" required>
+      <option value="Scheduled">Scheduled</option>
+      <option value="Completed">Completed</option>
+      <option value="Cancelled">Cancelled</option>
+    </select>
+  </div>
+  <div class="mb-3">
+    <label for="cpt_code_id" class="form-label">CPT Code (optional)</label>
+    <select class="form-select" name="cpt_code_id" id="cpt_code_id">
+      <option value="">None</option>
+      {% for c in cpt_codes %}
+        <option value="{{ c.id }}">{{ c.code }} - {{ c.description }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label for="icd10_code_id" class="form-label">ICD-10 Code (optional)</label>
+    <select class="form-select" name="icd10_code_id" id="icd10_code_id">
+      <option value="">None</option>
+      {% for i in icd10_codes %}
+        <option value="{{ i.id }}">{{ i.code }} - {{ i.description }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label for="notes" class="form-label">Notes</label>
+    <textarea class="form-control" name="notes" id="notes"></textarea>
+  </div>
+  <button type="submit" class="btn btn-primary">Save Visit</button>
 </form>
 {% endblock %}
