@@ -795,20 +795,6 @@ def visit_detail(visit_id):
 
     return render_template("visit_detail.html", visit=visit, notes=notes)
 
-@app.route('/api/patient_list')
-@login_required
-def api_patient_list():
-    patients = Patient.query.order_by(Patient.last_name).all()
-    return jsonify([
-        {
-            "id": p.id,
-            "first_name": p.first_name,
-            "last_name": p.last_name,
-            "dob": p.dob.strftime('%m-%d-%Y') if p.dob else ""
-        }
-        for p in patients
-    ])
-
 @app.route('/visits/new', methods=['GET', 'POST'])
 @login_required
 def new_visit():
