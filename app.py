@@ -33,9 +33,8 @@ from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, 
 load_dotenv()
 app = Flask(__name__)
 
-serializer = URLSafeTimedSerializer(app.secret_key)
-
 app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key_change_me")
+serializer = URLSafeTimedSerializer(app.secret_key)
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.join(basedir, 'static', 'uploads', 'db.sqlite3')
@@ -492,7 +491,7 @@ def serialize_patient(patient):
         "first_name": patient.first_name,
         "last_name": patient.last_name,
         "mrn": patient.mrn,
-        "dob": patient.dob.strftime("%Y-%m-%d") if patient.dob else None,
+        "dob": patient.dob.strftime("%m-%d-%Y") if patient.dob else None,
         "phone": patient.phone,
         "email": patient.email,
         "address": patient.address,
