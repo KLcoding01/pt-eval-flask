@@ -3,7 +3,7 @@
 
 {% block content %}
 <h2>Add New Patient</h2>
-<form method="POST" action="{{ url_for('add_patient') }}">
+<form method="POST" action="{{ url_for('new_patient') }}">
   <div class="mb-3">
     <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
     <input type="text" class="form-control" id="first_name" name="first_name" required>
