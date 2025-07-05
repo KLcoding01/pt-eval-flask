@@ -25,7 +25,9 @@ from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
-
+from your_app import app, db
+from your_app.models import Visit
+from your_app.google_calendar_helpers import create_google_event, update_google_event, delete_google_event
 # DB MODELS
 from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, Therapist, Visit, Physician, Insurance, PTNote
 
@@ -320,75 +322,94 @@ def oauth2callback():
 def api_create_event():
     data = request.json
     therapist_id = data.get('therapist_id')
+    patient_id = data.get('patient_id')
     title = data.get('title')
     start = data.get('start')
     end = data.get('end')
 
-    if not (therapist_id and title and start and end):
-        return jsonify({'error': 'Missing fields'}), 400
+    if not all([therapist_id, patient_id, title, start, end]):
+        return jsonify({'error': 'Missing required fields'}), 400
 
-    # Create new Visit and Google Calendar event
-    visit = Visit(
-        therapist_id=therapist_id,
-        visit_date=datetime.fromisoformat(start),
-        duration=int((datetime.fromisoformat(end) - datetime.fromisoformat(start)).total_seconds() / 60),
-        visit_type=title,
-        status='Scheduled'
-    )
-    db.session.add(visit)
-    db.session.commit()
-
-    event_id = create_google_event(visit)
-    if event_id:
-        visit.google_event_id = event_id
+    try:
+        visit = Visit(
+            patient_id=patient_id,
+            therapist_id=therapist_id,
+            visit_date=datetime.fromisoformat(start),
+            duration=int((datetime.fromisoformat(end) - datetime.fromisoformat(start)).total_seconds() / 60),
+            visit_type=title,
+            status='Scheduled'
+        )
+        db.session.add(visit)
         db.session.commit()
 
-    return jsonify({'success': True, 'id': visit.id})
+        event_id = create_google_event(visit)
+        if event_id:
+            visit.google_event_id = event_id
+            db.session.commit()
 
-@app.route('/api/events/<string:event_id>', methods=['PUT'])
+        return jsonify({
+            'success': True,
+            'id': visit.id,
+            'google_event_id': visit.google_event_id,
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/events/<int:event_id>', methods=['PUT'])
 @login_required
 def api_update_event(event_id):
+    visit = Visit.query.get_or_404(event_id)
     data = request.json
+    therapist_id = data.get('therapist_id')
+    patient_id = data.get('patient_id')
     title = data.get('title')
     start = data.get('start')
     end = data.get('end')
 
-    visit = Visit.query.filter_by(google_event_id=event_id).first()
-    if not visit:
-        abort(404)
+    if not all([therapist_id, patient_id, title, start, end]):
+        return jsonify({'error': 'Missing required fields'}), 400
 
-    if title:
+    try:
+        visit.therapist_id = therapist_id
+        visit.patient_id = patient_id
         visit.visit_type = title
-    if start:
         visit.visit_date = datetime.fromisoformat(start)
-    if end:
-        duration = int((datetime.fromisoformat(end) - datetime.fromisoformat(start)).total_seconds() / 60)
-        visit.duration = duration
+        visit.duration = int((datetime.fromisoformat(end) - datetime.fromisoformat(start)).total_seconds() / 60)
+        db.session.commit()
 
-    db.session.commit()
+        if visit.google_event_id:
+            update_google_event(visit)
+        else:
+            event_id = create_google_event(visit)
+            if event_id:
+                visit.google_event_id = event_id
+                db.session.commit()
 
-    success = update_google_event(visit)
-    if not success:
-        return jsonify({'error': 'Failed to update Google event'}), 500
+        return jsonify({'success': True})
 
-    return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
-@app.route('/api/events/<string:event_id>', methods=['DELETE'])
+
+@app.route('/api/events/<int:event_id>', methods=['DELETE'])
 @login_required
 def api_delete_event(event_id):
-    visit = Visit.query.filter_by(google_event_id=event_id).first()
-    if not visit:
-        abort(404)
+    visit = Visit.query.get_or_404(event_id)
 
-    success = delete_google_event(visit)
-    if not success:
-        return jsonify({'error': 'Failed to delete Google event'}), 500
+    try:
+        if visit.google_event_id:
+            delete_google_event(visit)
+        db.session.delete(visit)
+        db.session.commit()
+        return jsonify({'success': True})
 
-    visit.status = 'Deleted'
-    visit.deleted_at = datetime.utcnow()
-    db.session.commit()
-
-    return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
     
 @app.route('/api/therapist_list')
 @login_required

@@ -94,6 +94,10 @@
       Therapist:
       <select id="event-therapist" required></select>
     </label>
+    <label>
+      Patient:
+      <select id="event-patient" required></select>
+    </label>
     <button type="submit">Save</button>
     <button type="button" id="delete-event-btn" style="display:none;">Delete</button>
     <button type="button" id="cancel-btn">Cancel</button>
@@ -139,7 +143,7 @@
 
     calendar.render();
 
-    // Load therapist list for dropdown
+    // Load therapist list for dropdowns
     fetch('/api/therapist_list')
       .then(res => res.json())
       .then(data => {
@@ -150,6 +154,19 @@
           therapistSelect.appendChild(option);
         });
         copyTherapistsToModal();
+      });
+
+    // Load patient list for modal dropdown
+    fetch('/api/patient_list')
+      .then(res => res.json())
+      .then(data => {
+        var patientSelect = document.getElementById('event-patient');
+        data.forEach(p => {
+          var option = document.createElement('option');
+          option.value = p.id;
+          option.textContent = p.first_name + ' ' + p.last_name;
+          patientSelect.appendChild(option);
+        });
       });
 
     // Reload events when therapist changes
@@ -183,6 +200,7 @@
       document.getElementById('event-start').value = eventData.start ? eventData.start.slice(0,16) : '';
       document.getElementById('event-end').value = eventData.end ? eventData.end.slice(0,16) : '';
       document.getElementById('event-therapist').value = eventData.extendedProps?.therapist_id || therapistSelect.value;
+      document.getElementById('event-patient').value = eventData.extendedProps?.patient_id || '';
 
       deleteBtn.style.display = isNew ? 'none' : 'inline';
       modal.style.display = 'block';
@@ -193,9 +211,12 @@
     }
 
     function openEditEventModal(event) {
-      // Add therapist_id into extendedProps if missing
+      // Add therapist_id and patient_id into extendedProps if missing
       if (!event.extendedProps.therapist_id) {
         event.extendedProps.therapist_id = therapistSelect.value;
+      }
+      if (!event.extendedProps.patient_id) {
+        event.extendedProps.patient_id = '';
       }
       showEventModal(event);
     }
@@ -207,8 +228,21 @@
       var start = document.getElementById('event-start').value;
       var end = document.getElementById('event-end').value;
       var therapist_id = document.getElementById('event-therapist').value;
+      var patient_id = document.getElementById('event-patient').value;
 
-      var payload = { title: title, start: new Date(start).toISOString(), end: new Date(end).toISOString(), therapist_id: parseInt(therapist_id) };
+      if (!patient_id) {
+        alert('Please select a patient.');
+        return;
+      }
+
+      var payload = {
+        title: title,
+        start: new Date(start).toISOString(),
+        end: new Date(end).toISOString(),
+        therapist_id: parseInt(therapist_id),
+        patient_id: parseInt(patient_id)
+      };
+
       var url = '/api/events';
       var method = 'POST';
       if (id) {
