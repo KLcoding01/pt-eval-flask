@@ -10,13 +10,14 @@ class Patient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(64), nullable=False)
     last_name = db.Column(db.String(64), nullable=False)
+    mrn = db.Column(db.String(7), unique=True, nullable=False)
     dob = db.Column(db.Date)
     phone = db.Column(db.String(20))
     email = db.Column(db.String(120))
     address = db.Column(db.String(256))
     insurance_id = db.Column(db.Integer, db.ForeignKey("insurances.id"))
     physician_id = db.Column(db.Integer, db.ForeignKey("physicians.id"))
-
+    mrn = db.Column(db.String(7), unique=True, nullable=False)
     # Relationships
     visits = db.relationship("Visit", back_populates="patient", cascade="all, delete-orphan")
     insurance = db.relationship("Insurance", back_populates="patients")
