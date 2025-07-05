@@ -15,6 +15,9 @@ class Patient(db.Model):
     phone = db.Column(db.String(20))
     email = db.Column(db.String(120))
     address = db.Column(db.String(256))
+    city = db.Column(db.String(100))
+    state = db.Column(db.String(20))
+    zip_code = db.Column(db.String(20))
     insurance_id = db.Column(db.Integer, db.ForeignKey("insurances.id"))
     physician_id = db.Column(db.Integer, db.ForeignKey("physicians.id"))
     # Relationships
