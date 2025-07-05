@@ -108,9 +108,62 @@
   document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
     var therapistSelect = document.getElementById('therapist-select');
-    var patientSelect = document.getElementById('event-patient');
 
-    // Load therapists first, then initialize calendar
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      selectable: true,
+      editable: true,
+      height: "auto",
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+      },
+      events: function(fetchInfo, successCallback, failureCallback) {
+        var therapistId = therapistSelect.value;
+        console.log("Fetching events for therapist ID:", therapistId);
+        if (!therapistId) {
+          successCallback([]);
+          return;
+        }
+        fetch('/api/events?therapist_id=' + therapistId)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log("Fetched events:", data);
+            // Map events to ensure start/end are strings, add id
+            const events = data.map(ev => ({
+              id: ev.id,
+              title: ev.title,
+              start: ev.start,
+              end: ev.end,
+              extendedProps: ev.extendedProps || {}
+            }));
+            successCallback(events);
+          })
+          .catch(error => {
+            console.error("Error fetching events:", error);
+            failureCallback(error);
+          });
+      },
+      loading: function(isLoading) {
+        calendarEl.style.opacity = isLoading ? 0.5 : 1;
+      },
+      eventClick: function(info) {
+        openEditEventModal(info.event);
+      },
+      select: function(selectionInfo) {
+        openCreateEventModal(selectionInfo.startStr, selectionInfo.endStr);
+      }
+    });
+
+    calendar.render();
+
+    // Load therapist list for dropdowns
     fetch('/api/therapist_list')
       .then(res => res.json())
       .then(data => {
@@ -121,17 +174,15 @@
           therapistSelect.appendChild(option);
         });
         copyTherapistsToModal();
-        initCalendar();
-      })
-      .catch(() => alert('Failed to load therapists.'));
+      });
 
-    // Load patients into modal dropdown
+    // Function to load patient list for modal dropdown (reusable)
     function loadPatientList() {
       fetch('/api/patient_list')
         .then(res => res.json())
         .then(data => {
-          if (!patientSelect) return;
-          patientSelect.innerHTML = '';
+          var patientSelect = document.getElementById('event-patient');
+          patientSelect.innerHTML = ''; // clear old options
           data.forEach(p => {
             var option = document.createElement('option');
             option.value = p.id;
@@ -140,49 +191,14 @@
           });
         });
     }
+
+    // Initial patient list load
     loadPatientList();
 
-    var calendar;
-
-    function initCalendar() {
-      calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        selectable: true,
-        editable: true,
-        height: "auto",
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        events: function(fetchInfo, successCallback, failureCallback) {
-          var therapistId = therapistSelect.value;
-          if (!therapistId) {
-            successCallback([]);
-            return;
-          }
-          fetch('/api/events?therapist_id=' + therapistId)
-            .then(response => response.json())
-            .then(data => successCallback(data))
-            .catch(() => failureCallback());
-        },
-        loading: function(isLoading) {
-          calendarEl.style.opacity = isLoading ? 0.5 : 1;
-        },
-        eventClick: function(info) {
-          openEditEventModal(info.event);
-        },
-        select: function(selectionInfo) {
-          openCreateEventModal(selectionInfo.startStr, selectionInfo.endStr);
-        }
-      });
-
-      calendar.render();
-
-      therapistSelect.addEventListener('change', function() {
-        calendar.refetchEvents();
-      });
-    }
+    // Reload events when therapist changes
+    therapistSelect.addEventListener('change', function() {
+      calendar.refetchEvents();
+    });
 
     // Copy therapists from dropdown to modal select
     function copyTherapistsToModal() {
@@ -209,8 +225,9 @@
       document.getElementById('event-title').value = eventData.title || '';
       document.getElementById('event-start').value = eventData.start ? eventData.start.slice(0,16) : '';
       document.getElementById('event-end').value = eventData.end ? eventData.end.slice(0,16) : '';
-      document.getElementById('event-therapist').value = eventData.extendedProps?.therapist_id || therapistSelect.value;
-      document.getElementById('event-patient').value = eventData.extendedProps?.patient_id || '';
+      // Use extendedProps therapist_id or fallback to therapistSelect.value
+      document.getElementById('event-therapist').value = (eventData.extendedProps && eventData.extendedProps.therapist_id) || therapistSelect.value || '';
+      document.getElementById('event-patient').value = (eventData.extendedProps && eventData.extendedProps.patient_id) || '';
 
       deleteBtn.style.display = isNew ? 'none' : 'inline';
       modal.style.display = 'block';
@@ -221,6 +238,8 @@
     }
 
     function openEditEventModal(event) {
+      // Ensure therapist_id and patient_id exist in extendedProps
+      if (!event.extendedProps) event.extendedProps = {};
       if (!event.extendedProps.therapist_id) {
         event.extendedProps.therapist_id = therapistSelect.value;
       }
@@ -259,17 +278,23 @@
         method = 'PUT';
       }
 
-      var res = await fetch(url, {
-        method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      try {
+        var res = await fetch(url, {
+          method: method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
 
-      if (res.ok) {
-        modal.style.display = 'none';
-        calendar.refetchEvents();
-      } else {
+        if (res.ok) {
+          modal.style.display = 'none';
+          calendar.refetchEvents();
+        } else {
+          alert('Error saving event');
+          console.error(await res.text());
+        }
+      } catch (err) {
         alert('Error saving event');
+        console.error(err);
       }
     };
 
@@ -278,12 +303,18 @@
       if (!id) return;
       if (!confirm('Delete this event?')) return;
 
-      var res = await fetch('/api/events/' + id, { method: 'DELETE' });
-      if (res.ok) {
-        modal.style.display = 'none';
-        calendar.refetchEvents();
-      } else {
+      try {
+        var res = await fetch('/api/events/' + id, { method: 'DELETE' });
+        if (res.ok) {
+          modal.style.display = 'none';
+          calendar.refetchEvents();
+        } else {
+          alert('Error deleting event');
+          console.error(await res.text());
+        }
+      } catch (err) {
         alert('Error deleting event');
+        console.error(err);
       }
     };
 
@@ -291,7 +322,9 @@
       modal.style.display = 'none';
     };
 
+    // Expose loadPatientList globally so you can call after patient creation
     window.loadPatientList = loadPatientList;
   });
 </script>
+
 {% endblock %}
