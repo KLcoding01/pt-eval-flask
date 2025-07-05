@@ -538,7 +538,7 @@ def patient_detail(patient_id):
         notes=notes,
         deleted_notes=deleted_notes,
         edit_visit_id=edit_visit_id
-    )
+        )
     
 @app.route('/notes/<int:note_id>/delete', methods=['POST'])
 @login_required
@@ -568,39 +568,18 @@ def recover_note(note_id):
         flash(f"Error recovering note: {e}", "danger")
     return redirect(url_for('patient_detail', patient_id=note.patient_id))
     
-@app.route('/patients/new', methods=['GET', 'POST'])
-@login_required
-def new_patient():
-    insurances = Insurance.query.all()
-    physicians = Physician.query.all()
+-%m-%d").date() if dob else None
 
-    if request.method == 'POST':
-        first_name = request.form.get('first_name')
-        last_name = request.form.get('last_name')
-        dob = request.form.get('dob') or None
-        phone = request.form.get('phone')
-        email = request.form.get('email')
-        address = request.form.get('address')
-        city = request.form.get('city')
-        state = request.form.get('state')
-        zip_code = request.form.get('zip_code')
-        insurance_id = request.form.get('insurance') or None
-        physician_id = request.form.get('physician') or None
-        other_notes = request.form.get('other_notes')
-        mrn = request.form.get('mrn')
-
-        # Convert dob to date object if provided
-        dob_date = datetime.strptime(dob, "%Y-%m-%d").date() if dob else None
-
+        # Validation
         if not first_name or not last_name:
             flash("First name and last name are required.", "danger")
             return redirect(url_for('new_patient'))
 
-        # Validate MRN format: must be exactly 7 digits
         if not mrn or not re.fullmatch(r"\d{7}", mrn):
             flash("Medical Record Number (MRN) must be a 7-digit number.", "danger")
             return redirect(url_for('new_patient'))
 
+        # Create and save patient record
         patient = Patient(
             first_name=first_name,
             last_name=last_name,
@@ -616,14 +595,14 @@ def new_patient():
             other_notes=other_notes,
             mrn=mrn
         )
-
         db.session.add(patient)
         db.session.commit()
+
         flash("New patient added!", "success")
         return redirect(url_for('patients_list'))
 
     else:
-        # GET: generate next MRN by incrementing max existing MRN
+        # GET request: generate next MRN
         max_mrn_obj = db.session.query(func.max(Patient.mrn)).first()
         max_mrn = max_mrn_obj[0] if max_mrn_obj and max_mrn_obj[0] else None
 
@@ -632,11 +611,13 @@ def new_patient():
         else:
             generated_mrn = "1000001"
 
-        return render_template('add_patient.html',
-                               generated_mrn=generated_mrn,
-                               insurances=insurances,
-                               physicians=physicians)
-                               
+        return render_template(
+            'add_patient.html',
+            generated_mrn=generated_mrn,
+            insurances=insurances,
+            physicians=physicians
+        )
+        
 # 3. Edit patient
 @app.route('/patients/<int:patient_id>/edit', methods=['GET', 'POST'])
 @login_required
