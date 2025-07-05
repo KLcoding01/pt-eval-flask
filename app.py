@@ -19,7 +19,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, func
 from sqlalchemy.dialects.sqlite import JSON
 from flask_migrate import Migrate
-
+from itsdangerous import URLSafeTimedSerializer
 # Google Calendar imports
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
@@ -33,6 +33,8 @@ from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, 
 load_dotenv()
 app = Flask(__name__)
 
+serializer = URLSafeTimedSerializer(app.secret_key)
+
 app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key_change_me")
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -42,6 +44,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
 # ====== FORGOT PASSWORD RESET ======
+serializer = URLSafeTimedSerializer(app.secret_key)
 app.config['MAIL_SERVER'] = os.getenv("MAIL_SERVER", "smtp.gmail.com")
 app.config['MAIL_PORT'] = int(os.getenv("MAIL_PORT", 587))
 app.config['MAIL_USE_TLS'] = True
@@ -54,20 +57,6 @@ mail = Mail(app)
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 MODEL = "gpt-4o-mini"
-
-# Usage example in your route:
-dob = request.form.get('dob')
-dob_date = parse_dob(dob)
-
-# ====== DOB =========
-def parse_dob(dob_str):
-    if not dob_str:
-        return None
-    normalized_dob = dob_str.replace('/', '-')
-    try:
-        return datetime.strptime(normalized_dob, "%m-%d-%Y").date()
-    except ValueError:
-        return None
 
 # ====== INIT DB ======
 db.init_app(app)
@@ -410,7 +399,7 @@ def fromjson_filter(s):
 def edit_visit_date(visit_id):
     new_date = request.form.get('date')
     visit = Visit.query.get_or_404(visit_id)
-    visit.date = new_date
+    visit.visit_date = datetime.strptime(new_date, '%m-%d-%Y')
     db.session.commit()
     return redirect(url_for('patient_profile', patient_id=visit.patient_id))
 
@@ -454,8 +443,8 @@ def add_visit():
         google_event_id = request.form.get('google_event_id')
 
         # ---- FIX 1: Parse datetime ----
-        visit_date = datetime.strptime(visit_date_str, "%m-%d-%YT%H:%M") if visit_date_str else None
-        end_time = datetime.strptime(end_time_str, "%m-%d-%YT%H:%M") if end_time_str else None
+        visit_date = datetime.strptime(visit_date_str, "%m-%d-%Y %H:%M") if visit_date_str else None
+        end_time = datetime.strptime(end_time_str, "%m-%d-%Y %H:%M") if end_time_str else None
 
         # ---- FIX 2: Validate patient_id ----
         if not patient_id:
@@ -497,18 +486,35 @@ def add_visit():
 
 
 # ========== PATIENT CRUD ==========
-
+def serialize_patient(patient):
+    return {
+        "id": patient.id,
+        "first_name": patient.first_name,
+        "last_name": patient.last_name,
+        "mrn": patient.mrn,
+        "dob": patient.dob.strftime("%Y-%m-%d") if patient.dob else None,
+        "phone": patient.phone,
+        "email": patient.email,
+        "address": patient.address,
+        "city": patient.city,
+        "state": patient.state,
+        "zip_code": patient.zip_code,
+        "insurance_id": patient.insurance_id,
+        "physician_id": patient.physician_id,
+    }
+    
+@app.route('/api/patient/<int:patient_id>')
+@login_required
+def api_patient_detail(patient_id):
+    patient = Patient.query.get_or_404(patient_id)
+    return jsonify(serialize_patient(patient))
+    
 @app.route('/patients')
 @login_required
 def patients_list():
     patients = Patient.query.all()
     return render_template('patients.html', patients=patients, active_page='pt_builder')
-
-from datetime import datetime, timedelta
-
-from sqlalchemy import or_
-from datetime import datetime, timedelta
-
+    
 @app.route('/patients/<int:patient_id>')
 @login_required
 def patient_detail(patient_id):
@@ -576,7 +582,9 @@ def new_patient():
     if request.method == 'POST':
         first_name = request.form.get('first_name')
         last_name = request.form.get('last_name')
-        dob = request.form.get('dob') or None
+        dob = request.form.get('dob')  # <-- get DOB here inside the request context
+        dob_date = parse_dob(dob)      # <-- parse it here
+
         phone = request.form.get('phone')
         email = request.form.get('email')
         address = request.form.get('address')
@@ -587,8 +595,6 @@ def new_patient():
         physician_id = request.form.get('physician') or None
         other_notes = request.form.get('other_notes')
         mrn = request.form.get('mrn')
-
-        dob_date = parse_dob(dob)
 
         if not first_name or not last_name:
             flash("First name and last name are required.", "danger")
@@ -660,11 +666,6 @@ def edit_patient(patient_id):
         flash("Patient updated!", "success")
         return redirect(url_for('patients_list'))
     return render_template('patient_form.html', patient=patient, insurances=insurances, physicians=physicians)
-
-@app.route('/some-route')
-def some_route():
-    redirect_url = url_for('new_patient')  # inside request
-    return redirect(redirect_url)
     
 # ========== VISIT CRUD WITH GOOGLE CALENDAR SYNC ==========
 @app.route('/visits')

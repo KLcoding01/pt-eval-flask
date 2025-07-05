@@ -105,7 +105,6 @@ class Visit(db.Model):
     icd10_code_id = db.Column(db.Integer, db.ForeignKey("icd10_codes.id"), nullable=True)
     notes = db.Column(db.Text)
     google_event_id = db.Column(db.String(128), nullable=True)
-
     deleted_at = db.Column(db.DateTime, nullable=True)
     
     billing = db.relationship("Billing", uselist=False, back_populates="visit", cascade="all, delete-orphan")
@@ -185,4 +184,3 @@ class PTNote(db.Model):
 
     def __repr__(self):
         return f"<PTNote {self.id} Patient:{self.patient_id} Type:{self.note_type} Deleted:{self.deleted}>"
-
