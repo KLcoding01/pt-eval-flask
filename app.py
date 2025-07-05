@@ -28,7 +28,9 @@ from google.auth.transport.requests import Request
 
 # DB MODELS
 from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, Therapist, Visit, Physician, Insurance, PTNote
-    
+import random
+import string
+
 # ====== ENV & CONFIG ======
 load_dotenv()
 app = Flask(__name__)
@@ -566,11 +568,13 @@ def recover_note(note_id):
         db.session.rollback()
         flash(f"Error recovering note: {e}", "danger")
     return redirect(url_for('patient_detail', patient_id=note.patient_id))
+    
 @app.route('/patients/new', methods=['GET', 'POST'])
 @login_required
 def new_patient():
     insurances = Insurance.query.all()
     physicians = Physician.query.all()
+
     if request.method == 'POST':
         first_name = request.form.get('first_name')
         last_name = request.form.get('last_name')
@@ -578,16 +582,22 @@ def new_patient():
         phone = request.form.get('phone')
         email = request.form.get('email')
         address = request.form.get('address')
-        insurance_id = request.form.get('insurance_id') or None
-        physician_id = request.form.get('physician_id') or None
+        city = request.form.get('city')
+        state = request.form.get('state')
+        zip_code = request.form.get('zip_code')
+        insurance_id = request.form.get('insurance') or None
+        physician_id = request.form.get('physician') or None
+        other_notes = request.form.get('other_notes')
+        mrn = request.form.get('mrn')
 
-        # Convert dob to date if provided
+        # Convert dob to date object if provided
         dob_date = datetime.strptime(dob, "%Y-%m-%d").date() if dob else None
 
         if not first_name or not last_name:
             flash("First name and last name are required.", "danger")
             return redirect(url_for('new_patient'))
 
+        # Create Patient instance with all fields
         patient = Patient(
             first_name=first_name,
             last_name=last_name,
@@ -595,14 +605,23 @@ def new_patient():
             phone=phone,
             email=email,
             address=address,
-            insurance_id=insurance_id if insurance_id else None,
-            physician_id=physician_id if physician_id else None
+            city=city,
+            state=state,
+            zip_code=zip_code,
+            insurance_id=insurance_id,
+            physician_id=physician_id,
+            other_notes=other_notes,
+            mrn=mrn
         )
+
         db.session.add(patient)
         db.session.commit()
         flash("New patient added!", "success")
         return redirect(url_for('patients_list'))
-    return render_template('patient_form.html', patient=None, insurances=insurances, physicians=physicians)
+
+    # GET method: generate MRN for new patient form
+    generated_mrn = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+    return render_template('add_patient.html', generated_mrn=generated_mrn, insurances=insurances, physicians=physicians)
     
 # 3. Edit patient
 @app.route('/patients/<int:patient_id>/edit', methods=['GET', 'POST'])
