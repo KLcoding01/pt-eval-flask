@@ -106,10 +106,10 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('calendar');
-    var therapistSelect = document.getElementById('therapist-select');
+    const calendarEl = document.getElementById('calendar');
+    const therapistSelect = document.getElementById('therapist-select');
 
-    var calendar = new FullCalendar.Calendar(calendarEl, {
+    const calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: 'dayGridMonth',
       selectable: true,
       editable: true,
@@ -120,7 +120,7 @@
         right: 'dayGridMonth,timeGridWeek,timeGridDay'
       },
       events: function(fetchInfo, successCallback, failureCallback) {
-        var therapistId = therapistSelect.value;
+        const therapistId = therapistSelect.value;
         console.log("Fetching events for therapist ID:", therapistId);
         if (!therapistId) {
           successCallback([]);
@@ -135,7 +135,7 @@
           })
           .then(data => {
             console.log("Fetched events:", data);
-            // Map events to ensure start/end are strings, add id
+            // Map events properly and ensure start/end are ISO strings
             const events = data.map(ev => ({
               id: ev.id,
               title: ev.title,
@@ -168,34 +168,32 @@
       .then(res => res.json())
       .then(data => {
         data.forEach(t => {
-          var option = document.createElement('option');
+          const option = document.createElement('option');
           option.value = t.id;
-          option.textContent = t.first_name + ' ' + t.last_name;
+          option.textContent = `${t.first_name} ${t.last_name}`;
           therapistSelect.appendChild(option);
         });
         copyTherapistsToModal();
       });
 
-    // Function to load patient list for modal dropdown (reusable)
+    // Load patient list for modal dropdown
     function loadPatientList() {
       fetch('/api/patient_list')
         .then(res => res.json())
         .then(data => {
-          var patientSelect = document.getElementById('event-patient');
+          const patientSelect = document.getElementById('event-patient');
           patientSelect.innerHTML = ''; // clear old options
           data.forEach(p => {
-            var option = document.createElement('option');
+            const option = document.createElement('option');
             option.value = p.id;
-            option.textContent = p.first_name + ' ' + p.last_name;
+            option.textContent = `${p.first_name} ${p.last_name}`;
             patientSelect.appendChild(option);
           });
         });
     }
-
-    // Initial patient list load
     loadPatientList();
 
-    // Reload events when therapist changes
+    // When therapist changes, reload events
     therapistSelect.addEventListener('change', function() {
       calendar.refetchEvents();
     });
@@ -213,13 +211,13 @@
     }
 
     // Modal handling
-    var modal = document.getElementById('event-modal');
-    var form = document.getElementById('event-form');
-    var deleteBtn = document.getElementById('delete-event-btn');
-    var cancelBtn = document.getElementById('cancel-btn');
+    const modal = document.getElementById('event-modal');
+    const form = document.getElementById('event-form');
+    const deleteBtn = document.getElementById('delete-event-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
 
     function showEventModal(eventData) {
-      var isNew = !eventData.id;
+      const isNew = !eventData.id;
       document.getElementById('modal-title').textContent = isNew ? 'Create Event' : 'Edit Event';
       document.getElementById('event-id').value = eventData.id || '';
       document.getElementById('event-title').value = eventData.title || '';
@@ -249,19 +247,19 @@
 
     form.onsubmit = async function(e) {
       e.preventDefault();
-      var id = document.getElementById('event-id').value;
-      var title = document.getElementById('event-title').value;
-      var start = document.getElementById('event-start').value;
-      var end = document.getElementById('event-end').value;
-      var therapist_id = document.getElementById('event-therapist').value;
-      var patient_id = document.getElementById('event-patient').value;
+      const id = document.getElementById('event-id').value;
+      const title = document.getElementById('event-title').value;
+      const start = document.getElementById('event-start').value;
+      const end = document.getElementById('event-end').value;
+      const therapist_id = document.getElementById('event-therapist').value;
+      const patient_id = document.getElementById('event-patient').value;
 
       if (!patient_id) {
         alert('Please select a patient.');
         return;
       }
 
-      var payload = {
+      const payload = {
         title: title,
         start: new Date(start).toISOString(),
         end: new Date(end).toISOString(),
@@ -269,15 +267,15 @@
         patient_id: parseInt(patient_id)
       };
 
-      var url = '/api/events';
-      var method = 'POST';
+      let url = '/api/events';
+      let method = 'POST';
       if (id) {
         url += '/' + id;
         method = 'PUT';
       }
 
       try {
-        var res = await fetch(url, {
+        const res = await fetch(url, {
           method: method,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -297,12 +295,12 @@
     };
 
     deleteBtn.onclick = async function() {
-      var id = document.getElementById('event-id').value;
+      const id = document.getElementById('event-id').value;
       if (!id) return;
       if (!confirm('Delete this event?')) return;
 
       try {
-        var res = await fetch('/api/events/' + id, { method: 'DELETE' });
+        const res = await fetch('/api/events/' + id, { method: 'DELETE' });
         if (res.ok) {
           modal.style.display = 'none';
           calendar.refetchEvents();
@@ -320,7 +318,7 @@
       modal.style.display = 'none';
     };
 
-    // Expose loadPatientList globally so you can call after patient creation
+    // Expose loadPatientList globally
     window.loadPatientList = loadPatientList;
   });
 </script>
