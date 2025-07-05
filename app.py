@@ -314,45 +314,68 @@ def oauth2callback():
     flash("Google Calendar connected!", "success")
     return redirect(url_for('dashboard'))
 
-@app.route('/api/events', methods=['POST'])
+@app.route('/api/events', methods=['GET', 'POST'])
 @login_required
-def api_create_event():
-    data = request.json
-    therapist_id = data.get('therapist_id')
-    patient_id = data.get('patient_id')
-    title = data.get('title')
-    start = data.get('start')
-    end = data.get('end')
+def api_events():
+    if request.method == 'GET':
+        therapist_id = request.args.get('therapist_id', type=int)
+        if not therapist_id:
+            return jsonify([])
 
-    if not all([therapist_id, patient_id, title, start, end]):
-        return jsonify({'error': 'Missing required fields'}), 400
+        visits = Visit.query.filter_by(therapist_id=therapist_id).all()
 
-    try:
-        visit = Visit(
-            patient_id=patient_id,
-            therapist_id=therapist_id,
-            visit_date=datetime.fromisoformat(start),
-            duration=int((datetime.fromisoformat(end) - datetime.fromisoformat(start)).total_seconds() / 60),
-            visit_type=title,
-            status='Scheduled'
-        )
-        db.session.add(visit)
-        db.session.commit()
+        events = []
+        for visit in visits:
+            events.append({
+                "id": visit.id,
+                "title": visit.visit_type or "Untitled",
+                "start": visit.visit_date.isoformat(),
+                "end": (visit.visit_date + timedelta(minutes=visit.duration)).isoformat() if visit.duration else None,
+                "extendedProps": {
+                    "therapist_id": visit.therapist_id,
+                    "patient_id": visit.patient_id
+                }
+            })
+        return jsonify(events)
 
-        event_id = create_google_event(visit)
-        if event_id:
-            visit.google_event_id = event_id
+    elif request.method == 'POST':
+        data = request.json
+        therapist_id = data.get('therapist_id')
+        patient_id = data.get('patient_id')
+        title = data.get('title')
+        start = data.get('start')
+        end = data.get('end')
+
+        if not all([therapist_id, patient_id, title, start, end]):
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        try:
+            visit = Visit(
+                patient_id=patient_id,
+                therapist_id=therapist_id,
+                visit_date=datetime.fromisoformat(start),
+                duration=int((datetime.fromisoformat(end) - datetime.fromisoformat(start)).total_seconds() / 60),
+                visit_type=title,
+                status='Scheduled'
+            )
+            db.session.add(visit)
             db.session.commit()
 
-        return jsonify({
-            'success': True,
-            'id': visit.id,
-            'google_event_id': visit.google_event_id,
-        })
+            event_id = create_google_event(visit)
+            if event_id:
+                visit.google_event_id = event_id
+                db.session.commit()
 
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+            return jsonify({
+                'success': True,
+                'id': visit.id,
+                'google_event_id': visit.google_event_id,
+            })
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
+
 
 
 @app.route('/api/events/<int:event_id>', methods=['PUT'])
