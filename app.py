@@ -921,11 +921,11 @@ def billing_overview():
 def pt_builder():
     return render_template('pt_builder.html')
 
-@app.route('/patient/<int:patient_id>/pt_soap')
+@app.route('/patient/<int:patient_id>/daily_builder')
 @login_required
-def pt_soap(patient_id):
+def daily_builder(patient_id):
     patient = Patient.query.get_or_404(patient_id)
-    return render_template('pt_soap.html', patient=patient)
+    return render_template('daily_builder.html', patient=patient)
     
 @app.route('/patient/<int:patient_id>/pt_builder', methods=['GET'])
 @login_required
