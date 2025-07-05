@@ -225,7 +225,6 @@
       document.getElementById('event-title').value = eventData.title || '';
       document.getElementById('event-start').value = eventData.start ? eventData.start.slice(0,16) : '';
       document.getElementById('event-end').value = eventData.end ? eventData.end.slice(0,16) : '';
-      // Use extendedProps therapist_id or fallback to therapistSelect.value
       document.getElementById('event-therapist').value = (eventData.extendedProps && eventData.extendedProps.therapist_id) || therapistSelect.value || '';
       document.getElementById('event-patient').value = (eventData.extendedProps && eventData.extendedProps.patient_id) || '';
 
@@ -238,7 +237,6 @@
     }
 
     function openEditEventModal(event) {
-      // Ensure therapist_id and patient_id exist in extendedProps
       if (!event.extendedProps) event.extendedProps = {};
       if (!event.extendedProps.therapist_id) {
         event.extendedProps.therapist_id = therapistSelect.value;
@@ -326,5 +324,4 @@
     window.loadPatientList = loadPatientList;
   });
 </script>
-
 {% endblock %}
