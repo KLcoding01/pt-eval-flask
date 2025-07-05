@@ -25,9 +25,8 @@ from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
-from your_app import app, db
-from your_app.models import Visit
-from your_app.google_calendar_helpers import create_google_event, update_google_event, delete_google_event
+from app import app, db
+from models import Visit
 # DB MODELS
 from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, Therapist, Visit, Physician, Insurance, PTNote
 
