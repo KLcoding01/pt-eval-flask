@@ -90,6 +90,19 @@ with app.app_context():
         db.session.commit()
         print("Default admin user created: username=admin, password=admin123")
 
+def parse_dob(dob_str):
+    """
+    Parse DOB string in MM-DD-YYYY or MM/DD/YYYY format.
+    Returns a date object or None if invalid.
+    """
+    if not dob_str:
+        return None
+    for fmt in ("%m-%d-%Y", "%m/%d/%Y"):
+        try:
+            return datetime.strptime(dob_str, fmt).date()
+        except ValueError:
+            continue
+    return None
 # ====== ROUTES ======
 @app.route('/')
 def index():
