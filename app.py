@@ -16,7 +16,7 @@ from datetime import date, datetime, timedelta
 from io import BytesIO
 from functools import wraps
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, func
 from sqlalchemy.dialects.sqlite import JSON
 from flask_migrate import Migrate
 
@@ -28,8 +28,7 @@ from google.auth.transport.requests import Request
 
 # DB MODELS
 from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, Therapist, Visit, Physician, Insurance, PTNote
-import random
-import string
+
 
 # ====== ENV & CONFIG ======
 load_dotenv()
@@ -597,7 +596,11 @@ def new_patient():
             flash("First name and last name are required.", "danger")
             return redirect(url_for('new_patient'))
 
-        # Create Patient instance with all fields
+        # Validate MRN format: must be exactly 7 digits
+        if not mrn or not re.fullmatch(r"\d{7}", mrn):
+            flash("Medical Record Number (MRN) must be a 7-digit number.", "danger")
+            return redirect(url_for('new_patient'))
+
         patient = Patient(
             first_name=first_name,
             last_name=last_name,
@@ -619,10 +622,21 @@ def new_patient():
         flash("New patient added!", "success")
         return redirect(url_for('patients_list'))
 
-    # GET method: generate MRN for new patient form
-    generated_mrn = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-    return render_template('add_patient.html', generated_mrn=generated_mrn, insurances=insurances, physicians=physicians)
-    
+    else:
+        # GET: generate next MRN by incrementing max existing MRN
+        max_mrn_obj = db.session.query(func.max(Patient.mrn)).first()
+        max_mrn = max_mrn_obj[0] if max_mrn_obj and max_mrn_obj[0] else None
+
+        if max_mrn and max_mrn.isdigit():
+            generated_mrn = str(int(max_mrn) + 1).zfill(7)
+        else:
+            generated_mrn = "1000001"
+
+        return render_template('add_patient.html',
+                               generated_mrn=generated_mrn,
+                               insurances=insurances,
+                               physicians=physicians)
+                               
 # 3. Edit patient
 @app.route('/patients/<int:patient_id>/edit', methods=['GET', 'POST'])
 @login_required
