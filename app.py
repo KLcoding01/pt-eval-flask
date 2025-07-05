@@ -29,17 +29,6 @@ from google.auth.transport.requests import Request
 # DB MODELS
 from models import db, CPTCode, ICD10Code, Patient, Visit, Attachment, Billing, Therapist, Visit, Physician, Insurance, PTNote
 
-# ====== DOB =========
-
-def parse_dob(dob_str):
-    if not dob_str:
-        return None
-    normalized_dob = dob_str.replace('/', '-')
-    try:
-        return datetime.strptime(normalized_dob, "%m-%d-%Y").date()
-    except ValueError:
-        return None
-
 # ====== ENV & CONFIG ======
 load_dotenv()
 app = Flask(__name__)
@@ -69,6 +58,16 @@ MODEL = "gpt-4o-mini"
 # Usage example in your route:
 dob = request.form.get('dob')
 dob_date = parse_dob(dob)
+
+# ====== DOB =========
+def parse_dob(dob_str):
+    if not dob_str:
+        return None
+    normalized_dob = dob_str.replace('/', '-')
+    try:
+        return datetime.strptime(normalized_dob, "%m-%d-%Y").date()
+    except ValueError:
+        return None
 
 # ====== INIT DB ======
 db.init_app(app)
