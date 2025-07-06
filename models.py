@@ -41,7 +41,7 @@ class Therapist(db.Model, UserMixin):
     email = db.Column(db.String(120), unique=True)
     phone = db.Column(db.String(20))
     availability = db.Column(db.String(256))
-    pi = db.Column(db.String(20), nullable=True)
+    npi = db.Column(db.String(20), nullable=True)
     pt_license = db.Column(db.String(50), nullable=True)
 
     visits = db.relationship("Visit", back_populates="therapist", cascade="all, delete-orphan")
