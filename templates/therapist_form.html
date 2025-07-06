@@ -3,17 +3,35 @@
 <div class="container mt-5">
   <h2>{{ 'Edit Therapist' if therapist else 'Add Therapist' }}</h2>
   <form method="post">
+    {% if not therapist %}
+    <div class="mb-3">
+      <label>Username</label>
+      <input type="text" name="username" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label>Password</label>
+      <input type="password" name="password" class="form-control" required>
+    </div>
+    {% endif %}
     <div class="mb-3">
       <label>First Name</label>
-      <input type="text" name="first_name" class="form-control" value="{{ therapist.first_name if therapist else '' }}">
+      <input type="text" name="first_name" class="form-control" value="{{ therapist.first_name if therapist else '' }}" required>
     </div>
     <div class="mb-3">
       <label>Last Name</label>
-      <input type="text" name="last_name" class="form-control" value="{{ therapist.last_name if therapist else '' }}">
+      <input type="text" name="last_name" class="form-control" value="{{ therapist.last_name if therapist else '' }}" required>
     </div>
     <div class="mb-3">
       <label>Credentials</label>
       <input type="text" name="credentials" class="form-control" value="{{ therapist.credentials if therapist else '' }}">
+    </div>
+    <div class="mb-3">
+      <label>NPI</label>
+      <input type="text" name="npi" class="form-control" value="{{ therapist.npi if therapist else '' }}">
+    </div>
+    <div class="mb-3">
+      <label>PT License</label>
+      <input type="text" name="pt_license" class="form-control" value="{{ therapist.pt_license if therapist else '' }}">
     </div>
     <div class="mb-3">
       <label>Phone</label>
@@ -21,7 +39,7 @@
     </div>
     <div class="mb-3">
       <label>Email</label>
-      <input type="email" name="email" class="form-control" value="{{ therapist.email if therapist else '' }}">
+      <input type="email" name="email" class="form-control" value="{{ therapist.email if therapist else '' }}" required>
     </div>
     <button type="submit" class="btn btn-success">{{ 'Update' if therapist else 'Add Therapist' }}</button>
     <a href="{{ url_for('therapists_list') }}" class="btn btn-secondary ms-2">Cancel</a>
