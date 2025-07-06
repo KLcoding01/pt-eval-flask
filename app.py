@@ -86,6 +86,8 @@ with app.app_context():
             email="admin@example.com",
             phone="555-555-5555",
             availability="M-F"
+            npi="0000000000",
+            pt_license="LICENSE123"
         )
         db.session.add(admin)
         db.session.commit()
